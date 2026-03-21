@@ -30,7 +30,7 @@ const Goals = {
                     </div>
                 `).join('') : `
                     <div class="card" style="margin-bottom: 24px; text-align: center; padding: 32px;">
-                        <p style="color: var(--text-dim);">No daily goal set. Set a target to get notified when you exceed it.</p>
+                        <p style="color: var(--text-muted);">No daily goal set. Set a target to get notified when you exceed it.</p>
                     </div>
                 `}
 
@@ -49,7 +49,7 @@ const Goals = {
                     </div>
                 `).join('') : `
                     <div class="card" style="margin-bottom: 24px; text-align: center; padding: 32px;">
-                        <p style="color: var(--text-dim);">No per-app limits set.</p>
+                        <p style="color: var(--text-muted);">No per-app limits set.</p>
                     </div>
                 `}
 
@@ -73,7 +73,7 @@ const Goals = {
                     </div>`;
                 }).join('') : `
                     <div class="card" style="margin-bottom: 24px; text-align: center; padding: 32px;">
-                        <p style="color: var(--text-dim);">No bedtime reminder set.</p>
+                        <p style="color: var(--text-muted);">No bedtime reminder set.</p>
                     </div>
                 `}
             </div>

@@ -74,8 +74,8 @@ const App = {
     // Generate color for an app based on its name
     appColor(name) {
         const colors = [
-            '#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#22c55e',
-            '#06b6d4', '#f97316', '#14b8a6', '#e11d48', '#a855f7',
+            '#0071e3', '#af52de', '#ff2d55', '#ff9500', '#30d158',
+            '#5ac8fa', '#ff6482', '#64d2ff', '#bf5af2', '#34c759',
         ];
         let hash = 0;
         for (let i = 0; i < name.length; i++) {
@@ -87,14 +87,14 @@ const App = {
     // Category color
     categoryColor(category) {
         const map = {
-            'Productivity': '#6366f1',
-            'Communication': '#8b5cf6',
-            'Social': '#ec4899',
-            'Entertainment': '#f59e0b',
-            'Utilities': '#6b7280',
-            'Uncategorized': '#94a3b8',
+            'Productivity': '#0071e3',
+            'Communication': '#af52de',
+            'Social': '#ff2d55',
+            'Entertainment': '#ff9500',
+            'Utilities': '#6e6e73',
+            'Uncategorized': '#aeaeb2',
         };
-        return map[category] || '#94a3b8';
+        return map[category] || '#aeaeb2';
     },
 
     // Refresh current tab

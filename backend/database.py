@@ -133,9 +133,12 @@ def get_daily_usage(date):
     """Get total usage per app for a given date in minutes."""
     with get_db() as conn:
         rows = conn.execute(
-            """SELECT app_name, COUNT(*) * 2.0 / 60.0 as minutes
-               FROM app_usage WHERE date = ?
-               GROUP BY app_name ORDER BY minutes DESC""",
+            """SELECT u.app_name, COUNT(*) * 2.0 / 60.0 as minutes,
+                      COALESCE(c.category, 'Uncategorized') as category
+               FROM app_usage u
+               LEFT JOIN app_categories c ON u.app_name = c.app_name
+               WHERE u.date = ?
+               GROUP BY u.app_name ORDER BY minutes DESC""",
             (date,),
         ).fetchall()
         return [dict(r) for r in rows]

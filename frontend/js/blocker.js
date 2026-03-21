@@ -23,7 +23,7 @@ const Blocker = {
                     <div style="display: flex; align-items: center; justify-content: space-between;">
                         <div>
                             <div style="font-weight: 600; font-size: 15px;">Focus Mode (Whitelist)</div>
-                            <div style="color: var(--text-dim); font-size: 13px; margin-top: 4px;">
+                            <div style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
                                 Block ALL apps except those in your whitelist
                             </div>
                         </div>
@@ -39,7 +39,7 @@ const Blocker = {
                     <h2>Blocked Apps</h2>
                     <button class="btn btn-primary btn-sm" onclick="Blocker.addBlock()">Block App</button>
                 </div>
-                <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 16px;">
+                <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
                     These apps will be force-quit when opened (or after their time limit).
                 </p>
                 ${blocked.length > 0 ? blocked.map(b => `
@@ -59,7 +59,7 @@ const Blocker = {
                     </div>
                 `).join('') : `
                     <div class="card" style="margin-bottom: 24px; text-align: center; padding: 32px;">
-                        <p style="color: var(--text-dim);">No apps blocked.</p>
+                        <p style="color: var(--text-muted);">No apps blocked.</p>
                     </div>
                 `}
 
@@ -68,7 +68,7 @@ const Blocker = {
                     <h2>Whitelisted Apps</h2>
                     <button class="btn btn-primary btn-sm" onclick="Blocker.addWhitelist()">Add to Whitelist</button>
                 </div>
-                <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 16px;">
+                <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
                     These apps are always allowed, even in Focus Mode.
                 </p>
                 ${whitelisted.length > 0 ? whitelisted.map(b => `
@@ -86,7 +86,7 @@ const Blocker = {
                     </div>
                 `).join('') : `
                     <div class="card" style="text-align: center; padding: 32px;">
-                        <p style="color: var(--text-dim);">No whitelisted apps. Add apps here to allow them during Focus Mode.</p>
+                        <p style="color: var(--text-muted);">No whitelisted apps. Add apps here to allow them during Focus Mode.</p>
                     </div>
                 `}
 
@@ -94,7 +94,7 @@ const Blocker = {
                 <div class="section-header" style="margin-top: 32px;">
                     <h2>Block by Category</h2>
                 </div>
-                <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 16px;">
+                <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
                     Block all apps in a category at once.
                 </p>
                 <div class="cards-grid">
@@ -105,7 +105,7 @@ const Blocker = {
                             <div style="display: flex; align-items: center; justify-content: space-between;">
                                 <div>
                                     <div style="font-weight: 600;">${cat}</div>
-                                    <div style="color: var(--text-dim); font-size: 12px;">${isBlocked ? 'Blocked' : 'Allowed'}</div>
+                                    <div style="color: var(--text-muted); font-size: 12px;">${isBlocked ? 'Blocked' : 'Allowed'}</div>
                                 </div>
                                 <div style="width: 12px; height: 12px; border-radius: 50%; background: ${isBlocked ? 'var(--red)' : 'var(--green)'};"></div>
                             </div>
