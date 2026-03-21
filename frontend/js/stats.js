@@ -122,15 +122,16 @@ const Stats = {
                 datasets: [{
                     label: 'Screen Time',
                     data: weekly.days.map(d => d.minutes),
-                    backgroundColor: 'rgba(99, 102, 241, 0.5)',
-                    borderColor: '#6366f1',
-                    borderWidth: 1,
+                    backgroundColor: 'rgba(0, 113, 227, 0.15)',
+                    borderColor: '#0071e3',
+                    borderWidth: 0,
                     borderRadius: 6,
+                    hoverBackgroundColor: 'rgba(0, 113, 227, 0.3)',
                 }, {
                     label: 'Average',
                     data: weekly.days.map(() => weekly.daily_average),
                     type: 'line',
-                    borderColor: '#f59e0b',
+                    borderColor: '#ff9500',
                     borderWidth: 2,
                     borderDash: [5, 5],
                     pointRadius: 0,
@@ -142,12 +143,12 @@ const Stats = {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        labels: { color: '#94a3b8', padding: 16 },
+                        labels: { color: '#64748b', padding: 16 },
                     },
                 },
                 scales: {
-                    x: { grid: { display: false }, ticks: { color: '#64748b' } },
-                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', callback: v => App.formatTime(v) } },
+                    x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+                    y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#94a3b8', callback: v => App.formatTime(v) } },
                 },
             },
         });

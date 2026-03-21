@@ -128,8 +128,8 @@ const Apps = {
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', font: { size: 10 }, maxRotation: 0 } },
-                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', callback: v => App.formatTime(v) } },
+                    x: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 0 } },
+                    y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#94a3b8', callback: v => App.formatTime(v) } },
                 },
             },
         });
@@ -155,8 +155,8 @@ const Apps = {
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { grid: { display: false }, ticks: { color: '#64748b' } },
-                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', callback: v => App.formatTime(v) } },
+                    x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+                    y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#94a3b8', callback: v => App.formatTime(v) } },
                 },
             },
         });

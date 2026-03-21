@@ -26,7 +26,7 @@ const Settings = {
                     <h2>App Categories</h2>
                     <button class="btn btn-primary btn-sm" onclick="Settings.addCategory()">Categorize App</button>
                 </div>
-                <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 16px;">
+                <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
                     Assign apps to categories for better organization and category-based blocking.
                 </p>
                 <div class="cards-grid" style="margin-bottom: 32px;">
@@ -34,7 +34,7 @@ const Settings = {
                         <div class="card">
                             <div class="card-header">
                                 <span class="card-title" style="color: ${App.categoryColor(cat)}">${cat}</span>
-                                <span style="font-size: 12px; color: var(--text-dim);">${apps.length} apps</span>
+                                <span style="font-size: 12px; color: var(--text-muted);">${apps.length} apps</span>
                             </div>
                             <div style="font-size: 13px; color: var(--text-muted); line-height: 1.8;">
                                 ${apps.slice(0, 8).join(', ')}${apps.length > 8 ? `, +${apps.length - 8} more` : ''}
@@ -51,11 +51,11 @@ const Settings = {
                     <div style="text-align: center; padding: 20px;">
                         <div style="font-size: 48px; margin-bottom: 12px;">🧘</div>
                         <div style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">Detox</div>
-                        <div style="color: var(--text-dim); font-size: 13px;">
+                        <div style="color: var(--text-muted); font-size: 13px;">
                             Screen Time Tracker for macOS<br>
                             Take control of your digital habits.
                         </div>
-                        <div style="margin-top: 16px; color: var(--text-dim); font-size: 12px;">
+                        <div style="margin-top: 16px; color: var(--text-muted); font-size: 12px;">
                             Monitor polls active app every 2 seconds.<br>
                             Data stored locally in SQLite.
                         </div>

@@ -39,12 +39,12 @@ const Dashboard = {
                         </div>
                         <div class="progress-ring-container">
                             <div class="progress-ring">
-                                <svg width="160" height="160" viewBox="0 0 160 160">
-                                    <circle cx="80" cy="80" r="70" stroke="var(--border)" stroke-width="10" fill="none"/>
-                                    <circle cx="80" cy="80" r="70" stroke="${goalPct >= 100 ? 'var(--red)' : 'var(--accent)'}"
-                                        stroke-width="10" fill="none" stroke-linecap="round"
-                                        stroke-dasharray="${2 * Math.PI * 70}"
-                                        stroke-dashoffset="${2 * Math.PI * 70 * (1 - goalPct / 100)}"/>
+                                <svg width="140" height="140" viewBox="0 0 140 140">
+                                    <circle cx="70" cy="70" r="60" stroke="var(--border)" stroke-width="9" fill="none"/>
+                                    <circle cx="70" cy="70" r="60" stroke="${goalPct >= 100 ? 'var(--red)' : 'var(--accent)'}"
+                                        stroke-width="9" fill="none" stroke-linecap="round"
+                                        stroke-dasharray="${2 * Math.PI * 60}"
+                                        stroke-dashoffset="${2 * Math.PI * 60 * (1 - goalPct / 100)}"/>
                                 </svg>
                                 <div class="progress-text">
                                     <span class="progress-value">${Math.round(goalPct)}%</span>
@@ -71,7 +71,7 @@ const Dashboard = {
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+                <div class="content-grid">
                     <div>
                         <div class="chart-container">
                             <h3>Hourly Breakdown</h3>
@@ -124,10 +124,11 @@ const Dashboard = {
                 labels,
                 datasets: [{
                     data: Object.values(hourly),
-                    backgroundColor: 'rgba(99, 102, 241, 0.6)',
-                    borderColor: '#6366f1',
-                    borderWidth: 1,
-                    borderRadius: 4,
+                    backgroundColor: 'rgba(0, 113, 227, 0.15)',
+                    borderColor: '#0071e3',
+                    borderWidth: 0,
+                    borderRadius: 6,
+                    hoverBackgroundColor: 'rgba(0, 113, 227, 0.3)',
                 }],
             },
             options: {
@@ -136,13 +137,13 @@ const Dashboard = {
                 plugins: { legend: { display: false } },
                 scales: {
                     x: {
-                        grid: { color: 'rgba(255,255,255,0.05)' },
-                        ticks: { color: '#64748b', font: { size: 10 }, maxRotation: 0 },
+                        grid: { color: 'rgba(0,0,0,0.06)' },
+                        ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 0 },
                     },
                     y: {
-                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        grid: { color: 'rgba(0,0,0,0.06)' },
                         ticks: {
-                            color: '#64748b',
+                            color: '#94a3b8',
                             callback: v => App.formatTime(v),
                         },
                     },
@@ -171,7 +172,7 @@ const Dashboard = {
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: { color: '#94a3b8', padding: 12, font: { size: 11 } },
+                        labels: { color: '#64748b', padding: 12, font: { size: 11 } },
                     },
                     tooltip: {
                         callbacks: {
@@ -193,9 +194,10 @@ const Dashboard = {
                 datasets: [{
                     data: weekData.days.map(d => d.minutes),
                     backgroundColor: weekData.days.map(d =>
-                        d.date === App.currentDate ? '#6366f1' : 'rgba(99, 102, 241, 0.3)'
+                        d.date === App.currentDate ? '#0071e3' : 'rgba(0, 113, 227, 0.15)'
                     ),
                     borderRadius: 6,
+                    borderWidth: 0,
                 }],
             },
             options: {
@@ -205,11 +207,11 @@ const Dashboard = {
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { color: '#64748b' },
+                        ticks: { color: '#94a3b8' },
                     },
                     y: {
-                        grid: { color: 'rgba(255,255,255,0.05)' },
-                        ticks: { color: '#64748b', callback: v => App.formatTime(v) },
+                        grid: { color: 'rgba(0,0,0,0.06)' },
+                        ticks: { color: '#94a3b8', callback: v => App.formatTime(v) },
                     },
                 },
             },
