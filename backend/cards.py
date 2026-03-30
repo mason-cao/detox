@@ -41,9 +41,13 @@ def format_time(minutes):
 def generate_card(date):
     """Generate a shareable card PNG for the given date."""
     # Get data
-    daily = db.get_daily_usage(date)
-    stats = db.get_daily_stats(date)
-    total = stats["total_minutes"]
+    try:
+        daily = db.get_daily_usage(date)
+        stats = db.get_daily_stats(date)
+    except Exception:
+        daily = []
+        stats = {}
+    total = stats.get("total_minutes", 0)
 
     # Card dimensions (Instagram story: 1080x1920)
     W, H = 1080, 1920
@@ -90,9 +94,9 @@ def generate_card(date):
     # Stats row
     y_pos += 300
     stat_items = [
-        ("Pickups", str(stats["pickups_count"])),
-        ("Longest Detox", format_time(stats["longest_detox_minutes"])),
-        ("Longest Session", format_time(stats["continuous_use_minutes"])),
+        ("Pickups", str(stats.get("pickups_count", 0))),
+        ("Longest Detox", format_time(stats.get("longest_detox_minutes", 0))),
+        ("Longest Session", format_time(stats.get("continuous_use_minutes", 0))),
     ]
 
     col_w = W // len(stat_items)
@@ -143,7 +147,7 @@ def generate_card(date):
             y_pos += 50
 
     # Most used app highlight
-    if stats["most_used_app"]:
+    if stats.get("most_used_app"):
         y_pos += 30
         draw.text(
             (W // 2, y_pos),

@@ -49,9 +49,11 @@ const Cards = {
             });
             this.generatedUrl = result.url;
             this.showPreview(result.url);
+            App.toast('Card generated!', 'success');
         } catch (e) {
             btn.textContent = 'Error - Try Again';
             btn.disabled = false;
+            App.toast('Failed to generate card', 'error');
         }
     },
 

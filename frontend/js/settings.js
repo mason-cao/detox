@@ -8,6 +8,8 @@ const Settings = {
             App.api('/api/categories'),
         ]);
 
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
         // Group categories
         const catGroups = {};
         categories.forEach(c => {
@@ -15,10 +17,55 @@ const Settings = {
             catGroups[c.category].push(c.app_name);
         });
 
+        const today = new Date().toISOString().split('T')[0];
+        const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+
         container.innerHTML = `
             <div class="fade-in">
                 <div class="page-header">
                     <h1>Settings</h1>
+                </div>
+
+                <!-- Appearance -->
+                <div class="section-header">
+                    <h2>Appearance</h2>
+                </div>
+                <div class="card" style="margin-bottom: 24px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <div style="font-weight: 600; font-size: 15px;">Dark Mode</div>
+                            <div style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
+                                Switch between light and dark themes
+                            </div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" ${isDark ? 'checked' : ''} onchange="App.toggleDarkMode()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Data Export -->
+                <div class="section-header">
+                    <h2>Data Export</h2>
+                </div>
+                <div class="card" style="margin-bottom: 24px;">
+                    <div style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">Export Your Data</div>
+                    <div style="color: var(--text-muted); font-size: 13px;">
+                        Download your screen time data as CSV or JSON.
+                    </div>
+                    <div class="export-row">
+                        <div class="form-group">
+                            <label>Start Date</label>
+                            <input type="date" id="exportStart" value="${weekAgo}">
+                        </div>
+                        <div class="form-group">
+                            <label>End Date</label>
+                            <input type="date" id="exportEnd" value="${today}">
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="Settings.exportData('csv')">Export CSV</button>
+                        <button class="btn btn-secondary btn-sm" onclick="Settings.exportData('json')">Export JSON</button>
+                    </div>
                 </div>
 
                 <!-- App Categories -->
@@ -43,6 +90,18 @@ const Settings = {
                     `).join('')}
                 </div>
 
+                <!-- Keyboard Shortcuts -->
+                <div class="section-header">
+                    <h2>Keyboard Shortcuts</h2>
+                </div>
+                <div class="kbd-grid" style="margin-bottom: 32px;">
+                    <div class="kbd-item"><kbd>←</kbd><kbd>→</kbd> <span class="kbd-desc">Navigate dates</span></div>
+                    <div class="kbd-item"><kbd>D</kbd> <span class="kbd-desc">Toggle dark mode</span></div>
+                    <div class="kbd-item"><kbd>/</kbd> <span class="kbd-desc">Search apps</span></div>
+                    <div class="kbd-item"><kbd>1</kbd>-<kbd>7</kbd> <span class="kbd-desc">Switch tabs</span></div>
+                    <div class="kbd-item"><kbd>Esc</kbd> <span class="kbd-desc">Close modals</span></div>
+                </div>
+
                 <!-- About -->
                 <div class="section-header">
                     <h2>About Detox</h2>
@@ -63,6 +122,31 @@ const Settings = {
                 </div>
             </div>
         `;
+    },
+
+    async exportData(format) {
+        const start = document.getElementById('exportStart').value;
+        const end = document.getElementById('exportEnd').value;
+        if (!start || !end) {
+            App.toast('Please select both start and end dates', 'warning');
+            return;
+        }
+
+        const url = `/api/export/${format}?start=${start}&end=${end}`;
+
+        if (format === 'csv') {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `detox-export-${start}-to-${end}.csv`;
+            a.click();
+            App.toast('CSV download started', 'success');
+        } else {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `detox-export-${start}-to-${end}.json`;
+            a.click();
+            App.toast('JSON download started', 'success');
+        }
     },
 
     addCategory() {
@@ -104,6 +188,7 @@ const Settings = {
             body: { app_name: appName, category },
         });
         document.querySelector('.modal-overlay').remove();
+        App.toast(`${appName} categorized as ${category}`, 'success');
         this.render(document.getElementById('content'));
     },
 };

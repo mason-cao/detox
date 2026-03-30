@@ -4,6 +4,30 @@ const Dashboard = {
     async render(container) {
         destroyCharts();
         const date = App.currentDate;
+
+        // Show loading skeleton
+        container.innerHTML = `
+            <div class="fade-in">
+                <div class="page-header">
+                    <h1>Dashboard</h1>
+                    <div class="date-nav">
+                        <button onclick="App.prevDate()">&#8249;</button>
+                        <span class="date-label">${App.formatDate(date)}</span>
+                        <button onclick="App.nextDate()">&#8250;</button>
+                    </div>
+                </div>
+                <div class="cards-grid">
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                </div>
+                <div class="content-grid">
+                    <div><div class="skeleton-chart"></div></div>
+                    <div><div class="skeleton-chart"></div></div>
+                </div>
+            </div>
+        `;
+
         const [data, weekData] = await Promise.all([
             App.api(`/api/dashboard?date=${date}`),
             App.api(`/api/dashboard/weekly?week_start=${App.getWeekStart(date)}`),
@@ -12,6 +36,7 @@ const Dashboard = {
         const totalStr = App.formatTime(data.total_minutes);
         const goalPct = data.goal_target ? Math.min(100, (data.total_minutes / data.goal_target) * 100) : 0;
         const goalStr = data.goal_target ? App.formatTime(data.goal_target) : null;
+        const circumference = 2 * Math.PI * 60;
 
         container.innerHTML = `
             <div class="fade-in">
@@ -40,11 +65,12 @@ const Dashboard = {
                         <div class="progress-ring-container">
                             <div class="progress-ring">
                                 <svg width="140" height="140" viewBox="0 0 140 140">
-                                    <circle cx="70" cy="70" r="60" stroke="var(--border)" stroke-width="9" fill="none"/>
-                                    <circle cx="70" cy="70" r="60" stroke="${goalPct >= 100 ? 'var(--red)' : 'var(--accent)'}"
+                                    <circle class="ring-track" cx="70" cy="70" r="60" stroke="var(--border)" stroke-width="9" fill="none"/>
+                                    <circle class="ring-fill" cx="70" cy="70" r="60" stroke="${goalPct >= 100 ? 'var(--red)' : 'var(--accent)'}"
                                         stroke-width="9" fill="none" stroke-linecap="round"
-                                        stroke-dasharray="${2 * Math.PI * 60}"
-                                        stroke-dashoffset="${2 * Math.PI * 60 * (1 - goalPct / 100)}"/>
+                                        stroke-dasharray="${circumference}"
+                                        stroke-dashoffset="${circumference}"
+                                        id="goalRing"/>
                                 </svg>
                                 <div class="progress-text">
                                     <span class="progress-value">${Math.round(goalPct)}%</span>
@@ -105,6 +131,16 @@ const Dashboard = {
             </div>
         `;
 
+        // Animate progress ring
+        if (goalStr) {
+            const ring = document.getElementById('goalRing');
+            if (ring) {
+                requestAnimationFrame(() => {
+                    ring.style.strokeDashoffset = circumference * (1 - goalPct / 100);
+                });
+            }
+        }
+
         this.renderHourlyChart(data.hourly);
         this.renderCategoryChart(data.categories);
         this.renderWeeklyChart(weekData);
@@ -134,18 +170,16 @@ const Dashboard = {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: { duration: 600, easing: 'easeOutQuart' },
                 plugins: { legend: { display: false } },
                 scales: {
                     x: {
-                        grid: { color: 'rgba(0,0,0,0.06)' },
-                        ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 0 },
+                        grid: { color: App.chartGridColor() },
+                        ticks: { color: App.chartTickColor(), font: { size: 10 }, maxRotation: 0 },
                     },
                     y: {
-                        grid: { color: 'rgba(0,0,0,0.06)' },
-                        ticks: {
-                            color: '#94a3b8',
-                            callback: v => App.formatTime(v),
-                        },
+                        grid: { color: App.chartGridColor() },
+                        ticks: { color: App.chartTickColor(), callback: v => App.formatTime(v) },
                     },
                 },
             },
@@ -169,10 +203,11 @@ const Dashboard = {
                 responsive: true,
                 maintainAspectRatio: false,
                 cutout: '65%',
+                animation: { duration: 800, easing: 'easeOutQuart' },
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: { color: '#64748b', padding: 12, font: { size: 11 } },
+                        labels: { color: App.chartTickColor(), padding: 12, font: { size: 11 } },
                     },
                     tooltip: {
                         callbacks: {
@@ -203,15 +238,16 @@ const Dashboard = {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: { duration: 600, easing: 'easeOutQuart' },
                 plugins: { legend: { display: false } },
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { color: '#94a3b8' },
+                        ticks: { color: App.chartTickColor() },
                     },
                     y: {
-                        grid: { color: 'rgba(0,0,0,0.06)' },
-                        ticks: { color: '#94a3b8', callback: v => App.formatTime(v) },
+                        grid: { color: App.chartGridColor() },
+                        ticks: { color: App.chartTickColor(), callback: v => App.formatTime(v) },
                     },
                 },
             },

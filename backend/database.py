@@ -436,6 +436,23 @@ def set_category(app_name, category):
         )
 
 
+# ── Export ────────────────────────────────────────────────────────────
+
+def get_export_data(start_date, end_date):
+    """Get all session data between two dates for export."""
+    with get_db() as conn:
+        rows = conn.execute(
+            """SELECT app_name, date,
+                      ROUND(SUM(duration_seconds) / 60.0, 1) as minutes
+               FROM sessions
+               WHERE date >= ? AND date <= ?
+               GROUP BY app_name, date
+               ORDER BY date, minutes DESC""",
+            (start_date, end_date)
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
 # ── Settings ─────────────────────────────────────────────────────────────
 
 def get_settings():

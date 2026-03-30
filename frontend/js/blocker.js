@@ -101,13 +101,13 @@ const Blocker = {
                     ${['Social', 'Entertainment', 'Communication'].map(cat => {
                         const isBlocked = blocked.some(b => b.app_name === `__category__${cat}`);
                         return `
-                        <div class="card" style="cursor: pointer;" onclick="Blocker.toggleCategory('${cat}', ${!isBlocked})">
+                        <div class="card cat-card" onclick="Blocker.toggleCategory('${cat}', ${!isBlocked})">
                             <div style="display: flex; align-items: center; justify-content: space-between;">
                                 <div>
                                     <div style="font-weight: 600;">${cat}</div>
                                     <div style="color: var(--text-muted); font-size: 12px;">${isBlocked ? 'Blocked' : 'Allowed'}</div>
                                 </div>
-                                <div style="width: 12px; height: 12px; border-radius: 50%; background: ${isBlocked ? 'var(--red)' : 'var(--green)'};"></div>
+                                <div class="cat-status-dot" style="background: ${isBlocked ? 'var(--red)' : 'var(--green)'};"></div>
                             </div>
                         </div>`;
                     }).join('')}
@@ -121,6 +121,7 @@ const Blocker = {
             method: 'POST',
             body: { whitelist_mode: enabled ? '1' : '0' },
         });
+        App.toast(enabled ? 'Focus Mode enabled' : 'Focus Mode disabled', enabled ? 'warning' : 'info');
     },
 
     addBlock() {
@@ -175,6 +176,7 @@ const Blocker = {
             body: { app_name: appName, block_type: 'blocked', daily_limit_minutes: limit },
         });
         document.querySelector('.modal-overlay').remove();
+        App.toast(`${appName} has been blocked`, 'success');
         this.render(document.getElementById('content'));
     },
 
@@ -205,11 +207,13 @@ const Blocker = {
             body: { app_name: appName, block_type: 'whitelisted' },
         });
         document.querySelector('.modal-overlay').remove();
+        App.toast(`${appName} added to whitelist`, 'success');
         this.render(document.getElementById('content'));
     },
 
     async removeBlock(appName) {
         await App.api(`/api/blocks/${encodeURIComponent(appName)}`, { method: 'DELETE' });
+        App.toast(`${appName} unblocked`, 'info');
         this.render(document.getElementById('content'));
     },
 
@@ -220,8 +224,10 @@ const Blocker = {
                 method: 'POST',
                 body: { app_name: name, block_type: 'blocked' },
             });
+            App.toast(`${category} apps blocked`, 'warning');
         } else {
             await App.api(`/api/blocks/${encodeURIComponent(name)}`, { method: 'DELETE' });
+            App.toast(`${category} apps unblocked`, 'info');
         }
         this.render(document.getElementById('content'));
     },
