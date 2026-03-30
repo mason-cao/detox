@@ -2,6 +2,7 @@
 
 const Apps = {
     detailApp: null,
+    searchQuery: '',
 
     async render(container) {
         destroyCharts();
@@ -24,32 +25,57 @@ const Apps = {
                         <p>The monitor will start tracking apps as you use them.</p>
                     </div>
                 ` : `
+                    <div class="search-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" class="search-input" id="appSearch"
+                            placeholder="Search apps..." value="${this.searchQuery}"
+                            oninput="Apps.filterApps(this.value)">
+                        <span class="search-kbd">/</span>
+                    </div>
                     <div class="chart-container">
-                        <ul class="app-list">
-                            ${apps.map(app => {
-                                const maxMin = apps[0].total_minutes;
-                                return `
-                                <li class="app-item" onclick="Apps.showDetail('${app.app_name.replace(/'/g, "\\'")}')">
-                                    <div class="app-icon" style="background: ${App.appColor(app.app_name)}">
-                                        ${app.app_name.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div class="app-info">
-                                        <div class="app-name">${app.app_name}</div>
-                                        <div class="app-category">${app.category}</div>
-                                    </div>
-                                    <div class="app-bar-wrapper">
-                                        <div class="app-bar">
-                                            <div class="app-bar-fill" style="width: ${(app.total_minutes / maxMin * 100)}%; background: ${App.appColor(app.app_name)}"></div>
-                                        </div>
-                                    </div>
-                                    <div class="app-time">${App.formatTime(app.total_minutes)}</div>
-                                </li>`;
-                            }).join('')}
+                        <ul class="app-list" id="appsList">
+                            ${this.renderAppList(apps)}
                         </ul>
                     </div>
                 `}
             </div>
         `;
+    },
+
+    renderAppList(apps) {
+        const filtered = this.searchQuery
+            ? apps.filter(a => a.app_name.toLowerCase().includes(this.searchQuery.toLowerCase()))
+            : apps;
+
+        if (filtered.length === 0) {
+            return '<div class="empty-state" style="padding: 24px;"><p>No apps match your search.</p></div>';
+        }
+
+        const maxMin = apps[0].total_minutes;
+        return filtered.map(app => `
+            <li class="app-item" onclick="Apps.showDetail('${app.app_name.replace(/'/g, "\\'")}')">
+                <div class="app-icon" style="background: ${App.appColor(app.app_name)}">
+                    ${app.app_name.charAt(0).toUpperCase()}
+                </div>
+                <div class="app-info">
+                    <div class="app-name">${app.app_name}</div>
+                    <div class="app-category">${app.category}</div>
+                </div>
+                <div class="app-bar-wrapper">
+                    <div class="app-bar">
+                        <div class="app-bar-fill" style="width: ${(app.total_minutes / maxMin * 100)}%; background: ${App.appColor(app.app_name)}"></div>
+                    </div>
+                </div>
+                <div class="app-time">${App.formatTime(app.total_minutes)}</div>
+            </li>
+        `).join('');
+    },
+
+    async filterApps(query) {
+        this.searchQuery = query;
+        const apps = await App.api('/api/apps');
+        const list = document.getElementById('appsList');
+        if (list) list.innerHTML = this.renderAppList(apps);
     },
 
     showDetail(appName) {
@@ -64,7 +90,7 @@ const Apps = {
             <div class="fade-in">
                 <div class="page-header">
                     <h1>
-                        <a class="view-link" onclick="Apps.detailApp=null; App.showTab('apps')" style="font-size: 16px; margin-right: 8px;">← Back</a>
+                        <a class="view-link" onclick="Apps.detailApp=null; Apps.searchQuery=''; App.showTab('apps')" style="font-size: 16px; margin-right: 8px;">← Back</a>
                         <span class="app-icon" style="background: ${App.appColor(appName)}; display: inline-flex; width: 36px; height: 36px; vertical-align: middle; margin-right: 8px; font-size: 14px;">
                             ${appName.charAt(0).toUpperCase()}
                         </span>
@@ -126,10 +152,11 @@ const Apps = {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: { duration: 600, easing: 'easeOutQuart' },
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 0 } },
-                    y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#94a3b8', callback: v => App.formatTime(v) } },
+                    x: { grid: { color: App.chartGridColor() }, ticks: { color: App.chartTickColor(), font: { size: 10 }, maxRotation: 0 } },
+                    y: { grid: { color: App.chartGridColor() }, ticks: { color: App.chartTickColor(), callback: v => App.formatTime(v) } },
                 },
             },
         });
@@ -153,10 +180,11 @@ const Apps = {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: { duration: 600, easing: 'easeOutQuart' },
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
-                    y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#94a3b8', callback: v => App.formatTime(v) } },
+                    x: { grid: { display: false }, ticks: { color: App.chartTickColor() } },
+                    y: { grid: { color: App.chartGridColor() }, ticks: { color: App.chartTickColor(), callback: v => App.formatTime(v) } },
                 },
             },
         });

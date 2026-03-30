@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detox</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
@@ -43,6 +46,12 @@
                     <span>Settings</span>
                 </a></li>
             </ul>
+            <div class="sidebar-footer">
+                <button class="theme-toggle-btn" id="themeToggle" onclick="App.toggleDarkMode()">
+                    <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    <span class="theme-toggle-label">Dark Mode</span>
+                </button>
+            </div>
             <div class="monitor-status" id="monitor-status">
                 <span class="status-dot"></span>
                 <span class="status-text">Checking...</span>
@@ -50,6 +59,8 @@
         </nav>
         <main id="content"></main>
     </div>
+
+    <div class="toast-container" id="toastContainer"></div>
 
     <script src="/js/app.js"></script>
     <script src="/js/dashboard.js"></script>

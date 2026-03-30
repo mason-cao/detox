@@ -1,13 +1,32 @@
 """Flask web server serving the dashboard API and frontend static files."""
 
 import os
+import re
+import io
+import csv
+from functools import wraps
 from datetime import datetime, timedelta
-from flask import Flask, jsonify, request, send_from_directory, send_file
+from flask import Flask, jsonify, request, send_from_directory
 
 from backend.config import FRONTEND_DIR, SERVER_PORT, CARDS_DIR, PID_FILE
 from backend import database as db
 
 app = Flask(__name__, static_folder=None)
+
+DATE_RE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+
+
+def api_route(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        try:
+            date = request.args.get('date')
+            if date and not DATE_RE.match(date):
+                return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+            return f(*args, **kwargs)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    return wrapper
 
 
 # ── Static file serving ─────────────────────────────────────────────────
@@ -35,6 +54,7 @@ def serve_assets(filename):
 # ── Dashboard API ────────────────────────────────────────────────────────
 
 @app.route("/api/dashboard")
+@api_route
 def api_dashboard():
     date = request.args.get("date", datetime.now().strftime("%Y-%m-%d"))
     apps = db.get_daily_usage(date)
@@ -60,6 +80,7 @@ def api_dashboard():
 
 
 @app.route("/api/dashboard/weekly")
+@api_route
 def api_dashboard_weekly():
     week_start = request.args.get("week_start")
     if not week_start:
@@ -73,6 +94,7 @@ def api_dashboard_weekly():
 # ── Statistics API ───────────────────────────────────────────────────────
 
 @app.route("/api/stats/daily")
+@api_route
 def api_stats_daily():
     date = request.args.get("date", datetime.now().strftime("%Y-%m-%d"))
     stats = db.get_daily_stats(date)
@@ -80,6 +102,7 @@ def api_stats_daily():
 
 
 @app.route("/api/stats/weekly")
+@api_route
 def api_stats_weekly():
     week_start = request.args.get("week_start")
     if not week_start:
@@ -93,12 +116,14 @@ def api_stats_weekly():
 # ── Apps API ─────────────────────────────────────────────────────────────
 
 @app.route("/api/apps")
+@api_route
 def api_apps():
     apps = db.get_all_apps()
     return jsonify(apps)
 
 
 @app.route("/api/apps/<app_name>")
+@api_route
 def api_app_detail(app_name):
     date = request.args.get("date", datetime.now().strftime("%Y-%m-%d"))
     period = request.args.get("period", "week")
@@ -119,12 +144,14 @@ def api_app_detail(app_name):
 # ── Goals API ────────────────────────────────────────────────────────────
 
 @app.route("/api/goals", methods=["GET"])
+@api_route
 def api_goals_get():
     goals = db.get_goals()
     return jsonify(goals)
 
 
 @app.route("/api/goals", methods=["POST"])
+@api_route
 def api_goals_create():
     data = request.json
     goal_id = db.create_goal(
@@ -138,6 +165,7 @@ def api_goals_create():
 
 
 @app.route("/api/goals/<int:goal_id>", methods=["DELETE"])
+@api_route
 def api_goals_delete(goal_id):
     db.delete_goal(goal_id)
     return jsonify({"ok": True})
@@ -146,12 +174,14 @@ def api_goals_delete(goal_id):
 # ── Blocks API ───────────────────────────────────────────────────────────
 
 @app.route("/api/blocks", methods=["GET"])
+@api_route
 def api_blocks_get():
     blocks = db.get_blocks()
     return jsonify(blocks)
 
 
 @app.route("/api/blocks", methods=["POST"])
+@api_route
 def api_blocks_create():
     data = request.json
     db.add_block(
@@ -163,6 +193,7 @@ def api_blocks_create():
 
 
 @app.route("/api/blocks/<app_name>", methods=["DELETE"])
+@api_route
 def api_blocks_delete(app_name):
     db.remove_block(app_name)
     return jsonify({"ok": True})
@@ -171,12 +202,14 @@ def api_blocks_delete(app_name):
 # ── Categories API ───────────────────────────────────────────────────────
 
 @app.route("/api/categories", methods=["GET"])
+@api_route
 def api_categories_get():
     categories = db.get_categories()
     return jsonify(categories)
 
 
 @app.route("/api/categories", methods=["POST"])
+@api_route
 def api_categories_set():
     data = request.json
     db.set_category(data["app_name"], data["category"])
@@ -186,6 +219,7 @@ def api_categories_set():
 # ── Cards API ────────────────────────────────────────────────────────────
 
 @app.route("/api/cards/generate", methods=["POST"])
+@api_route
 def api_cards_generate():
     from backend.cards import generate_card
 
@@ -196,6 +230,7 @@ def api_cards_generate():
 
 
 @app.route("/api/cards/<filename>")
+@api_route
 def api_cards_serve(filename):
     return send_from_directory(CARDS_DIR, filename)
 
@@ -203,12 +238,14 @@ def api_cards_serve(filename):
 # ── Settings API ─────────────────────────────────────────────────────────
 
 @app.route("/api/settings", methods=["GET"])
+@api_route
 def api_settings_get():
     settings = db.get_settings()
     return jsonify(settings)
 
 
 @app.route("/api/settings", methods=["POST"])
+@api_route
 def api_settings_set():
     data = request.json
     for key, value in data.items():
@@ -219,6 +256,7 @@ def api_settings_set():
 # ── Status API ───────────────────────────────────────────────────────────
 
 @app.route("/api/status")
+@api_route
 def api_status():
     monitor_running = False
     if os.path.exists(PID_FILE):
@@ -230,6 +268,35 @@ def api_status():
         except (ProcessLookupError, ValueError, PermissionError):
             pass
     return jsonify({"monitor_running": monitor_running})
+
+
+# ── Export API ───────────────────────────────────────────────────────
+
+@app.route('/api/export/csv')
+@api_route
+def export_csv():
+    start = request.args.get('start', (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d'))
+    end = request.args.get('end', datetime.now().strftime('%Y-%m-%d'))
+    rows = db.get_export_data(start, end)
+
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=['date', 'app_name', 'minutes'])
+    writer.writeheader()
+    writer.writerows(rows)
+
+    return output.getvalue(), 200, {
+        'Content-Type': 'text/csv',
+        'Content-Disposition': f'attachment; filename=detox-export-{start}-to-{end}.csv'
+    }
+
+
+@app.route('/api/export/json')
+@api_route
+def export_json():
+    start = request.args.get('start', (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d'))
+    end = request.args.get('end', datetime.now().strftime('%Y-%m-%d'))
+    rows = db.get_export_data(start, end)
+    return jsonify({"start": start, "end": end, "data": rows})
 
 
 # ── Main ─────────────────────────────────────────────────────────────────
