@@ -81,7 +81,6 @@ const Goals = {
     },
 
     addDailyGoal() {
-        const content = document.getElementById('content');
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
         modal.innerHTML = `
@@ -117,6 +116,7 @@ const Goals = {
             body: { type: 'daily_total', target_minutes: total },
         });
         document.querySelector('.modal-overlay').remove();
+        App.toast(`Daily goal set to ${App.formatTime(total)}`, 'success');
         this.render(document.getElementById('content'));
     },
 
@@ -161,6 +161,7 @@ const Goals = {
             body: { type: 'app_limit', app_name: appName, target_minutes: total },
         });
         document.querySelector('.modal-overlay').remove();
+        App.toast(`Limit set: ${appName} — ${App.formatTime(total)}/day`, 'success');
         this.render(document.getElementById('content'));
     },
 
@@ -199,11 +200,15 @@ const Goals = {
             body: { type: 'bedtime', bedtime_hour: hour, bedtime_minute: minute },
         });
         document.querySelector('.modal-overlay').remove();
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const h12 = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+        App.toast(`Bedtime reminder set for ${h12}:${minute.toString().padStart(2,'0')} ${ampm}`, 'success');
         this.render(document.getElementById('content'));
     },
 
     async removeGoal(id) {
         await App.api(`/api/goals/${id}`, { method: 'DELETE' });
+        App.toast('Goal removed', 'info');
         this.render(document.getElementById('content'));
     },
 };
