@@ -1,4 +1,4 @@
-# 🧘 Detox — Screen Time Tracker for macOS
+# Detox — Screen Time Tracker for macOS
 
 Take control of your digital habits. Detox monitors your app usage in real time, visualizes your screen time with interactive charts, and helps you stay focused by blocking distracting apps.
 
@@ -11,19 +11,20 @@ Take control of your digital habits. Detox monitors your app usage in real time,
 
 ## Features
 
-### 📊 Interactive Dashboard
+### Interactive Dashboard
 - Total daily screen time with hourly breakdown chart
 - Category-based doughnut chart (Productivity, Social, Entertainment, etc.)
 - Weekly trend bar chart with highlighted current day
 - Top apps ranked by usage with visual bars
-- Daily goal progress ring
+- Daily goal progress ring with smooth animation
 
-### 📱 Per-App Tracking
+### Per-App Tracking
 - See every app you've used and how long
+- **Search and filter** apps by name
 - Click any app for a detailed view with hourly and daily charts
 - Navigate between days to compare usage patterns
 
-### 📈 Detailed Statistics
+### Detailed Statistics
 **Daily stats:**
 - Pickups count (e.g., 80 times today)
 - Checking frequency (every 8 minutes)
@@ -37,22 +38,43 @@ Take control of your digital habits. Detox monitors your app usage in real time,
 - Shortest and longest usage days
 - Daily breakdown chart with average line
 
-### 🔒 App Blocker
+### App Blocker
 - **Block individual apps** — always, or after a daily time limit
 - **Block by category** — block all Social or Entertainment apps at once
 - **Focus Mode** — block everything except whitelisted apps (e.g., only allow Notes and Calendar)
 - Blocked apps are force-quit with a notification explaining why
+- **Toast notifications** confirm every action
 
-### 🎯 Goals & Limits
+### Goals & Limits
 - Set a daily screen time goal and get notified when you hit it
 - Set per-app time limits (e.g., max 30 minutes of Instagram per day)
 - Bedtime reminder notifications
 
-### 🃏 Shareable Progress Cards
+### Shareable Progress Cards
 - Generate a personalized PNG card with your screen time stats
-- Instagram story format (1080×1920)
+- Instagram story format (1080x1920)
 - Shows total time, top apps, pickups, and detox streaks
 - Download and share with friends to encourage change
+
+### Dark Mode
+- Toggle between light and dark themes from the sidebar or Settings
+- Respects system preference on first load
+- Persists across sessions via localStorage
+- Glassmorphism sidebar with backdrop blur in both modes
+
+### Data Export
+- Export screen time data as **CSV** or **JSON**
+- Select custom date ranges
+- Download directly from Settings
+
+### Keyboard Shortcuts
+| Key | Action |
+|-----|--------|
+| `← →` | Navigate dates |
+| `D` | Toggle dark mode |
+| `/` | Search apps |
+| `1`-`7` | Switch tabs |
+| `Esc` | Close modals |
 
 ---
 
@@ -115,8 +137,8 @@ Press `Ctrl+C` in the terminal, or run:
 
 - **Monitor** — A background Python process polls the frontmost app every 2 seconds using `osascript`. It records usage, tracks sessions, detects pickups (screen unlock → app use), enforces blocks, and checks goals.
 - **Database** — SQLite with WAL mode for safe concurrent reads/writes. Stores raw usage observations, aggregated sessions, pickups, goals, blocks, and settings.
-- **Server** — Flask serves the REST API and static frontend files.
-- **Frontend** — Vanilla HTML/CSS/JS with Chart.js for interactive graphs. No build step, no Node.js required.
+- **Server** — Flask serves the REST API and static frontend files. All API routes include error handling with date validation.
+- **Frontend** — Vanilla HTML/CSS/JS with Chart.js for interactive graphs. Inter font via Google Fonts. Dark mode support with system preference detection. No build step, no Node.js required.
 
 ---
 
@@ -128,25 +150,25 @@ detox/
 ├── stop.sh               # Clean shutdown
 ├── requirements.txt      # flask, pillow
 ├── backend/
-│   ├── server.py         # Flask API + static file serving
+│   ├── server.py         # Flask API + static file serving + error handling
 │   ├── monitor.py        # Background app tracking daemon
-│   ├── database.py       # SQLite schema + query helpers
+│   ├── database.py       # SQLite schema + query helpers + data export
 │   ├── blocker.py        # Force-quit blocked apps
 │   ├── notifier.py       # macOS notification wrapper
 │   ├── cards.py          # Shareable card PNG generation
 │   └── config.py         # Paths, defaults, categories
 ├── frontend/
-│   ├── index.html        # Single-page app shell
-│   ├── css/style.css     # Dark theme stylesheet
+│   ├── index.html        # SPA shell with sidebar, toast container
+│   ├── css/style.css     # Light + dark theme, glassmorphism, animations
 │   └── js/
-│       ├── app.js        # Router, API client, state
-│       ├── dashboard.js  # Daily/weekly overview
-│       ├── apps.js       # App list + detail views
+│       ├── app.js        # Router, API client, dark mode, toasts, keyboard shortcuts
+│       ├── dashboard.js  # Daily/weekly overview with loading skeletons
+│       ├── apps.js       # App list with search/filter + detail views
 │       ├── stats.js      # Daily + weekly statistics
-│       ├── goals.js      # Goal management UI
-│       ├── blocker.js    # Block/whitelist UI
+│       ├── goals.js      # Goal management UI with toast feedback
+│       ├── blocker.js    # Block/whitelist UI with toast feedback
 │       ├── cards.js      # Share card UI
-│       └── settings.js   # Categories + preferences
+│       └── settings.js   # Dark mode, data export, categories, keyboard shortcuts
 └── data/                 # Created at runtime (gitignored)
     ├── screentime.db
     └── cards/
@@ -160,7 +182,7 @@ detox/
 |-----------|-----------|
 | Backend | Python 3.9, Flask |
 | Database | SQLite (WAL mode) |
-| Frontend | Vanilla JS, Chart.js |
+| Frontend | Vanilla JS, Chart.js, Inter font |
 | App Detection | `osascript` (AppleScript) |
 | Notifications | macOS Notification Center |
 | Card Generation | Pillow (PIL) |

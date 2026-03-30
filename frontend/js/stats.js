@@ -141,14 +141,15 @@ const Stats = {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: { duration: 600, easing: 'easeOutQuart' },
                 plugins: {
                     legend: {
-                        labels: { color: '#64748b', padding: 16 },
+                        labels: { color: App.chartTickColor(), padding: 16 },
                     },
                 },
                 scales: {
-                    x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
-                    y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#94a3b8', callback: v => App.formatTime(v) } },
+                    x: { grid: { display: false }, ticks: { color: App.chartTickColor() } },
+                    y: { grid: { color: App.chartGridColor() }, ticks: { color: App.chartTickColor(), callback: v => App.formatTime(v) } },
                 },
             },
         });

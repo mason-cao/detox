@@ -10,7 +10,7 @@ import signal
 import subprocess
 from datetime import datetime
 
-from backend.config import POLL_INTERVAL, PID_FILE, SESSION_GAP_THRESHOLD
+from backend.config import POLL_INTERVAL, PID_FILE
 from backend import database as db
 from backend.blocker import kill_app
 from backend.notifier import notify
@@ -115,20 +115,21 @@ class Monitor:
 
         # Bedtime
         current_time = datetime.fromtimestamp(now)
-        if not self.bedtime_notified:
-            for goal in goals:
-                if goal["type"] == "bedtime" and goal["bedtime_hour"] is not None:
-                    bedtime_hour = goal["bedtime_hour"]
-                    bedtime_minute = goal["bedtime_minute"] or 0
-                    if (
-                        current_time.hour > bedtime_hour
-                        or (current_time.hour == bedtime_hour and current_time.minute >= bedtime_minute)
-                    ):
-                        notify(
-                            "Detox - Bedtime Reminder",
-                            "It's past your bedtime! Time to put the screen away and rest.",
-                        )
-                        self.bedtime_notified = True
+        for goal in goals:
+            if self.bedtime_notified:
+                break
+            if goal["type"] == "bedtime" and goal["bedtime_hour"] is not None:
+                bedtime_hour = goal["bedtime_hour"]
+                bedtime_minute = goal["bedtime_minute"] or 0
+                if (
+                    current_time.hour > bedtime_hour
+                    or (current_time.hour == bedtime_hour and current_time.minute >= bedtime_minute)
+                ):
+                    self.bedtime_notified = True
+                    notify(
+                        "Detox - Bedtime Reminder",
+                        "It's past your bedtime! Time to put the screen away and rest.",
+                    )
 
     def run(self):
         """Main monitoring loop."""
