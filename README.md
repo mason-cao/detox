@@ -1,6 +1,6 @@
 # Detox — Screen Time Tracker for macOS
 
-Take control of your digital habits. Detox monitors your app usage in real time, visualizes your screen time with interactive charts, and helps you stay focused by blocking distracting apps.
+Detox is a macOS screen time tracker that monitors your app usage in real time, visualizes your habits with interactive charts, and helps you stay focused by blocking distracting apps. With the average person spending over 7 hours daily on screens and losing an estimated 2.5 hours of productivity to digital distraction, protecting focus is a critical challenge. This widespread issue persists because desktop work environments lack native screen time tools. Attention is easily hijacked by constant context switching and mindless browsing, with no immediate feedback loop or active friction to help users maintain their focus.
 
 ![Python](https://img.shields.io/badge/Python-3.9+-3776ab?logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-2.0+-000000?logo=flask)
