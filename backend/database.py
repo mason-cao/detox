@@ -2,7 +2,13 @@ import sqlite3
 import time
 from datetime import datetime, timedelta
 from contextlib import contextmanager
-from backend.config import DB_PATH, DEFAULT_CATEGORIES, POLL_INTERVAL, SESSION_GAP_THRESHOLD
+from backend.config import (
+    DB_PATH,
+    DEFAULT_CATEGORIES,
+    FOCUS_MODE_RECOVERY_APPS,
+    POLL_INTERVAL,
+    SESSION_GAP_THRESHOLD,
+)
 
 
 USAGE_MINUTES_SQL = f"COUNT(*) * {float(POLL_INTERVAL)} / 60.0"
@@ -440,6 +446,8 @@ def is_app_blocked(app_name):
             "SELECT value FROM settings WHERE key = 'whitelist_mode'"
         ).fetchone()
         if whitelist_mode and whitelist_mode["value"] == "1":
+            if app_name in FOCUS_MODE_RECOVERY_APPS:
+                return False
             whitelisted = conn.execute(
                 "SELECT 1 FROM app_blocks WHERE app_name = ? AND block_type = 'whitelisted'",
                 (app_name,),

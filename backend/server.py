@@ -4,6 +4,7 @@ import os
 import re
 import io
 import csv
+import subprocess
 from functools import wraps
 from datetime import datetime, timedelta
 from flask import Flask, jsonify, request, send_from_directory
@@ -66,6 +67,25 @@ def optional_positive_int(data, field_name):
     if value <= 0:
         raise ApiError(f"{field_name} must be a positive integer")
     return value
+
+
+def get_frontmost_app_name():
+    try:
+        result = subprocess.run(
+            [
+                "osascript",
+                "-e",
+                'tell application "System Events" to get name of first process whose frontmost is true',
+            ],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (subprocess.TimeoutExpired, OSError):
+        return None
+    if result.returncode == 0 and result.stdout.strip():
+        return result.stdout.strip()
+    return None
 
 
 def api_route(f):
@@ -341,6 +361,23 @@ def api_settings_set():
     data = get_json_object()
     for key, value in data.items():
         db.set_setting(key, value)
+    return jsonify({"ok": True})
+
+
+@app.route("/api/focus-mode/enable", methods=["POST"])
+@api_route
+def api_focus_mode_enable():
+    allowed_app = get_frontmost_app_name()
+    if allowed_app:
+        db.add_block(allowed_app, block_type="whitelisted")
+    db.set_setting("whitelist_mode", "1")
+    return jsonify({"ok": True, "allowed_app": allowed_app})
+
+
+@app.route("/api/focus-mode/disable", methods=["POST"])
+@api_route
+def api_focus_mode_disable():
+    db.set_setting("whitelist_mode", "0")
     return jsonify({"ok": True})
 
 

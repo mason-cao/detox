@@ -204,6 +204,79 @@ body {
     font-weight: 500;
 }
 
+/* ── Focus Mode Exit ───────────────────────────────────────────────── */
+.focus-mode-banner {
+    position: fixed;
+    left: calc(var(--sidebar-w) + 24px);
+    right: 24px;
+    bottom: 24px;
+    z-index: 1900;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--red);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg);
+}
+
+.focus-mode-banner[hidden] { display: none; }
+
+.focus-mode-banner-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.focus-mode-banner-copy strong,
+.focus-mode-card-title {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.focus-mode-banner-copy span,
+.focus-mode-card-detail {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.focus-exit-btn {
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--red);
+    color: white;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 9px 14px;
+    transition: all 0.2s;
+}
+
+.focus-exit-btn:hover {
+    box-shadow: 0 0 0 3px var(--red-bg);
+    transform: translateY(-1px);
+}
+
+.focus-mode-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px 18px;
+    background: var(--red-bg);
+    border: 1px solid var(--red);
+    border-radius: var(--radius-sm);
+}
+
 .status-dot {
     width: 7px;
     height: 7px;
@@ -1134,6 +1207,17 @@ kbd {
     .page-header { flex-direction: column; gap: 12px; align-items: flex-start; }
     .toast-container { left: 16px; right: 16px; }
     .toast { min-width: auto; }
+    .focus-mode-banner {
+        left: calc(var(--sidebar-w) + 12px);
+        right: 12px;
+        bottom: 12px;
+        align-items: stretch;
+        flex-direction: column;
+    }
+    .focus-mode-card {
+        align-items: stretch;
+        flex-direction: column;
+    }
 }
 
 /* ── Animations ───────────────────────────────────────────────────── */

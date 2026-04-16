@@ -42,6 +42,7 @@ Detox is a macOS screen time tracker that monitors your app usage in real time, 
 - **Block individual apps** — always, or after a daily time limit
 - **Block by category** — block all Social or Entertainment apps at once
 - **Focus Mode** — block everything except whitelisted apps (e.g., only allow Notes and Calendar)
+- Full Lockdown exit banner stays visible while Focus Mode is active
 - Blocked apps are force-quit with a notification explaining why
 - **Toast notifications** confirm every action
 
