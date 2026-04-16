@@ -19,11 +19,21 @@ const Blocker = {
                     <h1>App Blocker</h1>
                 </div>
 
+                ${whitelistMode ? `
+                    <div class="focus-mode-card">
+                        <div>
+                            <div class="focus-mode-card-title">Full Lockdown Active</div>
+                            <div class="focus-mode-card-detail">Non-whitelisted apps are being closed automatically.</div>
+                        </div>
+                        <button class="focus-exit-btn" onclick="App.exitFocusMode()">Exit Focus Mode</button>
+                    </div>
+                ` : ''}
+
                 <!-- Whitelist Mode Toggle -->
                 <div class="card" style="margin-bottom: 24px;">
                     <div style="display: flex; align-items: center; justify-content: space-between;">
                         <div>
-                            <div style="font-weight: 600; font-size: 15px;">Focus Mode (Whitelist)</div>
+                            <div style="font-weight: 600; font-size: 15px;">Full Lockdown (Focus Mode)</div>
                             <div style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
                                 Block ALL apps except those in your whitelist
                             </div>
@@ -126,11 +136,21 @@ const Blocker = {
     },
 
     async toggleWhitelist(enabled) {
-        await App.api('/api/settings', {
-            method: 'POST',
-            body: { whitelist_mode: enabled ? '1' : '0' },
-        });
-        App.toast(enabled ? 'Focus Mode enabled' : 'Focus Mode disabled', enabled ? 'warning' : 'info');
+        if (enabled) {
+            const result = await App.api('/api/focus-mode/enable', {
+                method: 'POST',
+                body: {},
+            });
+            App.setFocusModeActive(true);
+            const suffix = result.allowed_app ? `; ${result.allowed_app} stays allowed` : '';
+            App.toast(`Focus Mode enabled${suffix}`, 'warning');
+            this.render(document.getElementById('content'));
+            return;
+        }
+
+        if (await App.exitFocusMode({ refresh: false })) {
+            this.render(document.getElementById('content'));
+        }
     },
 
     addBlock() {

@@ -10,6 +10,7 @@ function toLocalDateString(date = new Date()) {
 const App = {
     currentTab: 'dashboard',
     currentDate: toLocalDateString(),
+    focusModeActive: false,
 
     /* ── Time & Date Formatting ─────────────────────────────────────── */
 
@@ -83,6 +84,66 @@ const App = {
             throw new Error(message);
         }
         return data;
+    },
+
+    /* ── Focus Mode Exit ─────────────────────────────────────────────── */
+
+    ensureFocusModeBanner() {
+        let banner = document.getElementById('focusModeBanner');
+        if (banner) return banner;
+
+        banner = document.createElement('div');
+        banner.id = 'focusModeBanner';
+        banner.className = 'focus-mode-banner';
+        banner.hidden = true;
+
+        const copy = document.createElement('div');
+        copy.className = 'focus-mode-banner-copy';
+
+        const title = document.createElement('strong');
+        title.textContent = 'Full Lockdown Active';
+
+        const detail = document.createElement('span');
+        detail.textContent = 'Only whitelisted apps are allowed.';
+
+        const button = document.createElement('button');
+        button.className = 'focus-exit-btn';
+        button.type = 'button';
+        button.textContent = 'Exit Focus Mode';
+        button.addEventListener('click', () => this.exitFocusMode());
+
+        copy.append(title, detail);
+        banner.append(copy, button);
+        document.body.appendChild(banner);
+        return banner;
+    },
+
+    setFocusModeActive(enabled) {
+        this.focusModeActive = enabled;
+        document.body.classList.toggle('focus-mode-active', enabled);
+        this.ensureFocusModeBanner().hidden = !enabled;
+    },
+
+    async refreshFocusMode() {
+        try {
+            const settings = await this.api('/api/settings');
+            this.setFocusModeActive(settings.whitelist_mode === '1');
+        } catch (e) {
+            // Leave the last visible state in place if the server is unreachable.
+        }
+    },
+
+    async exitFocusMode({ refresh = true } = {}) {
+        try {
+            await this.api('/api/focus-mode/disable', { method: 'POST', body: {} });
+            this.setFocusModeActive(false);
+            this.toast('Focus Mode disabled', 'success');
+            if (refresh) this.refresh();
+            return true;
+        } catch (e) {
+            this.toast(e.message || 'Failed to disable Focus Mode', 'error');
+            return false;
+        }
     },
 
     escapeHtml(value) {
@@ -300,6 +361,7 @@ const App = {
                 this.refresh();
             }
             this.checkMonitor();
+            this.refreshFocusMode();
         }, 30000);
     },
 
@@ -318,6 +380,7 @@ const App = {
         this.initKeyboardShortcuts();
         this.showTab('dashboard');
         this.checkMonitor();
+        this.refreshFocusMode();
         this.startAutoRefresh();
     }
 };

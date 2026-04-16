@@ -75,5 +75,14 @@ CATEGORY_COLORS = {
     "Uncategorized": "#94a3b8",
 }
 
+FOCUS_MODE_RECOVERY_APPS = {
+    "Activity Monitor",
+    "Finder",
+    "System Preferences",
+    "System Settings",
+    "Terminal",
+    "iTerm2",
+}
+
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(CARDS_DIR, exist_ok=True)
