@@ -92,7 +92,7 @@ const Dashboard = {
                         <div class="card-header">
                             <span class="card-title">Most Used</span>
                         </div>
-                        <div class="card-value small">${data.apps.length > 0 ? data.apps[0].app_name : '—'}</div>
+                        <div class="card-value small">${data.apps.length > 0 ? App.escapeHtml(data.apps[0].app_name) : '—'}</div>
                         <div class="card-subtitle">${data.apps.length > 0 ? App.formatTime(data.apps[0].minutes) : 'No data yet'}</div>
                     </div>
                 </div>
@@ -149,7 +149,7 @@ const Dashboard = {
 
     renderHourlyChart(hourly) {
         const ctx = document.getElementById('hourlyChart');
-        if (!ctx) return;
+        if (!ctx || !chartsAvailable()) return;
         const labels = Object.keys(hourly).map(h => {
             const hr = parseInt(h);
             return hr === 0 ? '12a' : hr < 12 ? `${hr}a` : hr === 12 ? '12p' : `${hr - 12}p`;
@@ -188,7 +188,7 @@ const Dashboard = {
 
     renderCategoryChart(categories) {
         const ctx = document.getElementById('categoryChart');
-        if (!ctx || categories.length === 0) return;
+        if (!ctx || !chartsAvailable() || categories.length === 0) return;
         new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -221,7 +221,7 @@ const Dashboard = {
 
     renderWeeklyChart(weekData) {
         const ctx = document.getElementById('weeklyChart');
-        if (!ctx) return;
+        if (!ctx || !chartsAvailable()) return;
         new Chart(ctx, {
             type: 'bar',
             data: {
@@ -262,14 +262,18 @@ const Dashboard = {
             return;
         }
         const maxMin = apps[0].minutes;
-        el.innerHTML = apps.map(app => `
-            <li class="app-item" onclick="Apps.showDetail('${app.app_name.replace(/'/g, "\\'")}')">
+        el.innerHTML = apps.map(app => {
+            const appName = App.escapeHtml(app.app_name);
+            const category = App.escapeHtml(app.category || 'Uncategorized');
+            const firstLetter = App.escapeHtml(app.app_name.charAt(0).toUpperCase());
+            return `
+            <li class="app-item" onclick="Apps.showDetail(${App.inlineArg(app.app_name)})">
                 <div class="app-icon" style="background: ${App.appColor(app.app_name)}">
-                    ${app.app_name.charAt(0).toUpperCase()}
+                    ${firstLetter}
                 </div>
                 <div class="app-info">
-                    <div class="app-name">${app.app_name}</div>
-                    <div class="app-category">${app.category || 'Uncategorized'}</div>
+                    <div class="app-name">${appName}</div>
+                    <div class="app-category">${category}</div>
                 </div>
                 <div class="app-bar-wrapper">
                     <div class="app-bar">
@@ -278,6 +282,7 @@ const Dashboard = {
                 </div>
                 <div class="app-time">${App.formatTime(app.minutes)}</div>
             </li>
-        `).join('');
+        `;
+        }).join('');
     },
 };

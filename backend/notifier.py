@@ -1,11 +1,15 @@
 import subprocess
 
 
+def escape_applescript_string(value):
+    return str(value).replace("\\", "\\\\").replace('"', '\\"')
+
+
 def notify(title, message, sound="default"):
     """Send a macOS notification via osascript."""
-    # Escape quotes for AppleScript
-    title = title.replace('"', '\\"')
-    message = message.replace('"', '\\"')
+    title = escape_applescript_string(title)
+    message = escape_applescript_string(message)
+    sound = escape_applescript_string(sound)
     subprocess.run(
         [
             "osascript",

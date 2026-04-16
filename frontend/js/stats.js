@@ -75,7 +75,7 @@ const Stats = {
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Most Used App</div>
-                    <div class="stat-value" style="font-size: 18px;">${stats.most_used_app || '—'}</div>
+                    <div class="stat-value" style="font-size: 18px;">${stats.most_used_app ? App.escapeHtml(stats.most_used_app) : '—'}</div>
                 </div>
             </div>
         `;
@@ -114,7 +114,7 @@ const Stats = {
 
     renderWeeklyChart(weekly) {
         const ctx = document.getElementById('weeklyStatsChart');
-        if (!ctx) return;
+        if (!ctx || !chartsAvailable()) return;
         new Chart(ctx, {
             type: 'bar',
             data: {

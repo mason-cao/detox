@@ -17,8 +17,10 @@ const Settings = {
             catGroups[c.category].push(c.app_name);
         });
 
-        const today = new Date().toISOString().split('T')[0];
-        const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+        const today = toLocalDateString();
+        const weekAgoDate = new Date();
+        weekAgoDate.setDate(weekAgoDate.getDate() - 7);
+        const weekAgo = toLocalDateString(weekAgoDate);
 
         container.innerHTML = `
             <div class="fade-in">
@@ -80,11 +82,11 @@ const Settings = {
                     ${Object.entries(catGroups).map(([cat, apps]) => `
                         <div class="card">
                             <div class="card-header">
-                                <span class="card-title" style="color: ${App.categoryColor(cat)}">${cat}</span>
+                                <span class="card-title" style="color: ${App.categoryColor(cat)}">${App.escapeHtml(cat)}</span>
                                 <span style="font-size: 12px; color: var(--text-muted);">${apps.length} apps</span>
                             </div>
                             <div style="font-size: 13px; color: var(--text-muted); line-height: 1.8;">
-                                ${apps.slice(0, 8).join(', ')}${apps.length > 8 ? `, +${apps.length - 8} more` : ''}
+                                ${apps.slice(0, 8).map(app => App.escapeHtml(app)).join(', ')}${apps.length > 8 ? `, +${apps.length - 8} more` : ''}
                             </div>
                         </div>
                     `).join('')}

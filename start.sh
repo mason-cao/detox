@@ -4,6 +4,26 @@ set -e
 DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$DIR"
 
+STARTED_MONITOR=0
+
+cleanup() {
+    status=$?
+    trap - EXIT INT TERM
+    echo ""
+    echo "Shutting down..."
+    if [ "$STARTED_MONITOR" = "1" ] && [ -f data/monitor.pid ]; then
+        kill "$(cat data/monitor.pid)" 2>/dev/null || true
+        rm -f data/monitor.pid
+        echo "  ✓ Monitor stopped"
+    elif [ -f data/monitor.pid ]; then
+        echo "  Monitor was already running; leaving it running"
+    fi
+    echo "  ✓ Detox stopped. See you next time!"
+    exit "$status"
+}
+
+trap cleanup EXIT INT TERM
+
 echo ""
 echo "  ╔══════════════════════════════════╗"
 echo "  ║       🧘 Detox v1.0             ║"
@@ -31,6 +51,7 @@ if [ -f data/monitor.pid ] && kill -0 "$(cat data/monitor.pid)" 2>/dev/null; the
 else
     python3 -m backend.monitor > data/monitor.log 2>&1 &
     MONITOR_PID=$!
+    STARTED_MONITOR=1
     echo "$MONITOR_PID" > data/monitor.pid
     echo "  ✓ Monitor started (PID $MONITOR_PID)"
 fi
@@ -53,13 +74,3 @@ echo ""
 
 # Run Flask server (foreground — Ctrl+C stops everything)
 python3 -m backend.server
-
-# Cleanup on exit
-echo ""
-echo "Shutting down..."
-if [ -f data/monitor.pid ]; then
-    kill "$(cat data/monitor.pid)" 2>/dev/null || true
-    rm -f data/monitor.pid
-    echo "  ✓ Monitor stopped"
-fi
-echo "  ✓ Detox stopped. See you next time!"

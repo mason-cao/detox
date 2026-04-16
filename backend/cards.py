@@ -38,6 +38,18 @@ def format_time(minutes):
     return f"{h}h {m}m"
 
 
+def fit_text(draw, text, font, max_width):
+    """Truncate text to fit within max_width pixels."""
+    text = str(text)
+    if draw.textlength(text, font=font) <= max_width:
+        return text
+
+    ellipsis = "..."
+    while text and draw.textlength(text + ellipsis, font=font) > max_width:
+        text = text[:-1]
+    return text + ellipsis if text else ellipsis
+
+
 def generate_card(date):
     """Generate a shareable card PNG for the given date."""
     # Get data
@@ -126,8 +138,9 @@ def generate_card(date):
         ]
         for i, app in enumerate(top_apps):
             color = bar_colors[i % len(bar_colors)]
+            app_name = fit_text(draw, app["app_name"], font_small, W - 360)
             # App name
-            draw.text((100, y_pos), app["app_name"], fill=(226, 232, 240), font=font_small, anchor="lt")
+            draw.text((100, y_pos), app_name, fill=(226, 232, 240), font=font_small, anchor="lt")
             # Time
             draw.text((W - 100, y_pos), format_time(app["minutes"]), fill=(148, 163, 184), font=font_small, anchor="rt")
             # Bar
@@ -151,7 +164,7 @@ def generate_card(date):
         y_pos += 30
         draw.text(
             (W // 2, y_pos),
-            f"Most used: {stats['most_used_app']}",
+            fit_text(draw, f"Most used: {stats['most_used_app']}", font_medium, W - 200),
             fill=(99, 102, 241),
             font=font_medium,
             anchor="mt",

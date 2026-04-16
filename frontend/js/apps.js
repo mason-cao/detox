@@ -28,7 +28,7 @@ const Apps = {
                     <div class="search-box">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                         <input type="text" class="search-input" id="appSearch"
-                            placeholder="Search apps..." value="${this.searchQuery}"
+                            placeholder="Search apps..." value="${App.escapeAttr(this.searchQuery)}"
                             oninput="Apps.filterApps(this.value)">
                         <span class="search-kbd">/</span>
                     </div>
@@ -52,14 +52,18 @@ const Apps = {
         }
 
         const maxMin = apps[0].total_minutes;
-        return filtered.map(app => `
-            <li class="app-item" onclick="Apps.showDetail('${app.app_name.replace(/'/g, "\\'")}')">
+        return filtered.map(app => {
+            const appName = App.escapeHtml(app.app_name);
+            const category = App.escapeHtml(app.category);
+            const firstLetter = App.escapeHtml(app.app_name.charAt(0).toUpperCase());
+            return `
+            <li class="app-item" onclick="Apps.showDetail(${App.inlineArg(app.app_name)})">
                 <div class="app-icon" style="background: ${App.appColor(app.app_name)}">
-                    ${app.app_name.charAt(0).toUpperCase()}
+                    ${firstLetter}
                 </div>
                 <div class="app-info">
-                    <div class="app-name">${app.app_name}</div>
-                    <div class="app-category">${app.category}</div>
+                    <div class="app-name">${appName}</div>
+                    <div class="app-category">${category}</div>
                 </div>
                 <div class="app-bar-wrapper">
                     <div class="app-bar">
@@ -68,7 +72,8 @@ const Apps = {
                 </div>
                 <div class="app-time">${App.formatTime(app.total_minutes)}</div>
             </li>
-        `).join('');
+        `;
+        }).join('');
     },
 
     async filterApps(query) {
@@ -85,6 +90,10 @@ const Apps = {
 
     async renderDetail(container, appName) {
         const data = await App.api(`/api/apps/${encodeURIComponent(appName)}?date=${App.currentDate}`);
+        const appNameEsc = App.escapeHtml(appName);
+        const firstLetter = App.escapeHtml(appName.charAt(0).toUpperCase());
+        const appArg = App.inlineArg(appName);
+        const selectedTotal = data.selected_total ?? data.today_total ?? 0;
 
         container.innerHTML = `
             <div class="fade-in">
@@ -92,26 +101,26 @@ const Apps = {
                     <h1>
                         <a class="view-link" onclick="Apps.detailApp=null; Apps.searchQuery=''; App.showTab('apps')" style="font-size: 16px; margin-right: 8px;">← Back</a>
                         <span class="app-icon" style="background: ${App.appColor(appName)}; display: inline-flex; width: 36px; height: 36px; vertical-align: middle; margin-right: 8px; font-size: 14px;">
-                            ${appName.charAt(0).toUpperCase()}
+                            ${firstLetter}
                         </span>
-                        ${appName}
+                        ${appNameEsc}
                     </h1>
                     <div class="date-nav">
-                        <button onclick="App.prevDate(); Apps.showDetail('${appName.replace(/'/g, "\\'")}')" >&#8249;</button>
+                        <button onclick="App.prevDate(); Apps.showDetail(${appArg})" >&#8249;</button>
                         <span class="date-label">${App.formatDate(App.currentDate)}</span>
-                        <button onclick="App.nextDate(); Apps.showDetail('${appName.replace(/'/g, "\\'")}')" >&#8250;</button>
+                        <button onclick="App.nextDate(); Apps.showDetail(${appArg})" >&#8250;</button>
                     </div>
                 </div>
 
                 <div class="cards-grid">
                     <div class="card">
-                        <div class="card-header"><span class="card-title">Today</span></div>
-                        <div class="card-value">${App.formatTime(data.today_total)}</div>
+                        <div class="card-header"><span class="card-title">${App.escapeHtml(App.formatDate(App.currentDate))}</span></div>
+                        <div class="card-value">${App.formatTime(selectedTotal)}</div>
                     </div>
                 </div>
 
                 <div class="chart-container">
-                    <h3>Hourly Usage Today</h3>
+                    <h3>Hourly Usage</h3>
                     <div class="chart-wrapper">
                         <canvas id="appHourlyChart"></canvas>
                     </div>
@@ -132,7 +141,7 @@ const Apps = {
 
     renderAppHourlyChart(hourly, appName) {
         const ctx = document.getElementById('appHourlyChart');
-        if (!ctx) return;
+        if (!ctx || !chartsAvailable()) return;
         const labels = Object.keys(hourly).map(h => {
             const hr = parseInt(h);
             return hr === 0 ? '12a' : hr < 12 ? `${hr}a` : hr === 12 ? '12p' : `${hr - 12}p`;
@@ -164,7 +173,7 @@ const Apps = {
 
     renderAppDailyChart(dailyTotals, appName) {
         const ctx = document.getElementById('appDailyChart');
-        if (!ctx) return;
+        if (!ctx || !chartsAvailable()) return;
         new Chart(ctx, {
             type: 'bar',
             data: {

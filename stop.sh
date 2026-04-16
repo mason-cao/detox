@@ -9,7 +9,27 @@ if [ -f data/monitor.pid ]; then
     rm -f data/monitor.pid
 fi
 
-# Kill Flask server if running on port 5050
-lsof -ti:5050 | xargs kill 2>/dev/null && echo "  ✓ Server stopped" || echo "  Server was not running"
+SERVER_PIDS="$(lsof -tiTCP:5050 -sTCP:LISTEN 2>/dev/null || true)"
+SERVER_STOPPED=0
+
+if [ -n "$SERVER_PIDS" ]; then
+    for pid in $SERVER_PIDS; do
+        cmd="$(ps -p "$pid" -o command= 2>/dev/null || true)"
+        case "$cmd" in
+            *"backend.server"*)
+                kill "$pid" 2>/dev/null && SERVER_STOPPED=1
+                ;;
+            *)
+                echo "  Port 5050 is used by PID $pid, but it does not look like Detox; leaving it running"
+                ;;
+        esac
+    done
+fi
+
+if [ "$SERVER_STOPPED" = "1" ]; then
+    echo "  ✓ Server stopped"
+else
+    echo "  Server was not running"
+fi
 
 echo "Done."
