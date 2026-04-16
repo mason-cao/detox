@@ -60,13 +60,14 @@ const Cards = {
     showPreview(url) {
         const preview = document.getElementById('cardPreview');
         if (!preview) return;
+        const safeUrl = App.escapeAttr(url);
         preview.innerHTML = `
             <div style="text-align: center;">
                 <div class="card-preview">
-                    <img src="${url}" alt="Screen Time Card">
+                    <img src="${safeUrl}" alt="Screen Time Card">
                 </div>
                 <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: center;">
-                    <a href="${url}" download="detox-card.png" class="btn btn-primary">Download PNG</a>
+                    <a href="${safeUrl}" download="detox-card.png" class="btn btn-primary">Download PNG</a>
                     <button class="btn btn-secondary" onclick="Cards.generatedUrl=null; Cards.render(document.getElementById('content'))">Generate New</button>
                 </div>
             </div>

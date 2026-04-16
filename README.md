@@ -138,7 +138,7 @@ Press `Ctrl+C` in the terminal, or run:
 - **Monitor** — A background Python process polls the frontmost app every 2 seconds using `osascript`. It records usage, tracks sessions, detects pickups (screen unlock → app use), enforces blocks, and checks goals.
 - **Database** — SQLite with WAL mode for safe concurrent reads/writes. Stores raw usage observations, aggregated sessions, pickups, goals, blocks, and settings.
 - **Server** — Flask serves the REST API and static frontend files. All API routes include error handling with date validation.
-- **Frontend** — Vanilla HTML/CSS/JS with Chart.js for interactive graphs. Inter font via Google Fonts. Dark mode support with system preference detection. No build step, no Node.js required.
+- **Frontend** — Vanilla HTML/CSS/JS with Chart.js for interactive graphs. Inter font via Google Fonts. Dark mode support with system preference detection. No build step, no Node.js required. If Chart.js is unavailable, the app still renders and skips chart drawing.
 
 ---
 
@@ -188,7 +188,7 @@ detox/
 | Card Generation | Pillow (PIL) |
 | App Blocking | `pkill` |
 
-**Zero external services.** Everything runs locally. Your data never leaves your machine.
+**Local data.** The tracker, database, API, and blocking logic run locally, and your screen-time data never leaves your machine. The dashboard currently loads Chart.js and Inter font assets from public CDNs unless you vendor those files locally.
 
 ---
 

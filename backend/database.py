@@ -2,7 +2,10 @@ import sqlite3
 import time
 from datetime import datetime, timedelta
 from contextlib import contextmanager
-from backend.config import DB_PATH, DEFAULT_CATEGORIES
+from backend.config import DB_PATH, DEFAULT_CATEGORIES, POLL_INTERVAL, SESSION_GAP_THRESHOLD
+
+
+USAGE_MINUTES_SQL = f"COUNT(*) * {float(POLL_INTERVAL)} / 60.0"
 
 
 def get_connection():
@@ -133,7 +136,7 @@ def get_daily_usage(date):
     """Get total usage per app for a given date in minutes."""
     with get_db() as conn:
         rows = conn.execute(
-            """SELECT u.app_name, COUNT(*) * 2.0 / 60.0 as minutes,
+            f"""SELECT u.app_name, {USAGE_MINUTES_SQL} as minutes,
                       COALESCE(c.category, 'Uncategorized') as category
                FROM app_usage u
                LEFT JOIN app_categories c ON u.app_name = c.app_name
@@ -148,8 +151,8 @@ def get_hourly_breakdown(date):
     """Get usage per hour for a given date."""
     with get_db() as conn:
         rows = conn.execute(
-            """SELECT CAST(strftime('%H', timestamp, 'unixepoch', 'localtime') AS INTEGER) as hour,
-                      COUNT(*) * 2.0 / 60.0 as minutes
+            f"""SELECT CAST(strftime('%H', timestamp, 'unixepoch', 'localtime') AS INTEGER) as hour,
+                      {USAGE_MINUTES_SQL} as minutes
                FROM app_usage WHERE date = ?
                GROUP BY hour ORDER BY hour""",
             (date,),
@@ -164,7 +167,7 @@ def get_daily_total(date):
     """Get total screen time in minutes for a date."""
     with get_db() as conn:
         row = conn.execute(
-            "SELECT COUNT(*) * 2.0 / 60.0 as minutes FROM app_usage WHERE date = ?",
+            f"SELECT {USAGE_MINUTES_SQL} as minutes FROM app_usage WHERE date = ?",
             (date,),
         ).fetchone()
         return round(row["minutes"], 1) if row else 0
@@ -178,7 +181,7 @@ def get_weekly_data(week_start):
         d = (start + timedelta(days=i)).strftime("%Y-%m-%d")
         total = get_daily_total(d)
         days.append({"date": d, "minutes": total})
-    totals = [d["minutes"] for d in days if d["minutes"] > 0]
+    totals = [d["minutes"] for d in days]
     return {
         "days": days,
         "weekly_total": round(sum(d["minutes"] for d in days), 1),
@@ -192,8 +195,8 @@ def get_category_breakdown(date):
     """Get usage per category for a given date."""
     with get_db() as conn:
         rows = conn.execute(
-            """SELECT COALESCE(c.category, 'Uncategorized') as category,
-                      COUNT(*) * 2.0 / 60.0 as minutes
+            f"""SELECT COALESCE(c.category, 'Uncategorized') as category,
+                      {USAGE_MINUTES_SQL} as minutes
                FROM app_usage u
                LEFT JOIN app_categories c ON u.app_name = c.app_name
                WHERE u.date = ?
@@ -233,30 +236,46 @@ def get_daily_stats(date):
         if pickups > 0 and total_minutes > 0:
             checking_every = round(total_minutes / pickups, 0)
 
-        # Sessions for detox / continuous use
-        sessions = conn.execute(
-            """SELECT start_time, end_time, duration_seconds, app_name
-               FROM sessions WHERE date = ?
-               ORDER BY start_time""",
+        # Raw usage samples include the currently active session, unlike
+        # closed session rows which are only written on app changes/shutdown.
+        usage_rows = conn.execute(
+            """SELECT timestamp, app_name
+               FROM app_usage WHERE date = ?
+               ORDER BY timestamp""",
             (date,),
         ).fetchall()
 
         longest_session = 0
         longest_detox = 0
         most_used = {}
+        run_start = None
+        previous_timestamp = None
 
-        for i, s in enumerate(sessions):
-            dur = s["duration_seconds"]
-            if dur > longest_session:
-                longest_session = dur
+        for row in usage_rows:
+            timestamp = row["timestamp"]
+            app = row["app_name"]
+            most_used[app] = most_used.get(app, 0) + POLL_INTERVAL
 
-            app = s["app_name"]
-            most_used[app] = most_used.get(app, 0) + dur
+            if run_start is None:
+                run_start = timestamp
+            elif previous_timestamp is not None:
+                gap = timestamp - previous_timestamp
+                if gap > SESSION_GAP_THRESHOLD:
+                    longest_session = max(
+                        longest_session,
+                        previous_timestamp - run_start + POLL_INTERVAL,
+                    )
+                    run_start = timestamp
+                    if gap > longest_detox:
+                        longest_detox = gap
 
-            if i > 0:
-                gap = s["start_time"] - sessions[i - 1]["end_time"]
-                if gap > longest_detox:
-                    longest_detox = gap
+            previous_timestamp = timestamp
+
+        if run_start is not None and previous_timestamp is not None:
+            longest_session = max(
+                longest_session,
+                previous_timestamp - run_start + POLL_INTERVAL,
+            )
 
         most_used_app = max(most_used, key=most_used.get) if most_used else None
 
@@ -283,9 +302,9 @@ def get_all_apps():
     """Get all tracked apps with total usage and categories."""
     with get_db() as conn:
         rows = conn.execute(
-            """SELECT u.app_name,
+            f"""SELECT u.app_name,
                       COALESCE(c.category, 'Uncategorized') as category,
-                      COUNT(*) * 2.0 / 60.0 as total_minutes
+                      {USAGE_MINUTES_SQL} as total_minutes
                FROM app_usage u
                LEFT JOIN app_categories c ON u.app_name = c.app_name
                GROUP BY u.app_name
@@ -298,8 +317,8 @@ def get_app_usage(app_name, date):
     """Get hourly breakdown for a specific app on a date."""
     with get_db() as conn:
         rows = conn.execute(
-            """SELECT CAST(strftime('%H', timestamp, 'unixepoch', 'localtime') AS INTEGER) as hour,
-                      COUNT(*) * 2.0 / 60.0 as minutes
+            f"""SELECT CAST(strftime('%H', timestamp, 'unixepoch', 'localtime') AS INTEGER) as hour,
+                      {USAGE_MINUTES_SQL} as minutes
                FROM app_usage WHERE app_name = ? AND date = ?
                GROUP BY hour ORDER BY hour""",
             (app_name, date),
@@ -310,15 +329,25 @@ def get_app_usage(app_name, date):
         return result
 
 
-def get_app_daily_totals(app_name, days=7):
-    """Get daily totals for an app over the last N days."""
+def get_app_total(app_name, date):
+    """Get total usage for an app on a specific date in minutes."""
     with get_db() as conn:
-        today = datetime.now()
+        row = conn.execute(
+            f"SELECT {USAGE_MINUTES_SQL} as minutes FROM app_usage WHERE app_name = ? AND date = ?",
+            (app_name, date),
+        ).fetchone()
+        return round(row["minutes"], 1) if row else 0
+
+
+def get_app_daily_totals(app_name, days=7, end_date=None):
+    """Get daily totals for an app over the N days ending on end_date."""
+    with get_db() as conn:
+        end = datetime.strptime(end_date, "%Y-%m-%d") if end_date else datetime.now()
         result = []
         for i in range(days - 1, -1, -1):
-            d = (today - timedelta(days=i)).strftime("%Y-%m-%d")
+            d = (end - timedelta(days=i)).strftime("%Y-%m-%d")
             row = conn.execute(
-                "SELECT COUNT(*) * 2.0 / 60.0 as minutes FROM app_usage WHERE app_name = ? AND date = ?",
+                f"SELECT {USAGE_MINUTES_SQL} as minutes FROM app_usage WHERE app_name = ? AND date = ?",
                 (app_name, d),
             ).fetchone()
             result.append({"date": d, "minutes": round(row["minutes"], 1)})
@@ -328,12 +357,7 @@ def get_app_daily_totals(app_name, days=7):
 def get_app_total_today(app_name):
     """Get today's total usage for an app in minutes."""
     today = datetime.now().strftime("%Y-%m-%d")
-    with get_db() as conn:
-        row = conn.execute(
-            "SELECT COUNT(*) * 2.0 / 60.0 as minutes FROM app_usage WHERE app_name = ? AND date = ?",
-            (app_name, today),
-        ).fetchone()
-        return round(row["minutes"], 1) if row else 0
+    return get_app_total(app_name, today)
 
 
 # ── Goals ────────────────────────────────────────────────────────────────
@@ -382,6 +406,35 @@ def remove_block(app_name):
 def is_app_blocked(app_name):
     """Check if an app should be blocked right now."""
     with get_db() as conn:
+        today_usage_value = None
+
+        def today_usage():
+            nonlocal today_usage_value
+            if today_usage_value is None:
+                today = datetime.now().strftime("%Y-%m-%d")
+                row = conn.execute(
+                    f"SELECT {USAGE_MINUTES_SQL} as minutes FROM app_usage WHERE app_name = ? AND date = ?",
+                    (app_name, today),
+                ).fetchone()
+                today_usage_value = round(row["minutes"], 1) if row else 0
+            return today_usage_value
+
+        def over_goal_limit():
+            goal_limit = conn.execute(
+                """SELECT target_minutes FROM goals
+                   WHERE active = 1
+                     AND type = 'app_limit'
+                     AND app_name = ?
+                     AND target_minutes IS NOT NULL
+                   ORDER BY target_minutes ASC
+                   LIMIT 1""",
+                (app_name,),
+            ).fetchone()
+            return bool(
+                goal_limit
+                and today_usage() >= goal_limit["target_minutes"]
+            )
+
         # Check whitelist mode
         whitelist_mode = conn.execute(
             "SELECT value FROM settings WHERE key = 'whitelist_mode'"
@@ -396,28 +449,31 @@ def is_app_blocked(app_name):
         block = conn.execute(
             "SELECT * FROM app_blocks WHERE app_name = ?", (app_name,)
         ).fetchone()
-        if not block:
-            # Check category block
-            cat = conn.execute(
-                "SELECT category FROM app_categories WHERE app_name = ?", (app_name,)
+        if block:
+            if block["block_type"] == "whitelisted":
+                return False
+
+            if block["daily_limit_minutes"] is not None:
+                return today_usage() >= block["daily_limit_minutes"] or over_goal_limit()
+
+            return True
+
+        if over_goal_limit():
+            return True
+
+        # Check category block
+        cat = conn.execute(
+            "SELECT category FROM app_categories WHERE app_name = ?", (app_name,)
+        ).fetchone()
+        if cat:
+            cat_block = conn.execute(
+                "SELECT 1 FROM app_blocks WHERE app_name = ? AND block_type = 'blocked'",
+                (f"__category__{cat['category']}",),
             ).fetchone()
-            if cat:
-                cat_block = conn.execute(
-                    "SELECT 1 FROM app_blocks WHERE app_name = ? AND block_type = 'blocked'",
-                    (f"__category__{cat['category']}",),
-                ).fetchone()
-                if cat_block:
-                    return True
-            return False
+            if cat_block:
+                return True
 
-        if block["block_type"] == "whitelisted":
-            return False
-
-        if block["daily_limit_minutes"] is not None:
-            today_usage = get_app_total_today(app_name)
-            return today_usage >= block["daily_limit_minutes"]
-
-        return True
+        return False
 
 
 # ── Categories ───────────────────────────────────────────────────────────
@@ -439,12 +495,12 @@ def set_category(app_name, category):
 # ── Export ────────────────────────────────────────────────────────────
 
 def get_export_data(start_date, end_date):
-    """Get all session data between two dates for export."""
+    """Get usage totals between two dates for export."""
     with get_db() as conn:
         rows = conn.execute(
-            """SELECT app_name, date,
-                      ROUND(SUM(duration_seconds) / 60.0, 1) as minutes
-               FROM sessions
+            f"""SELECT app_name, date,
+                      ROUND({USAGE_MINUTES_SQL}, 1) as minutes
+               FROM app_usage
                WHERE date >= ? AND date <= ?
                GROUP BY app_name, date
                ORDER BY date, minutes DESC""",

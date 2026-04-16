@@ -16,14 +16,69 @@ app = Flask(__name__, static_folder=None)
 DATE_RE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
 
 
+class ApiError(Exception):
+    def __init__(self, message, status_code=400):
+        super().__init__(message)
+        self.message = message
+        self.status_code = status_code
+
+
+def validate_date(value, field_name="date"):
+    if not isinstance(value, str) or not DATE_RE.match(value):
+        raise ApiError(f"Invalid {field_name} format. Use YYYY-MM-DD")
+    try:
+        datetime.strptime(value, "%Y-%m-%d")
+    except ValueError:
+        raise ApiError(f"Invalid {field_name}. Use a real calendar date")
+    return value
+
+
+def get_date_arg(field_name, default):
+    return validate_date(request.args.get(field_name, default), field_name)
+
+
+def get_json_object(required=True):
+    data = request.get_json(silent=True)
+    if data is None:
+        if required:
+            raise ApiError("Expected a JSON object")
+        return {}
+    if not isinstance(data, dict):
+        raise ApiError("Expected a JSON object")
+    return data
+
+
+def require_text(data, field_name):
+    value = data.get(field_name)
+    if not isinstance(value, str) or not value.strip():
+        raise ApiError(f"Missing or invalid field: {field_name}")
+    return value.strip()
+
+
+def optional_positive_int(data, field_name):
+    value = data.get(field_name)
+    if value is None:
+        return None
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        raise ApiError(f"{field_name} must be a positive integer")
+    if value <= 0:
+        raise ApiError(f"{field_name} must be a positive integer")
+    return value
+
+
 def api_route(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         try:
-            date = request.args.get('date')
-            if date and not DATE_RE.match(date):
-                return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+            for field_name in ("date", "week_start", "start", "end"):
+                value = request.args.get(field_name)
+                if value is not None:
+                    validate_date(value, field_name)
             return f(*args, **kwargs)
+        except ApiError as e:
+            return jsonify({"error": e.message}), e.status_code
         except Exception as e:
             return jsonify({"error": str(e)}), 500
     return wrapper
@@ -56,7 +111,7 @@ def serve_assets(filename):
 @app.route("/api/dashboard")
 @api_route
 def api_dashboard():
-    date = request.args.get("date", datetime.now().strftime("%Y-%m-%d"))
+    date = get_date_arg("date", datetime.now().strftime("%Y-%m-%d"))
     apps = db.get_daily_usage(date)
     hourly = db.get_hourly_breakdown(date)
     categories = db.get_category_breakdown(date)
@@ -87,6 +142,8 @@ def api_dashboard_weekly():
         today = datetime.now()
         monday = today - timedelta(days=today.weekday())
         week_start = monday.strftime("%Y-%m-%d")
+    else:
+        week_start = validate_date(week_start, "week_start")
     data = db.get_weekly_data(week_start)
     return jsonify(data)
 
@@ -96,7 +153,7 @@ def api_dashboard_weekly():
 @app.route("/api/stats/daily")
 @api_route
 def api_stats_daily():
-    date = request.args.get("date", datetime.now().strftime("%Y-%m-%d"))
+    date = get_date_arg("date", datetime.now().strftime("%Y-%m-%d"))
     stats = db.get_daily_stats(date)
     return jsonify(stats)
 
@@ -109,6 +166,8 @@ def api_stats_weekly():
         today = datetime.now()
         monday = today - timedelta(days=today.weekday())
         week_start = monday.strftime("%Y-%m-%d")
+    else:
+        week_start = validate_date(week_start, "week_start")
     stats = db.get_weekly_stats(week_start)
     return jsonify(stats)
 
@@ -125,17 +184,20 @@ def api_apps():
 @app.route("/api/apps/<app_name>")
 @api_route
 def api_app_detail(app_name):
-    date = request.args.get("date", datetime.now().strftime("%Y-%m-%d"))
+    date = get_date_arg("date", datetime.now().strftime("%Y-%m-%d"))
     period = request.args.get("period", "week")
+    if period not in {"week", "month"}:
+        raise ApiError("Invalid period. Use week or month")
     days = 7 if period == "week" else 30
 
     hourly = db.get_app_usage(app_name, date)
-    daily_totals = db.get_app_daily_totals(app_name, days)
-    today_total = db.get_app_total_today(app_name)
+    daily_totals = db.get_app_daily_totals(app_name, days, end_date=date)
+    selected_total = db.get_app_total(app_name, date)
 
     return jsonify({
         "app_name": app_name,
-        "today_total": today_total,
+        "date": date,
+        "selected_total": selected_total,
         "hourly": hourly,
         "daily_totals": daily_totals,
     })
@@ -153,13 +215,35 @@ def api_goals_get():
 @app.route("/api/goals", methods=["POST"])
 @api_route
 def api_goals_create():
-    data = request.json
+    data = get_json_object()
+    goal_type = data.get("type")
+    if goal_type not in {"daily_total", "app_limit", "bedtime"}:
+        raise ApiError("Invalid goal type")
+
+    target_minutes = optional_positive_int(data, "target_minutes")
+    app_name = data.get("app_name")
+    bedtime_hour = data.get("bedtime_hour")
+    bedtime_minute = data.get("bedtime_minute")
+
+    if goal_type in {"daily_total", "app_limit"} and target_minutes is None:
+        raise ApiError("target_minutes is required")
+    if goal_type == "app_limit":
+        app_name = require_text(data, "app_name")
+    if goal_type == "bedtime":
+        try:
+            bedtime_hour = int(bedtime_hour)
+            bedtime_minute = int(bedtime_minute or 0)
+        except (TypeError, ValueError):
+            raise ApiError("Invalid bedtime")
+        if not (0 <= bedtime_hour <= 23 and 0 <= bedtime_minute <= 59):
+            raise ApiError("Invalid bedtime")
+
     goal_id = db.create_goal(
-        goal_type=data["type"],
-        target_minutes=data.get("target_minutes"),
-        app_name=data.get("app_name"),
-        bedtime_hour=data.get("bedtime_hour"),
-        bedtime_minute=data.get("bedtime_minute"),
+        goal_type=goal_type,
+        target_minutes=target_minutes,
+        app_name=app_name,
+        bedtime_hour=bedtime_hour,
+        bedtime_minute=bedtime_minute,
     )
     return jsonify({"id": goal_id}), 201
 
@@ -183,11 +267,16 @@ def api_blocks_get():
 @app.route("/api/blocks", methods=["POST"])
 @api_route
 def api_blocks_create():
-    data = request.json
+    data = get_json_object()
+    app_name = require_text(data, "app_name")
+    block_type = data.get("block_type", "blocked")
+    if block_type not in {"blocked", "whitelisted"}:
+        raise ApiError("Invalid block_type")
+    daily_limit_minutes = optional_positive_int(data, "daily_limit_minutes")
     db.add_block(
-        app_name=data["app_name"],
-        block_type=data.get("block_type", "blocked"),
-        daily_limit_minutes=data.get("daily_limit_minutes"),
+        app_name=app_name,
+        block_type=block_type,
+        daily_limit_minutes=daily_limit_minutes,
     )
     return jsonify({"ok": True}), 201
 
@@ -211,8 +300,10 @@ def api_categories_get():
 @app.route("/api/categories", methods=["POST"])
 @api_route
 def api_categories_set():
-    data = request.json
-    db.set_category(data["app_name"], data["category"])
+    data = get_json_object()
+    app_name = require_text(data, "app_name")
+    category = require_text(data, "category")
+    db.set_category(app_name, category)
     return jsonify({"ok": True})
 
 
@@ -223,8 +314,8 @@ def api_categories_set():
 def api_cards_generate():
     from backend.cards import generate_card
 
-    data = request.json or {}
-    date = data.get("date", datetime.now().strftime("%Y-%m-%d"))
+    data = get_json_object(required=False)
+    date = validate_date(data.get("date", datetime.now().strftime("%Y-%m-%d")))
     filename = generate_card(date)
     return jsonify({"filename": filename, "url": f"/api/cards/{filename}"})
 
@@ -247,7 +338,7 @@ def api_settings_get():
 @app.route("/api/settings", methods=["POST"])
 @api_route
 def api_settings_set():
-    data = request.json
+    data = get_json_object()
     for key, value in data.items():
         db.set_setting(key, value)
     return jsonify({"ok": True})
@@ -275,8 +366,10 @@ def api_status():
 @app.route('/api/export/csv')
 @api_route
 def export_csv():
-    start = request.args.get('start', (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d'))
-    end = request.args.get('end', datetime.now().strftime('%Y-%m-%d'))
+    start = get_date_arg('start', (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d'))
+    end = get_date_arg('end', datetime.now().strftime('%Y-%m-%d'))
+    if start > end:
+        raise ApiError("start must be before or equal to end")
     rows = db.get_export_data(start, end)
 
     output = io.StringIO()
@@ -293,8 +386,10 @@ def export_csv():
 @app.route('/api/export/json')
 @api_route
 def export_json():
-    start = request.args.get('start', (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d'))
-    end = request.args.get('end', datetime.now().strftime('%Y-%m-%d'))
+    start = get_date_arg('start', (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d'))
+    end = get_date_arg('end', datetime.now().strftime('%Y-%m-%d'))
+    if start > end:
+        raise ApiError("start must be before or equal to end")
     rows = db.get_export_data(start, end)
     return jsonify({"start": start, "end": end, "data": rows})
 

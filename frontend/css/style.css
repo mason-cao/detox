@@ -106,7 +106,7 @@ body {
 .logo-text {
     font-size: 21px;
     font-weight: 800;
-    letter-spacing: -0.5px;
+    letter-spacing: 0;
     color: var(--text);
     background: linear-gradient(135deg, var(--accent), var(--purple));
     -webkit-background-clip: text;
@@ -241,7 +241,7 @@ body {
 .page-header h1 {
     font-size: 26px;
     font-weight: 800;
-    letter-spacing: -0.5px;
+    letter-spacing: 0;
     color: var(--text);
 }
 
@@ -321,12 +321,12 @@ body {
 .card-value {
     font-size: 32px;
     font-weight: 800;
-    letter-spacing: -1px;
+    letter-spacing: 0;
     line-height: 1.1;
     color: var(--text);
 }
 
-.card-value.small { font-size: 22px; letter-spacing: -0.3px; }
+.card-value.small { font-size: 22px; letter-spacing: 0; }
 
 .card-subtitle {
     font-size: 13px;
@@ -535,7 +535,7 @@ body {
 .stat-value {
     font-size: 26px;
     font-weight: 800;
-    letter-spacing: -0.5px;
+    letter-spacing: 0;
     color: var(--text);
 }
 

@@ -1,15 +1,23 @@
 /* ── Global App State & Utilities ─────────────────────────────────── */
 
+function toLocalDateString(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 const App = {
     currentTab: 'dashboard',
-    currentDate: new Date().toISOString().split('T')[0],
+    currentDate: toLocalDateString(),
 
     /* ── Time & Date Formatting ─────────────────────────────────────── */
 
     formatTime(minutes) {
         if (!minutes || minutes <= 0) return '0m';
-        const h = Math.floor(minutes / 60);
-        const m = Math.round(minutes % 60);
+        const totalMinutes = Math.round(minutes);
+        const h = Math.floor(totalMinutes / 60);
+        const m = totalMinutes % 60;
         if (h === 0) return `${m}m`;
         if (m === 0) return `${h}h`;
         return `${h}h ${m}m`;
@@ -18,10 +26,10 @@ const App = {
     formatDate(dateStr) {
         const d = new Date(dateStr + 'T12:00:00');
         const today = new Date();
-        const todayStr = today.toISOString().split('T')[0];
+        const todayStr = toLocalDateString(today);
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        const yesterdayStr = toLocalDateString(yesterday);
 
         if (dateStr === todayStr) return 'Today';
         if (dateStr === yesterdayStr) return 'Yesterday';
@@ -38,16 +46,16 @@ const App = {
     prevDate() {
         const d = new Date(this.currentDate + 'T12:00:00');
         d.setDate(d.getDate() - 1);
-        this.currentDate = d.toISOString().split('T')[0];
+        this.currentDate = toLocalDateString(d);
         this.refresh();
     },
 
     nextDate() {
         const d = new Date(this.currentDate + 'T12:00:00');
-        const today = new Date();
         d.setDate(d.getDate() + 1);
-        if (d <= today) {
-            this.currentDate = d.toISOString().split('T')[0];
+        const nextDate = toLocalDateString(d);
+        if (nextDate <= toLocalDateString()) {
+            this.currentDate = nextDate;
             this.refresh();
         }
     },
@@ -57,7 +65,7 @@ const App = {
         const day = d.getDay();
         const diff = d.getDate() - day + (day === 0 ? -6 : 1);
         d.setDate(diff);
-        return d.toISOString().split('T')[0];
+        return toLocalDateString(d);
     },
 
     /* ── API Client ─────────────────────────────────────────────────── */
@@ -68,7 +76,30 @@ const App = {
             ...options,
             body: options.body ? JSON.stringify(options.body) : undefined,
         });
-        return res.json();
+        const contentType = res.headers.get('Content-Type') || '';
+        const data = contentType.includes('application/json') ? await res.json() : await res.text();
+        if (!res.ok) {
+            const message = data && data.error ? data.error : `Request failed (${res.status})`;
+            throw new Error(message);
+        }
+        return data;
+    },
+
+    escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    },
+
+    escapeAttr(value) {
+        return this.escapeHtml(value).replace(/`/g, '&#96;');
+    },
+
+    inlineArg(value) {
+        return this.escapeAttr(JSON.stringify(String(value ?? '')));
     },
 
     /* ── Colors ─────────────────────────────────────────────────────── */
@@ -155,7 +186,12 @@ const App = {
 
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
-        toast.innerHTML = `<span class="toast-icon">${icons[type] || icons.info}</span><span>${message}</span>`;
+        const icon = document.createElement('span');
+        icon.className = 'toast-icon';
+        icon.innerHTML = icons[type] || icons.info;
+        const text = document.createElement('span');
+        text.textContent = message;
+        toast.append(icon, text);
         container.appendChild(toast);
 
         setTimeout(() => {
@@ -286,7 +322,12 @@ const App = {
     }
 };
 
+function chartsAvailable() {
+    return typeof Chart !== 'undefined';
+}
+
 function destroyCharts() {
+    if (!chartsAvailable() || !Chart.instances) return;
     Object.keys(Chart.instances).forEach(key => {
         Chart.instances[key].destroy();
     });

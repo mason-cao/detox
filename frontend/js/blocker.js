@@ -10,6 +10,7 @@ const Blocker = {
 
         const whitelistMode = settings.whitelist_mode === '1';
         const blocked = blocks.filter(b => b.block_type === 'blocked');
+        const blockedApps = blocked.filter(b => !b.app_name.startsWith('__category__'));
         const whitelisted = blocks.filter(b => b.block_type === 'whitelisted');
 
         container.innerHTML = `
@@ -42,22 +43,26 @@ const Blocker = {
                 <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
                     These apps will be force-quit when opened (or after their time limit).
                 </p>
-                ${blocked.length > 0 ? blocked.map(b => `
+                ${blockedApps.length > 0 ? blockedApps.map(b => {
+                    const appName = App.escapeHtml(b.app_name);
+                    const firstLetter = App.escapeHtml(b.app_name.charAt(0).toUpperCase());
+                    return `
                     <div class="block-item">
                         <div class="block-item-info">
                             <div class="app-icon" style="background: ${App.appColor(b.app_name)}; width: 32px; height: 32px; font-size: 13px;">
-                                ${b.app_name.charAt(0).toUpperCase()}
+                                ${firstLetter}
                             </div>
                             <div>
-                                <div class="block-item-name">${b.app_name}</div>
+                                <div class="block-item-name">${appName}</div>
                                 <div class="block-item-detail">
                                     ${b.daily_limit_minutes ? `After ${App.formatTime(b.daily_limit_minutes)}` : 'Always blocked'}
                                 </div>
                             </div>
                         </div>
-                        <button class="btn btn-danger btn-sm" onclick="Blocker.removeBlock('${b.app_name.replace(/'/g, "\\'")}')">Unblock</button>
+                        <button class="btn btn-danger btn-sm" onclick="Blocker.removeBlock(${App.inlineArg(b.app_name)})">Unblock</button>
                     </div>
-                `).join('') : `
+                `;
+                }).join('') : `
                     <div class="card" style="margin-bottom: 24px; text-align: center; padding: 32px;">
                         <p style="color: var(--text-muted);">No apps blocked.</p>
                     </div>
@@ -71,20 +76,24 @@ const Blocker = {
                 <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
                     These apps are always allowed, even in Focus Mode.
                 </p>
-                ${whitelisted.length > 0 ? whitelisted.map(b => `
+                ${whitelisted.length > 0 ? whitelisted.map(b => {
+                    const appName = App.escapeHtml(b.app_name);
+                    const firstLetter = App.escapeHtml(b.app_name.charAt(0).toUpperCase());
+                    return `
                     <div class="block-item">
                         <div class="block-item-info">
                             <div class="app-icon" style="background: var(--green); width: 32px; height: 32px; font-size: 13px;">
-                                ${b.app_name.charAt(0).toUpperCase()}
+                                ${firstLetter}
                             </div>
                             <div>
-                                <div class="block-item-name">${b.app_name}</div>
+                                <div class="block-item-name">${appName}</div>
                                 <div class="block-item-detail">Always allowed</div>
                             </div>
                         </div>
-                        <button class="btn btn-danger btn-sm" onclick="Blocker.removeBlock('${b.app_name.replace(/'/g, "\\'")}')">Remove</button>
+                        <button class="btn btn-danger btn-sm" onclick="Blocker.removeBlock(${App.inlineArg(b.app_name)})">Remove</button>
                     </div>
-                `).join('') : `
+                `;
+                }).join('') : `
                     <div class="card" style="text-align: center; padding: 32px;">
                         <p style="color: var(--text-muted);">No whitelisted apps. Add apps here to allow them during Focus Mode.</p>
                     </div>

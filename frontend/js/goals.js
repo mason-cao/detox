@@ -43,7 +43,7 @@ const Goals = {
                     <div class="goal-item">
                         <div class="goal-info">
                             <div class="goal-type">App Limit</div>
-                            <div class="goal-desc">${g.app_name}: ${App.formatTime(g.target_minutes)} per day</div>
+                            <div class="goal-desc">${App.escapeHtml(g.app_name)}: ${App.formatTime(g.target_minutes)} per day</div>
                         </div>
                         <button class="btn btn-danger btn-sm" onclick="Goals.removeGoal(${g.id})">Remove</button>
                     </div>
