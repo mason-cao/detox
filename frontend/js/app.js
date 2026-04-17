@@ -11,6 +11,7 @@ const App = {
     currentTab: 'dashboard',
     currentDate: toLocalDateString(),
     focusModeActive: false,
+    appSuggestionsCache: null,
 
     /* ── Time & Date Formatting ─────────────────────────────────────── */
 
@@ -84,6 +85,81 @@ const App = {
             throw new Error(message);
         }
         return data;
+    },
+
+    async getAppSuggestions({ refresh = false } = {}) {
+        if (this.appSuggestionsCache && !refresh) {
+            return this.appSuggestionsCache;
+        }
+
+        try {
+            const names = await this.api('/api/app-suggestions');
+            this.appSuggestionsCache = [...new Set(names)].sort((a, b) => a.localeCompare(b));
+            return this.appSuggestionsCache;
+        } catch (e) {
+            const apps = await this.api('/api/apps');
+            this.appSuggestionsCache = [...new Set(apps.map(app => app.app_name))]
+                .sort((a, b) => a.localeCompare(b));
+            return this.appSuggestionsCache;
+        }
+    },
+
+    invalidateAppSuggestions() {
+        this.appSuggestionsCache = null;
+    },
+
+    datalist(id, values) {
+        const options = [...new Set((values || [])
+            .filter(value => value !== null && value !== undefined)
+            .map(value => String(value)))]
+            .sort((a, b) => a.localeCompare(b));
+        return `
+            <datalist id="${this.escapeAttr(id)}">
+                ${options.map(value => `<option value="${this.escapeAttr(value)}"></option>`).join('')}
+            </datalist>
+        `;
+    },
+
+    appDatalist(id, appNames) {
+        return this.datalist(id, appNames);
+    },
+
+    openModal(markup, focusSelector = 'input, select, textarea, button') {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = markup;
+        modal.addEventListener('mousedown', (event) => {
+            if (event.target === modal) modal.remove();
+        });
+        modal.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' || event.target.tagName === 'TEXTAREA') return;
+            if (event.target.hasAttribute && event.target.hasAttribute('list')) return;
+            const primary = modal.querySelector('.modal-actions .btn-primary');
+            if (!primary) return;
+            event.preventDefault();
+            primary.click();
+        });
+        document.body.appendChild(modal);
+
+        requestAnimationFrame(() => {
+            const target = modal.querySelector(focusSelector);
+            if (!target) return;
+            target.focus();
+            if (target.tagName === 'INPUT' && target.type === 'text') {
+                target.select();
+            }
+        });
+
+        return modal;
+    },
+
+    async runAction(action, fallbackMessage = 'Action failed') {
+        try {
+            return await action();
+        } catch (e) {
+            this.toast(e.message || fallbackMessage, 'error');
+            return null;
+        }
     },
 
     /* ── Focus Mode Exit ─────────────────────────────────────────────── */
@@ -205,6 +281,18 @@ const App = {
         this.showTab(this.currentTab);
     },
 
+    async renderTab(content, tab) {
+        switch (tab) {
+            case 'dashboard': return Dashboard.render(content);
+            case 'apps': return Apps.render(content);
+            case 'stats': return Stats.render(content);
+            case 'goals': return Goals.render(content);
+            case 'blocker': return Blocker.render(content);
+            case 'cards': return Cards.render(content);
+            case 'settings': return Settings.render(content);
+        }
+    },
+
     showTab(tab) {
         this.currentTab = tab;
 
@@ -217,20 +305,22 @@ const App = {
         content.style.transform = 'translateY(6px)';
 
         requestAnimationFrame(() => {
-            switch (tab) {
-                case 'dashboard': Dashboard.render(content); break;
-                case 'apps': Apps.render(content); break;
-                case 'stats': Stats.render(content); break;
-                case 'goals': Goals.render(content); break;
-                case 'blocker': Blocker.render(content); break;
-                case 'cards': Cards.render(content); break;
-                case 'settings': Settings.render(content); break;
-            }
-            requestAnimationFrame(() => {
-                content.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
-                content.style.opacity = '1';
-                content.style.transform = 'translateY(0)';
-            });
+            this.renderTab(content, tab)
+                .catch((e) => {
+                    content.innerHTML = `
+                        <div class="empty-state">
+                            <h3>Unable to load ${this.escapeHtml(tab)}</h3>
+                            <p>${this.escapeHtml(e.message || 'Please try again.')}</p>
+                            <button class="btn btn-primary btn-sm" onclick="App.refresh()">Retry</button>
+                        </div>
+                    `;
+                    this.toast(e.message || 'Unable to load view', 'error');
+                })
+                .finally(() => requestAnimationFrame(() => {
+                    content.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                    content.style.opacity = '1';
+                    content.style.transform = 'translateY(0)';
+                }));
         });
     },
 
@@ -298,14 +388,17 @@ const App = {
 
     initKeyboardShortcuts() {
         document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
-            if (e.metaKey || e.ctrlKey || e.altKey) return;
-
             const modal = document.querySelector('.modal-overlay');
             if (modal) {
-                if (e.key === 'Escape') modal.remove();
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    modal.remove();
+                }
                 return;
             }
+
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.metaKey || e.ctrlKey || e.altKey) return;
 
             switch (e.key) {
                 case 'ArrowLeft': e.preventDefault(); this.prevDate(); break;

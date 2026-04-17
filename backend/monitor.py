@@ -8,9 +8,15 @@ import sys
 import time
 import signal
 import subprocess
+import re
 from datetime import datetime
 
-from backend.config import POLL_INTERVAL, PID_FILE
+from backend.config import (
+    DEFAULT_IDLE_TIMEOUT_MINUTES,
+    MAX_IDLE_TIMEOUT_MINUTES,
+    PID_FILE,
+    POLL_INTERVAL,
+)
 from backend import database as db
 from backend.blocker import kill_app
 from backend.notifier import notify
@@ -25,6 +31,44 @@ class Monitor:
         self.daily_goal_notified = False
         self.bedtime_notified = False
         self.last_date = None
+        self.idle_timeout_minutes = DEFAULT_IDLE_TIMEOUT_MINUTES
+
+    def refresh_tracking_settings(self):
+        """Refresh monitor settings that can change while the daemon runs."""
+        value = db.get_setting("idle_timeout_minutes", str(DEFAULT_IDLE_TIMEOUT_MINUTES))
+        try:
+            self.idle_timeout_minutes = min(MAX_IDLE_TIMEOUT_MINUTES, max(0, int(value)))
+        except (TypeError, ValueError):
+            self.idle_timeout_minutes = DEFAULT_IDLE_TIMEOUT_MINUTES
+
+    def get_idle_seconds(self):
+        """Return macOS user idle time in seconds, or None if unavailable."""
+        try:
+            result = subprocess.run(
+                ["ioreg", "-c", "IOHIDSystem"],
+                capture_output=True,
+                text=True,
+                timeout=3,
+            )
+        except (subprocess.TimeoutExpired, OSError):
+            return None
+        if result.returncode != 0:
+            return None
+        match = re.search(r'"HIDIdleTime"\s*=\s*(\d+)', result.stdout)
+        if not match:
+            return None
+        return int(match.group(1)) / 1_000_000_000
+
+    def apply_idle_filter(self, app_name):
+        """Treat the user as inactive when idle past the configured threshold."""
+        if not app_name or self.idle_timeout_minutes <= 0:
+            return app_name
+        idle_seconds = self.get_idle_seconds()
+        if idle_seconds is None:
+            return app_name
+        if idle_seconds >= self.idle_timeout_minutes * 60:
+            return None
+        return app_name
 
     def get_frontmost_app(self):
         """Get the name of the frontmost application via osascript."""
@@ -155,10 +199,17 @@ class Monitor:
         signal.signal(signal.SIGINT, shutdown)
 
         goal_check_counter = 0
+        settings_check_counter = 0
+        self.refresh_tracking_settings()
 
         while self.running:
             now = time.time()
-            app_name = self.get_frontmost_app()
+            settings_check_counter += 1
+            if settings_check_counter >= 15:
+                self.refresh_tracking_settings()
+                settings_check_counter = 0
+
+            app_name = self.apply_idle_filter(self.get_frontmost_app())
 
             # Check pickup
             self.check_pickup(app_name, now)

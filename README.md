@@ -21,6 +21,8 @@ Detox is a macOS screen time tracker that monitors your app usage in real time, 
 ### Per-App Tracking
 - See every app you've used and how long
 - **Search and filter** apps by name
+- Set limits, block apps, and categorize apps directly from the app list
+- Autocomplete app names from tracked apps and installed macOS apps
 - Click any app for a detailed view with hourly and daily charts
 - Navigate between days to compare usage patterns
 
@@ -62,6 +64,11 @@ Detox is a macOS screen time tracker that monitors your app usage in real time, 
 - Respects system preference on first load
 - Persists across sessions via localStorage
 - Glassmorphism sidebar with backdrop blur in both modes
+
+### Idle Detection
+- Stop counting screen time after a configurable period with no keyboard or pointer activity
+- Default idle timeout is 5 minutes
+- Configure or disable idle detection from Settings
 
 ### Data Export
 - Export screen time data as **CSV** or **JSON**
@@ -136,7 +143,7 @@ Press `Ctrl+C` in the terminal, or run:
 └─────────────┘                   └──────────────┘
 ```
 
-- **Monitor** — A background Python process polls the frontmost app every 2 seconds using `osascript`. It records usage, tracks sessions, detects pickups (screen unlock → app use), enforces blocks, and checks goals.
+- **Monitor** — A background Python process polls the frontmost app every 2 seconds using `osascript`. It records usage, tracks sessions, detects pickups (screen unlock → app use), ignores idle periods when configured, enforces blocks, and checks goals.
 - **Database** — SQLite with WAL mode for safe concurrent reads/writes. Stores raw usage observations, aggregated sessions, pickups, goals, blocks, and settings.
 - **Server** — Flask serves the REST API and static frontend files. All API routes include error handling with date validation.
 - **Frontend** — Vanilla HTML/CSS/JS with Chart.js for interactive graphs. Inter font via Google Fonts. Dark mode support with system preference detection. No build step, no Node.js required. If Chart.js is unavailable, the app still renders and skips chart drawing.

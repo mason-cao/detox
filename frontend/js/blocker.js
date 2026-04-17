@@ -3,15 +3,22 @@
 const Blocker = {
     async render(container) {
         destroyCharts();
-        const [blocks, settings] = await Promise.all([
+        const [blocks, settings, categories] = await Promise.all([
             App.api('/api/blocks'),
             App.api('/api/settings'),
+            App.api('/api/categories'),
         ]);
 
         const whitelistMode = settings.whitelist_mode === '1';
         const blocked = blocks.filter(b => b.block_type === 'blocked');
         const blockedApps = blocked.filter(b => !b.app_name.startsWith('__category__'));
         const whitelisted = blocks.filter(b => b.block_type === 'whitelisted');
+        const categoryNames = [...new Set([
+            'Social',
+            'Entertainment',
+            'Communication',
+            ...categories.map(c => c.category),
+        ])].sort((a, b) => a.localeCompare(b));
 
         container.innerHTML = `
             <div class="fade-in">
@@ -25,7 +32,7 @@ const Blocker = {
                             <div class="focus-mode-card-title">Full Lockdown Active</div>
                             <div class="focus-mode-card-detail">Non-whitelisted apps are being closed automatically.</div>
                         </div>
-                        <button class="focus-exit-btn" onclick="App.exitFocusMode()">Exit Focus Mode</button>
+                        <button class="focus-exit-btn" onclick="App.runAction(() => App.exitFocusMode())">Exit Focus Mode</button>
                     </div>
                 ` : ''}
 
@@ -39,7 +46,7 @@ const Blocker = {
                             </div>
                         </div>
                         <label class="toggle">
-                            <input type="checkbox" ${whitelistMode ? 'checked' : ''} onchange="Blocker.toggleWhitelist(this.checked)">
+                            <input type="checkbox" ${whitelistMode ? 'checked' : ''} onchange="App.runAction(() => Blocker.toggleWhitelist(event.target.checked))">
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
@@ -48,7 +55,7 @@ const Blocker = {
                 <!-- Blocked Apps -->
                 <div class="section-header">
                     <h2>Blocked Apps</h2>
-                    <button class="btn btn-primary btn-sm" onclick="Blocker.addBlock()">Block App</button>
+                    <button class="btn btn-primary btn-sm" onclick="App.runAction(() => Blocker.addBlock())">Block App</button>
                 </div>
                 <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
                     These apps will be force-quit when opened (or after their time limit).
@@ -69,7 +76,7 @@ const Blocker = {
                                 </div>
                             </div>
                         </div>
-                        <button class="btn btn-danger btn-sm" onclick="Blocker.removeBlock(${App.inlineArg(b.app_name)})">Unblock</button>
+                        <button class="btn btn-danger btn-sm" onclick="App.runAction(() => Blocker.removeBlock(${App.inlineArg(b.app_name)}))">Unblock</button>
                     </div>
                 `;
                 }).join('') : `
@@ -81,7 +88,7 @@ const Blocker = {
                 <!-- Whitelisted Apps -->
                 <div class="section-header" style="margin-top: 32px;">
                     <h2>Whitelisted Apps</h2>
-                    <button class="btn btn-primary btn-sm" onclick="Blocker.addWhitelist()">Add to Whitelist</button>
+                    <button class="btn btn-primary btn-sm" onclick="App.runAction(() => Blocker.addWhitelist())">Add to Whitelist</button>
                 </div>
                 <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
                     These apps are always allowed, even in Focus Mode.
@@ -100,7 +107,7 @@ const Blocker = {
                                 <div class="block-item-detail">Always allowed</div>
                             </div>
                         </div>
-                        <button class="btn btn-danger btn-sm" onclick="Blocker.removeBlock(${App.inlineArg(b.app_name)})">Remove</button>
+                        <button class="btn btn-danger btn-sm" onclick="App.runAction(() => Blocker.removeBlock(${App.inlineArg(b.app_name)}))">Remove</button>
                     </div>
                 `;
                 }).join('') : `
@@ -117,13 +124,14 @@ const Blocker = {
                     Block all apps in a category at once.
                 </p>
                 <div class="cards-grid">
-                    ${['Social', 'Entertainment', 'Communication'].map(cat => {
+                    ${categoryNames.map(cat => {
                         const isBlocked = blocked.some(b => b.app_name === `__category__${cat}`);
+                        const catArg = App.inlineArg(cat);
                         return `
-                        <div class="card cat-card" onclick="Blocker.toggleCategory('${cat}', ${!isBlocked})">
+                        <div class="card cat-card" onclick="App.runAction(() => Blocker.toggleCategory(${catArg}, ${!isBlocked}))">
                             <div style="display: flex; align-items: center; justify-content: space-between;">
                                 <div>
-                                    <div style="font-weight: 600;">${cat}</div>
+                                    <div style="font-weight: 600;">${App.escapeHtml(cat)}</div>
                                     <div style="color: var(--text-muted); font-size: 12px;">${isBlocked ? 'Blocked' : 'Allowed'}</div>
                                 </div>
                                 <div class="cat-status-dot" style="background: ${isBlocked ? 'var(--red)' : 'var(--green)'};"></div>
@@ -153,15 +161,15 @@ const Blocker = {
         }
     },
 
-    addBlock() {
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
+    async addBlock(prefillAppName = '') {
+        const appNames = await App.getAppSuggestions();
+        App.openModal(`
             <div class="modal">
                 <h2>Block App</h2>
                 <div class="form-group">
                     <label>App Name</label>
-                    <input type="text" id="blockAppName" placeholder="e.g., Instagram, TikTok">
+                    <input type="text" id="blockAppName" list="blockAppOptions" placeholder="Choose or type an app" value="${App.escapeAttr(prefillAppName)}">
+                    ${App.appDatalist('blockAppOptions', appNames)}
                 </div>
                 <div class="form-group">
                     <label>Block Type</label>
@@ -182,11 +190,10 @@ const Blocker = {
                 </div>
                 <div class="modal-actions">
                     <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-                    <button class="btn btn-primary" onclick="Blocker.saveBlock()">Block</button>
+                    <button class="btn btn-primary" onclick="App.runAction(() => Blocker.saveBlock())">Block</button>
                 </div>
             </div>
-        `;
-        document.body.appendChild(modal);
+        `, '#blockAppName');
     },
 
     async saveBlock() {
@@ -204,28 +211,28 @@ const Blocker = {
             method: 'POST',
             body: { app_name: appName, block_type: 'blocked', daily_limit_minutes: limit },
         });
+        App.invalidateAppSuggestions();
         document.querySelector('.modal-overlay').remove();
         App.toast(`${appName} has been blocked`, 'success');
         this.render(document.getElementById('content'));
     },
 
-    addWhitelist() {
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
+    async addWhitelist(prefillAppName = '') {
+        const appNames = await App.getAppSuggestions();
+        App.openModal(`
             <div class="modal">
                 <h2>Add to Whitelist</h2>
                 <div class="form-group">
                     <label>App Name</label>
-                    <input type="text" id="whitelistAppName" placeholder="e.g., Notes, Calendar">
+                    <input type="text" id="whitelistAppName" list="whitelistAppOptions" placeholder="Choose or type an app" value="${App.escapeAttr(prefillAppName)}">
+                    ${App.appDatalist('whitelistAppOptions', appNames)}
                 </div>
                 <div class="modal-actions">
                     <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-                    <button class="btn btn-primary" onclick="Blocker.saveWhitelist()">Add</button>
+                    <button class="btn btn-primary" onclick="App.runAction(() => Blocker.saveWhitelist())">Add</button>
                 </div>
             </div>
-        `;
-        document.body.appendChild(modal);
+        `, '#whitelistAppName');
     },
 
     async saveWhitelist() {
@@ -235,6 +242,7 @@ const Blocker = {
             method: 'POST',
             body: { app_name: appName, block_type: 'whitelisted' },
         });
+        App.invalidateAppSuggestions();
         document.querySelector('.modal-overlay').remove();
         App.toast(`${appName} added to whitelist`, 'success');
         this.render(document.getElementById('content'));
@@ -242,7 +250,9 @@ const Blocker = {
 
     async removeBlock(appName) {
         await App.api(`/api/blocks/${encodeURIComponent(appName)}`, { method: 'DELETE' });
-        App.toast(`${appName} unblocked`, 'info');
+        App.invalidateAppSuggestions();
+        const label = appName.startsWith('__category__') ? appName.replace('__category__', '') : appName;
+        App.toast(`${label} unblocked`, 'info');
         this.render(document.getElementById('content'));
     },
 
