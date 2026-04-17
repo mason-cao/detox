@@ -12,6 +12,7 @@ const App = {
     currentDate: toLocalDateString(),
     focusModeActive: false,
     appSuggestionsCache: null,
+    renderToken: 0,
 
     /* ── Time & Date Formatting ─────────────────────────────────────── */
 
@@ -275,10 +276,36 @@ const App = {
         return getComputedStyle(document.documentElement).getPropertyValue('--chart-tick').trim();
     },
 
+    chartAnimation(duration = 760) {
+        return {
+            duration: this.prefersReducedMotion() ? 0 : duration,
+            easing: 'easeOutQuart',
+        };
+    },
+
     /* ── Navigation ─────────────────────────────────────────────────── */
 
     refresh() {
         this.showTab(this.currentTab);
+    },
+
+    prefersReducedMotion() {
+        return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    },
+
+    wait(ms) {
+        if (ms <= 0) return Promise.resolve();
+        return new Promise(resolve => setTimeout(resolve, ms));
+    },
+
+    loadingMarkup(tab) {
+        const label = tab ? tab.charAt(0).toUpperCase() + tab.slice(1) : 'View';
+        return `
+            <div class="view-loading" role="status" aria-live="polite">
+                <div class="view-loading-ring"></div>
+                <span>Loading ${this.escapeHtml(label)}</span>
+            </div>
+        `;
     },
 
     async renderTab(content, tab) {
@@ -290,10 +317,12 @@ const App = {
             case 'blocker': return Blocker.render(content);
             case 'cards': return Cards.render(content);
             case 'settings': return Settings.render(content);
+            default: throw new Error(`Unknown tab: ${tab}`);
         }
     },
 
-    showTab(tab) {
+    async showTab(tab) {
+        const token = ++this.renderToken;
         this.currentTab = tab;
 
         document.querySelectorAll('.nav-links a').forEach(a => {
@@ -301,27 +330,38 @@ const App = {
         });
 
         const content = document.getElementById('content');
-        content.style.opacity = '0';
-        content.style.transform = 'translateY(6px)';
+        const hasContent = content.innerHTML.trim().length > 0;
+        const transitionMs = this.prefersReducedMotion() ? 0 : 120;
 
-        requestAnimationFrame(() => {
-            this.renderTab(content, tab)
-                .catch((e) => {
-                    content.innerHTML = `
-                        <div class="empty-state">
-                            <h3>Unable to load ${this.escapeHtml(tab)}</h3>
-                            <p>${this.escapeHtml(e.message || 'Please try again.')}</p>
-                            <button class="btn btn-primary btn-sm" onclick="App.refresh()">Retry</button>
-                        </div>
-                    `;
-                    this.toast(e.message || 'Unable to load view', 'error');
-                })
-                .finally(() => requestAnimationFrame(() => {
-                    content.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
-                    content.style.opacity = '1';
-                    content.style.transform = 'translateY(0)';
-                }));
-        });
+        content.setAttribute('aria-busy', 'true');
+        if (hasContent) {
+            content.classList.add('is-transitioning');
+            await this.wait(transitionMs);
+            if (token !== this.renderToken) return;
+        }
+
+        content.innerHTML = this.loadingMarkup(tab);
+        content.classList.remove('is-transitioning');
+
+        try {
+            await Promise.resolve(this.renderTab(content, tab));
+            if (token !== this.renderToken) return;
+        } catch (e) {
+            if (token !== this.renderToken) return;
+            content.innerHTML = `
+                <div class="empty-state fade-in">
+                    <h3>Unable to load ${this.escapeHtml(tab)}</h3>
+                    <p>${this.escapeHtml(e.message || 'Please try again.')}</p>
+                    <button class="btn btn-primary btn-sm" onclick="App.refresh()">Retry</button>
+                </div>
+            `;
+            this.toast(e.message || 'Unable to load view', 'error');
+        } finally {
+            if (token === this.renderToken) {
+                content.removeAttribute('aria-busy');
+                content.classList.remove('is-transitioning');
+            }
+        }
     },
 
     /* ── Toast Notifications ────────────────────────────────────────── */

@@ -302,6 +302,43 @@ body {
     flex: 1;
     padding: 32px 44px;
     max-width: 1100px;
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+    transition:
+        opacity 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+        filter 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform, filter;
+}
+
+#content.is-transitioning {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(2px);
+    pointer-events: none;
+}
+
+.view-loading {
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 14px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    animation: fadeIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.view-loading-ring {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    animation: spin 0.9s linear infinite;
 }
 
 .page-header {
@@ -368,7 +405,10 @@ body {
     border-radius: var(--radius);
     padding: 22px;
     box-shadow: var(--shadow-sm);
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition:
+        border-color 0.25s ease,
+        box-shadow 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .card:hover {
@@ -416,7 +456,9 @@ body {
     padding: 22px;
     margin-bottom: 14px;
     box-shadow: var(--shadow-sm);
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition:
+        box-shadow 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .chart-container:hover {
@@ -1050,7 +1092,7 @@ body {
     align-items: center;
     justify-content: center;
     z-index: 1000;
-    animation: fadeOverlay 0.2s ease;
+    animation: fadeOverlay 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .modal {
@@ -1061,7 +1103,7 @@ body {
     width: 400px;
     max-width: 90vw;
     box-shadow: var(--shadow-lg);
-    animation: modalSlideUp 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: modalSlideUp 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .modal h2 {
@@ -1334,8 +1376,8 @@ kbd {
 
 /* ── Animations ───────────────────────────────────────────────────── */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(12px); filter: blur(2px); }
+    to { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
 
 @keyframes fadeOverlay {
@@ -1344,8 +1386,8 @@ kbd {
 }
 
 @keyframes modalSlideUp {
-    from { opacity: 0; transform: translateY(16px) scale(0.96); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+    from { opacity: 0; transform: translateY(18px) scale(0.97); filter: blur(2px); }
+    to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
 }
 
 @keyframes toastIn {
@@ -1368,7 +1410,22 @@ kbd {
     50% { opacity: 0.5; }
 }
 
-.fade-in { animation: fadeIn 0.3s ease; }
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.fade-in { animation: fadeIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.001ms !important;
+    }
+}
 
 /* ── Scrollbar ────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; }

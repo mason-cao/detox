@@ -141,7 +141,7 @@ const Stats = {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: { duration: 600, easing: 'easeOutQuart' },
+                animation: App.chartAnimation(760),
                 plugins: {
                     legend: {
                         labels: { color: App.chartTickColor(), padding: 16 },
