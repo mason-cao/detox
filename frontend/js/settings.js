@@ -9,6 +9,8 @@ const Settings = {
         ]);
 
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const parsedIdleTimeout = parseInt(settings.idle_timeout_minutes ?? '5', 10);
+        const idleTimeout = Number.isFinite(parsedIdleTimeout) ? Math.min(120, Math.max(0, parsedIdleTimeout)) : 5;
 
         // Group categories
         const catGroups = {};
@@ -47,6 +49,25 @@ const Settings = {
                     </div>
                 </div>
 
+                <!-- Tracking -->
+                <div class="section-header">
+                    <h2>Tracking</h2>
+                </div>
+                <div class="card" style="margin-bottom: 24px;">
+                    <div style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">Idle Detection</div>
+                    <div style="color: var(--text-muted); font-size: 13px;">
+                        Stop counting screen time after no keyboard or pointer activity.
+                    </div>
+                    <div class="export-row">
+                        <div class="form-group">
+                            <label>Idle Timeout</label>
+                            <input type="number" id="idleTimeoutMinutes" min="0" max="120" value="${idleTimeout}">
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="App.runAction(() => Settings.saveIdleTimeout())">Save</button>
+                    </div>
+                    <div style="color: var(--text-muted); font-size: 12px; margin-top: 10px;">Use 0 minutes to disable idle detection.</div>
+                </div>
+
                 <!-- Data Export -->
                 <div class="section-header">
                     <h2>Data Export</h2>
@@ -65,15 +86,15 @@ const Settings = {
                             <label>End Date</label>
                             <input type="date" id="exportEnd" value="${today}">
                         </div>
-                        <button class="btn btn-primary btn-sm" onclick="Settings.exportData('csv')">Export CSV</button>
-                        <button class="btn btn-secondary btn-sm" onclick="Settings.exportData('json')">Export JSON</button>
+                        <button class="btn btn-primary btn-sm" onclick="App.runAction(() => Settings.exportData('csv'))">Export CSV</button>
+                        <button class="btn btn-secondary btn-sm" onclick="App.runAction(() => Settings.exportData('json'))">Export JSON</button>
                     </div>
                 </div>
 
                 <!-- App Categories -->
                 <div class="section-header">
                     <h2>App Categories</h2>
-                    <button class="btn btn-primary btn-sm" onclick="Settings.addCategory()">Categorize App</button>
+                    <button class="btn btn-primary btn-sm" onclick="App.runAction(() => Settings.addCategory())">Categorize App</button>
                 </div>
                 <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
                     Assign apps to categories for better organization and category-based blocking.
@@ -133,6 +154,10 @@ const Settings = {
             App.toast('Please select both start and end dates', 'warning');
             return;
         }
+        if (start > end) {
+            App.toast('Start date must be before end date', 'warning');
+            return;
+        }
 
         const url = `/api/export/${format}?start=${start}&end=${end}`;
 
@@ -151,46 +176,70 @@ const Settings = {
         }
     },
 
-    addCategory() {
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
+    async saveIdleTimeout() {
+        const input = document.getElementById('idleTimeoutMinutes');
+        const minutes = Math.min(120, Math.max(0, parseInt(input.value, 10) || 0));
+        await App.api('/api/settings', {
+            method: 'POST',
+            body: { idle_timeout_minutes: String(minutes) },
+        });
+        input.value = minutes;
+        App.toast(minutes === 0 ? 'Idle detection disabled' : `Idle timeout set to ${minutes}m`, 'success');
+    },
+
+    async addCategory(prefillAppName = '') {
+        const [appNames, categories] = await Promise.all([
+            App.getAppSuggestions(),
+            App.api('/api/categories'),
+        ]);
+        const categoryOptions = [...new Set([
+            'Productivity',
+            'Communication',
+            'Social',
+            'Entertainment',
+            'Utilities',
+            ...categories.map(c => c.category),
+        ])];
+        const existing = categories.find(c => c.app_name === prefillAppName);
+        const selectedCategory = existing ? existing.category : 'Productivity';
+
+        App.openModal(`
             <div class="modal">
                 <h2>Categorize App</h2>
                 <div class="form-group">
                     <label>App Name</label>
-                    <input type="text" id="catAppName" placeholder="e.g., Notion">
+                    <input type="text" id="catAppName" list="categoryAppOptions" placeholder="Choose or type an app" value="${App.escapeAttr(prefillAppName)}">
+                    ${App.appDatalist('categoryAppOptions', appNames)}
                 </div>
                 <div class="form-group">
                     <label>Category</label>
-                    <select id="catCategory">
-                        <option value="Productivity">Productivity</option>
-                        <option value="Communication">Communication</option>
-                        <option value="Social">Social</option>
-                        <option value="Entertainment">Entertainment</option>
-                        <option value="Utilities">Utilities</option>
-                    </select>
+                    <input type="text" id="catCategory" list="categoryOptions" value="${App.escapeAttr(selectedCategory)}">
+                    ${App.datalist('categoryOptions', categoryOptions)}
                 </div>
                 <div class="modal-actions">
                     <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-                    <button class="btn btn-primary" onclick="Settings.saveCategory()">Save</button>
+                    <button class="btn btn-primary" onclick="App.runAction(() => Settings.saveCategory())">Save</button>
                 </div>
             </div>
-        `;
-        document.body.appendChild(modal);
+        `, '#catAppName');
     },
 
     async saveCategory() {
         const appName = document.getElementById('catAppName').value.trim();
-        const category = document.getElementById('catCategory').value;
-        if (!appName) return;
+        const category = document.getElementById('catCategory').value.trim();
+        if (!appName || !category) return;
 
         await App.api('/api/categories', {
             method: 'POST',
             body: { app_name: appName, category },
         });
+        App.invalidateAppSuggestions();
         document.querySelector('.modal-overlay').remove();
         App.toast(`${appName} categorized as ${category}`, 'success');
-        this.render(document.getElementById('content'));
+        if (App.currentTab === 'settings') {
+            this.render(document.getElementById('content'));
+        } else {
+            App.refresh();
+        }
     },
 };

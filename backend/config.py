@@ -10,6 +10,13 @@ FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 POLL_INTERVAL = 2  # seconds between active app checks
 SERVER_PORT = 5050
 SESSION_GAP_THRESHOLD = 5  # seconds gap to consider a new session
+DEFAULT_IDLE_TIMEOUT_MINUTES = 5
+MAX_IDLE_TIMEOUT_MINUTES = 120
+
+DEFAULT_SETTINGS = {
+    "idle_timeout_minutes": str(DEFAULT_IDLE_TIMEOUT_MINUTES),
+    "whitelist_mode": "0",
+}
 
 DEFAULT_CATEGORIES = {
     "Safari": "Productivity",

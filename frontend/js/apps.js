@@ -3,6 +3,31 @@
 const Apps = {
     detailApp: null,
     searchQuery: '',
+    appLimitNames: new Set(),
+    blockedNames: new Set(),
+    whitelistedNames: new Set(),
+
+    async loadActionState() {
+        const [goals, blocks] = await Promise.all([
+            App.api('/api/goals'),
+            App.api('/api/blocks'),
+        ]);
+        this.appLimitNames = new Set(
+            goals
+                .filter(goal => goal.type === 'app_limit' && goal.app_name)
+                .map(goal => goal.app_name)
+        );
+        this.blockedNames = new Set(
+            blocks
+                .filter(block => block.block_type === 'blocked' && !block.app_name.startsWith('__category__'))
+                .map(block => block.app_name)
+        );
+        this.whitelistedNames = new Set(
+            blocks
+                .filter(block => block.block_type === 'whitelisted')
+                .map(block => block.app_name)
+        );
+    },
 
     async render(container) {
         destroyCharts();
@@ -11,7 +36,10 @@ const Apps = {
             return;
         }
 
-        const apps = await App.api('/api/apps');
+        const [apps] = await Promise.all([
+            App.api('/api/apps'),
+            this.loadActionState(),
+        ]);
 
         container.innerHTML = `
             <div class="fade-in">
@@ -56,8 +84,12 @@ const Apps = {
             const appName = App.escapeHtml(app.app_name);
             const category = App.escapeHtml(app.category);
             const firstLetter = App.escapeHtml(app.app_name.charAt(0).toUpperCase());
+            const appArg = App.inlineArg(app.app_name);
+            const hasLimit = this.appLimitNames.has(app.app_name);
+            const isBlocked = this.blockedNames.has(app.app_name);
+            const isWhitelisted = this.whitelistedNames.has(app.app_name);
             return `
-            <li class="app-item" onclick="Apps.showDetail(${App.inlineArg(app.app_name)})">
+            <li class="app-item" onclick="Apps.showDetail(${appArg})">
                 <div class="app-icon" style="background: ${App.appColor(app.app_name)}">
                     ${firstLetter}
                 </div>
@@ -69,6 +101,17 @@ const Apps = {
                     <div class="app-bar">
                         <div class="app-bar-fill" style="width: ${(app.total_minutes / maxMin * 100)}%; background: ${App.appColor(app.app_name)}"></div>
                     </div>
+                </div>
+                <div class="app-actions">
+                    <button class="icon-btn ${hasLimit ? 'active' : ''}" title="${hasLimit ? 'Change limit' : 'Set limit'}" onclick="event.stopPropagation(); App.runAction(() => Apps.quickLimit(${appArg}))">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                    </button>
+                    <button class="icon-btn ${isBlocked ? 'danger-active' : ''}" title="${isBlocked ? 'Blocked' : 'Block app'}" onclick="event.stopPropagation(); App.runAction(() => Apps.quickBlock(${appArg}))">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                    </button>
+                    <button class="icon-btn ${isWhitelisted ? 'success-active' : ''}" title="${isWhitelisted ? 'Allowed in Focus Mode' : 'Categorize'}" onclick="event.stopPropagation(); App.runAction(() => Apps.quickCategory(${appArg}))">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10l-8 8-8-8V4h16z"/><circle cx="12" cy="8" r="1"/></svg>
+                    </button>
                 </div>
                 <div class="app-time">${App.formatTime(app.total_minutes)}</div>
             </li>
@@ -88,12 +131,36 @@ const Apps = {
         App.showTab('apps');
     },
 
+    async quickLimit(appName) {
+        await Goals.addAppLimit(appName);
+    },
+
+    async quickBlock(appName) {
+        await App.api('/api/blocks', {
+            method: 'POST',
+            body: { app_name: appName, block_type: 'blocked' },
+        });
+        App.invalidateAppSuggestions();
+        App.toast(`${appName} has been blocked`, 'success');
+        App.refresh();
+    },
+
+    async quickCategory(appName) {
+        await Settings.addCategory(appName);
+    },
+
     async renderDetail(container, appName) {
-        const data = await App.api(`/api/apps/${encodeURIComponent(appName)}?date=${App.currentDate}`);
+        const [data] = await Promise.all([
+            App.api(`/api/apps/${encodeURIComponent(appName)}?date=${App.currentDate}`),
+            this.loadActionState(),
+        ]);
         const appNameEsc = App.escapeHtml(appName);
         const firstLetter = App.escapeHtml(appName.charAt(0).toUpperCase());
         const appArg = App.inlineArg(appName);
         const selectedTotal = data.selected_total ?? data.today_total ?? 0;
+        const hasLimit = this.appLimitNames.has(appName);
+        const isBlocked = this.blockedNames.has(appName);
+        const isWhitelisted = this.whitelistedNames.has(appName);
 
         container.innerHTML = `
             <div class="fade-in">
@@ -112,10 +179,30 @@ const Apps = {
                     </div>
                 </div>
 
+                <div class="detail-actions">
+                    <button class="btn btn-secondary btn-sm ${hasLimit ? 'active-action' : ''}" onclick="App.runAction(() => Apps.quickLimit(${appArg}))">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                        ${hasLimit ? 'Change Limit' : 'Set Limit'}
+                    </button>
+                    <button class="btn btn-secondary btn-sm ${isBlocked ? 'danger-action' : ''}" onclick="App.runAction(() => Apps.quickBlock(${appArg}))">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                        ${isBlocked ? 'Blocked' : 'Block App'}
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="App.runAction(() => Apps.quickCategory(${appArg}))">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10l-8 8-8-8V4h16z"/><circle cx="12" cy="8" r="1"/></svg>
+                        Categorize
+                    </button>
+                </div>
+
                 <div class="cards-grid">
                     <div class="card">
                         <div class="card-header"><span class="card-title">${App.escapeHtml(App.formatDate(App.currentDate))}</span></div>
                         <div class="card-value">${App.formatTime(selectedTotal)}</div>
+                        ${hasLimit || isBlocked || isWhitelisted ? `<div class="app-status-row">
+                            ${hasLimit ? '<span class="status-pill">Limit set</span>' : ''}
+                            ${isBlocked ? '<span class="status-pill danger">Blocked</span>' : ''}
+                            ${isWhitelisted ? '<span class="status-pill success">Focus allowed</span>' : ''}
+                        </div>` : ''}
                     </div>
                 </div>
 

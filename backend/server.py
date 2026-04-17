@@ -9,7 +9,14 @@ from functools import wraps
 from datetime import datetime, timedelta
 from flask import Flask, jsonify, request, send_from_directory
 
-from backend.config import FRONTEND_DIR, SERVER_PORT, CARDS_DIR, PID_FILE
+from backend.config import (
+    CARDS_DIR,
+    DEFAULT_SETTINGS,
+    FRONTEND_DIR,
+    MAX_IDLE_TIMEOUT_MINUTES,
+    PID_FILE,
+    SERVER_PORT,
+)
 from backend import database as db
 
 app = Flask(__name__, static_folder=None)
@@ -69,6 +76,29 @@ def optional_positive_int(data, field_name):
     return value
 
 
+def normalize_setting(key, value):
+    if key == "idle_timeout_minutes":
+        try:
+            minutes = int(value)
+        except (TypeError, ValueError):
+            raise ApiError("idle_timeout_minutes must be a number")
+        if minutes < 0 or minutes > MAX_IDLE_TIMEOUT_MINUTES:
+            raise ApiError(
+                f"idle_timeout_minutes must be between 0 and {MAX_IDLE_TIMEOUT_MINUTES}"
+            )
+        return str(minutes)
+
+    if key == "whitelist_mode":
+        normalized = str(value).strip().lower()
+        if normalized in {"1", "true", "on", "yes"}:
+            return "1"
+        if normalized in {"0", "false", "off", "no"}:
+            return "0"
+        raise ApiError("whitelist_mode must be enabled or disabled")
+
+    return value
+
+
 def get_frontmost_app_name():
     try:
         result = subprocess.run(
@@ -86,6 +116,27 @@ def get_frontmost_app_name():
     if result.returncode == 0 and result.stdout.strip():
         return result.stdout.strip()
     return None
+
+
+def get_installed_app_names():
+    app_dirs = [
+        "/Applications",
+        os.path.expanduser("~/Applications"),
+        "/System/Applications",
+        "/System/Applications/Utilities",
+    ]
+    names = set()
+    for app_dir in app_dirs:
+        if not os.path.isdir(app_dir):
+            continue
+        try:
+            entries = os.listdir(app_dir)
+        except OSError:
+            continue
+        for entry in entries:
+            if entry.endswith(".app"):
+                names.add(entry[:-4])
+    return sorted(names, key=str.casefold)
 
 
 def api_route(f):
@@ -199,6 +250,28 @@ def api_stats_weekly():
 def api_apps():
     apps = db.get_all_apps()
     return jsonify(apps)
+
+
+@app.route("/api/app-suggestions")
+@api_route
+def api_app_suggestions():
+    names = {app["app_name"] for app in db.get_all_apps()}
+    names.update(c["app_name"] for c in db.get_categories())
+    names.update(
+        g["app_name"]
+        for g in db.get_goals()
+        if g.get("app_name")
+    )
+    names.update(
+        b["app_name"]
+        for b in db.get_blocks()
+        if not b["app_name"].startswith("__category__")
+    )
+    names.update(get_installed_app_names())
+    frontmost = get_frontmost_app_name()
+    if frontmost:
+        names.add(frontmost)
+    return jsonify(sorted(names, key=str.casefold))
 
 
 @app.route("/api/apps/<app_name>")
@@ -351,7 +424,7 @@ def api_cards_serve(filename):
 @app.route("/api/settings", methods=["GET"])
 @api_route
 def api_settings_get():
-    settings = db.get_settings()
+    settings = {**DEFAULT_SETTINGS, **db.get_settings()}
     return jsonify(settings)
 
 
@@ -360,7 +433,7 @@ def api_settings_get():
 def api_settings_set():
     data = get_json_object()
     for key, value in data.items():
-        db.set_setting(key, value)
+        db.set_setting(key, normalize_setting(key, value))
     return jsonify({"ok": True})
 
 

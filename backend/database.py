@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from backend.config import (
     DB_PATH,
     DEFAULT_CATEGORIES,
+    DEFAULT_SETTINGS,
     FOCUS_MODE_RECOVERY_APPS,
     POLL_INTERVAL,
     SESSION_GAP_THRESHOLD,
@@ -97,6 +98,13 @@ def init_db():
             conn.execute(
                 "INSERT OR IGNORE INTO app_categories (app_name, category) VALUES (?, ?)",
                 (app_name, category),
+            )
+
+        # Seed default settings without overwriting user preferences.
+        for key, value in DEFAULT_SETTINGS.items():
+            conn.execute(
+                "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
+                (key, value),
             )
 
 
@@ -376,6 +384,20 @@ def get_goals():
 
 def create_goal(goal_type, target_minutes=None, app_name=None, bedtime_hour=None, bedtime_minute=None):
     with get_db() as conn:
+        if goal_type == "daily_total":
+            conn.execute(
+                "UPDATE goals SET active = 0 WHERE active = 1 AND type = 'daily_total'"
+            )
+        elif goal_type == "app_limit" and app_name:
+            conn.execute(
+                """UPDATE goals SET active = 0
+                   WHERE active = 1 AND type = 'app_limit' AND app_name = ?""",
+                (app_name,),
+            )
+        elif goal_type == "bedtime":
+            conn.execute(
+                "UPDATE goals SET active = 0 WHERE active = 1 AND type = 'bedtime'"
+            )
         conn.execute(
             "INSERT INTO goals (type, target_minutes, app_name, bedtime_hour, bedtime_minute) VALUES (?, ?, ?, ?, ?)",
             (goal_type, target_minutes, app_name, bedtime_hour, bedtime_minute),

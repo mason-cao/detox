@@ -18,7 +18,7 @@ const Goals = {
                 <!-- Daily Screen Time Goal -->
                 <div class="section-header">
                     <h2>Daily Screen Time Goal</h2>
-                    ${dailyGoals.length === 0 ? `<button class="btn btn-primary btn-sm" onclick="Goals.addDailyGoal()">Set Goal</button>` : ''}
+                    ${dailyGoals.length === 0 ? `<button class="btn btn-primary btn-sm" onclick="App.runAction(() => Goals.addDailyGoal())">Set Goal</button>` : ''}
                 </div>
                 ${dailyGoals.length > 0 ? dailyGoals.map(g => `
                     <div class="goal-item">
@@ -26,7 +26,7 @@ const Goals = {
                             <div class="goal-type">Daily Limit</div>
                             <div class="goal-desc">${App.formatTime(g.target_minutes)} per day</div>
                         </div>
-                        <button class="btn btn-danger btn-sm" onclick="Goals.removeGoal(${g.id})">Remove</button>
+                        <button class="btn btn-danger btn-sm" onclick="App.runAction(() => Goals.removeGoal(${g.id}))">Remove</button>
                     </div>
                 `).join('') : `
                     <div class="card" style="margin-bottom: 24px; text-align: center; padding: 32px;">
@@ -37,7 +37,7 @@ const Goals = {
                 <!-- Per-App Limits -->
                 <div class="section-header" style="margin-top: 32px;">
                     <h2>Per-App Limits</h2>
-                    <button class="btn btn-primary btn-sm" onclick="Goals.addAppLimit()">Add Limit</button>
+                    <button class="btn btn-primary btn-sm" onclick="App.runAction(() => Goals.addAppLimit())">Add Limit</button>
                 </div>
                 ${appGoals.length > 0 ? appGoals.map(g => `
                     <div class="goal-item">
@@ -45,7 +45,7 @@ const Goals = {
                             <div class="goal-type">App Limit</div>
                             <div class="goal-desc">${App.escapeHtml(g.app_name)}: ${App.formatTime(g.target_minutes)} per day</div>
                         </div>
-                        <button class="btn btn-danger btn-sm" onclick="Goals.removeGoal(${g.id})">Remove</button>
+                        <button class="btn btn-danger btn-sm" onclick="App.runAction(() => Goals.removeGoal(${g.id}))">Remove</button>
                     </div>
                 `).join('') : `
                     <div class="card" style="margin-bottom: 24px; text-align: center; padding: 32px;">
@@ -56,7 +56,7 @@ const Goals = {
                 <!-- Bedtime Reminder -->
                 <div class="section-header" style="margin-top: 32px;">
                     <h2>Bedtime Reminder</h2>
-                    ${bedtimeGoals.length === 0 ? `<button class="btn btn-primary btn-sm" onclick="Goals.addBedtime()">Set Bedtime</button>` : ''}
+                    ${bedtimeGoals.length === 0 ? `<button class="btn btn-primary btn-sm" onclick="App.runAction(() => Goals.addBedtime())">Set Bedtime</button>` : ''}
                 </div>
                 ${bedtimeGoals.length > 0 ? bedtimeGoals.map(g => {
                     const hr = g.bedtime_hour;
@@ -69,7 +69,7 @@ const Goals = {
                             <div class="goal-type">Bedtime</div>
                             <div class="goal-desc">${h12}:${min} ${ampm}</div>
                         </div>
-                        <button class="btn btn-danger btn-sm" onclick="Goals.removeGoal(${g.id})">Remove</button>
+                        <button class="btn btn-danger btn-sm" onclick="App.runAction(() => Goals.removeGoal(${g.id}))">Remove</button>
                     </div>`;
                 }).join('') : `
                     <div class="card" style="margin-bottom: 24px; text-align: center; padding: 32px;">
@@ -81,9 +81,7 @@ const Goals = {
     },
 
     addDailyGoal() {
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
+        App.openModal(`
             <div class="modal">
                 <h2>Set Daily Goal</h2>
                 <div class="form-row">
@@ -98,11 +96,10 @@ const Goals = {
                 </div>
                 <div class="modal-actions">
                     <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-                    <button class="btn btn-primary" onclick="Goals.saveDailyGoal()">Save</button>
+                    <button class="btn btn-primary" onclick="App.runAction(() => Goals.saveDailyGoal())">Save</button>
                 </div>
             </div>
-        `;
-        document.body.appendChild(modal);
+        `, '#goalHours');
     },
 
     async saveDailyGoal() {
@@ -120,15 +117,15 @@ const Goals = {
         this.render(document.getElementById('content'));
     },
 
-    addAppLimit() {
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
+    async addAppLimit(prefillAppName = '') {
+        const appNames = await App.getAppSuggestions();
+        App.openModal(`
             <div class="modal">
                 <h2>Add App Limit</h2>
                 <div class="form-group">
                     <label>App Name</label>
-                    <input type="text" id="limitAppName" placeholder="e.g., Safari, Instagram">
+                    <input type="text" id="limitAppName" list="limitAppOptions" placeholder="Choose or type an app" value="${App.escapeAttr(prefillAppName)}">
+                    ${App.appDatalist('limitAppOptions', appNames)}
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -142,11 +139,10 @@ const Goals = {
                 </div>
                 <div class="modal-actions">
                     <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-                    <button class="btn btn-primary" onclick="Goals.saveAppLimit()">Save</button>
+                    <button class="btn btn-primary" onclick="App.runAction(() => Goals.saveAppLimit())">Save</button>
                 </div>
             </div>
-        `;
-        document.body.appendChild(modal);
+        `, '#limitAppName');
     },
 
     async saveAppLimit() {
@@ -160,15 +156,18 @@ const Goals = {
             method: 'POST',
             body: { type: 'app_limit', app_name: appName, target_minutes: total },
         });
+        App.invalidateAppSuggestions();
         document.querySelector('.modal-overlay').remove();
         App.toast(`Limit set: ${appName} — ${App.formatTime(total)}/day`, 'success');
-        this.render(document.getElementById('content'));
+        if (App.currentTab === 'goals') {
+            this.render(document.getElementById('content'));
+        } else {
+            App.refresh();
+        }
     },
 
     addBedtime() {
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
+        App.openModal(`
             <div class="modal">
                 <h2>Set Bedtime Reminder</h2>
                 <div class="form-row">
@@ -183,11 +182,10 @@ const Goals = {
                 </div>
                 <div class="modal-actions">
                     <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-                    <button class="btn btn-primary" onclick="Goals.saveBedtime()">Save</button>
+                    <button class="btn btn-primary" onclick="App.runAction(() => Goals.saveBedtime())">Save</button>
                 </div>
             </div>
-        `;
-        document.body.appendChild(modal);
+        `, '#bedHour');
     },
 
     async saveBedtime() {
