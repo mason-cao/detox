@@ -248,7 +248,7 @@ const Apps = {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: { duration: 600, easing: 'easeOutQuart' },
+                animation: App.chartAnimation(760),
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { grid: { color: App.chartGridColor() }, ticks: { color: App.chartTickColor(), font: { size: 10 }, maxRotation: 0 } },
@@ -276,7 +276,7 @@ const Apps = {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: { duration: 600, easing: 'easeOutQuart' },
+                animation: App.chartAnimation(760),
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { grid: { display: false }, ticks: { color: App.chartTickColor() } },

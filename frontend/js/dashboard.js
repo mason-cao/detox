@@ -170,7 +170,7 @@ const Dashboard = {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: { duration: 600, easing: 'easeOutQuart' },
+                animation: App.chartAnimation(760),
                 plugins: { legend: { display: false } },
                 scales: {
                     x: {
@@ -203,7 +203,7 @@ const Dashboard = {
                 responsive: true,
                 maintainAspectRatio: false,
                 cutout: '65%',
-                animation: { duration: 800, easing: 'easeOutQuart' },
+                animation: App.chartAnimation(900),
                 plugins: {
                     legend: {
                         position: 'bottom',
@@ -238,7 +238,7 @@ const Dashboard = {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: { duration: 600, easing: 'easeOutQuart' },
+                animation: App.chartAnimation(760),
                 plugins: { legend: { display: false } },
                 scales: {
                     x: {
