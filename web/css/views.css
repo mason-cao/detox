@@ -18,4 +18,118 @@
     flex-wrap: wrap;
 }
 
-/* Residents, Chronicle, Charter sections get filled in Tasks 2, 4, 5. */
+/* ── Residents' Registry ─────────────────────────────────────────────── */
+.registry-search {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--dc-parchment);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    margin-bottom: var(--sp-4);
+    color: var(--dc-ink-soft);
+}
+
+.registry-search input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    font-family: var(--font-game);
+    font-size: var(--fs-lg);
+    color: var(--dc-ink);
+    outline: none;
+}
+
+.registry-search input::placeholder { color: var(--dc-ink-soft); }
+
+.registry-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.resident {
+    display: grid;
+    grid-template-columns: 44px 1fr 120px auto auto;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: var(--sp-3);
+    background: var(--dc-parchment);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    cursor: pointer;
+    font-family: var(--font-ui);
+}
+
+.resident:hover { background: var(--dc-noon); }
+
+.resident__portrait {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 14px;
+    color: #fff;
+    box-shadow: 0 0 0 2px var(--dc-ink);
+}
+
+.resident__info { min-width: 0; }
+.resident__name {
+    font-weight: 600;
+    color: var(--dc-ink);
+    font-size: var(--fs-md);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.resident__category {
+    font-size: var(--fs-xs);
+    color: var(--dc-ink-soft);
+    margin-top: 2px;
+}
+
+.resident__bar {
+    height: 8px;
+    background: rgba(42, 30, 42, 0.12);
+    box-shadow: inset 0 0 0 1px var(--dc-ink);
+}
+.resident__bar-fill { height: 100%; }
+
+.resident__actions { display: flex; gap: var(--sp-1); }
+.resident__action {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--dc-parchment);
+    color: var(--dc-ink);
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 0 0 2px var(--dc-ink);
+}
+.resident__action:hover { background: var(--dc-noon); }
+.resident__action.is-on { background: var(--dc-coin); }
+.resident__action.is-danger-on { background: var(--dc-danger); color: #fff; }
+.resident__action.is-ok-on { background: var(--dc-ok); color: #fff; }
+
+.resident__time {
+    font-family: var(--font-game);
+    font-size: var(--fs-lg);
+    color: var(--dc-ink);
+    padding-left: var(--sp-2);
+}
+
+.registry-empty {
+    padding: var(--sp-6);
+    text-align: center;
+    background: var(--dc-parchment);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    font-family: var(--font-game);
+    font-size: var(--fs-lg);
+    color: var(--dc-ink-soft);
+}
