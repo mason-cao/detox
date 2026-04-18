@@ -11,92 +11,81 @@ const Goals = {
 
         container.innerHTML = `
             <div class="fade-in">
-                <div class="page-header">
-                    <h1>Goals & Limits</h1>
+                <h1 class="page-heading">The Town Charter</h1>
+
+                <div class="charter-section">
+                    <div class="charter-section__header">
+                        <h2 class="charter-section__title">DAILY SCREEN-TIME DECREE</h2>
+                        ${dailyGoals.length === 0 ? `<button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Goals.addDailyGoal())">ISSUE</button>` : ''}
+                    </div>
+                    ${dailyGoals.length > 0 ? dailyGoals.map(g => `
+                        <div class="decree">
+                            <div>
+                                <div class="decree__kind">DAILY LIMIT</div>
+                                <div class="decree__body">${App.formatTime(g.target_minutes)} per day</div>
+                            </div>
+                            <button class="pixel-button pixel-button--danger" onclick="App.runAction(() => Goals.removeGoal(${g.id}))">REPEAL</button>
+                        </div>
+                    `).join('') : `<div class="decree-empty">No daily decree. Issue one to be warned when you exceed it.</div>`}
                 </div>
 
-                <!-- Daily Screen Time Goal -->
-                <div class="section-header">
-                    <h2>Daily Screen Time Goal</h2>
-                    ${dailyGoals.length === 0 ? `<button class="btn btn-primary btn-sm" onclick="App.runAction(() => Goals.addDailyGoal())">Set Goal</button>` : ''}
-                </div>
-                ${dailyGoals.length > 0 ? dailyGoals.map(g => `
-                    <div class="goal-item">
-                        <div class="goal-info">
-                            <div class="goal-type">Daily Limit</div>
-                            <div class="goal-desc">${App.formatTime(g.target_minutes)} per day</div>
+                <div class="charter-section">
+                    <div class="charter-section__header">
+                        <h2 class="charter-section__title">PER-RESIDENT DECREES</h2>
+                        <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Goals.addAppLimit())">ADD</button>
+                    </div>
+                    ${appGoals.length > 0 ? appGoals.map(g => `
+                        <div class="decree">
+                            <div>
+                                <div class="decree__kind">APP LIMIT</div>
+                                <div class="decree__body">${App.escapeHtml(g.app_name)} — ${App.formatTime(g.target_minutes)}/day</div>
+                            </div>
+                            <button class="pixel-button pixel-button--danger" onclick="App.runAction(() => Goals.removeGoal(${g.id}))">REPEAL</button>
                         </div>
-                        <button class="btn btn-danger btn-sm" onclick="App.runAction(() => Goals.removeGoal(${g.id}))">Remove</button>
-                    </div>
-                `).join('') : `
-                    <div class="card" style="margin-bottom: 24px; text-align: center; padding: 32px;">
-                        <p style="color: var(--text-muted);">No daily goal set. Set a target to get notified when you exceed it.</p>
-                    </div>
-                `}
+                    `).join('') : `<div class="decree-empty">No per-resident decrees in effect.</div>`}
+                </div>
 
-                <!-- Per-App Limits -->
-                <div class="section-header" style="margin-top: 32px;">
-                    <h2>Per-App Limits</h2>
-                    <button class="btn btn-primary btn-sm" onclick="App.runAction(() => Goals.addAppLimit())">Add Limit</button>
+                <div class="charter-section">
+                    <div class="charter-section__header">
+                        <h2 class="charter-section__title">BEDTIME BELL</h2>
+                        ${bedtimeGoals.length === 0 ? `<button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Goals.addBedtime())">SET</button>` : ''}
+                    </div>
+                    ${bedtimeGoals.length > 0 ? bedtimeGoals.map(g => {
+                        const hr = g.bedtime_hour;
+                        const min = (g.bedtime_minute || 0).toString().padStart(2, '0');
+                        const ampm = hr >= 12 ? 'PM' : 'AM';
+                        const h12 = hr > 12 ? hr - 12 : (hr === 0 ? 12 : hr);
+                        return `
+                        <div class="decree">
+                            <div>
+                                <div class="decree__kind">BEDTIME</div>
+                                <div class="decree__body">${h12}:${min} ${ampm}</div>
+                            </div>
+                            <button class="pixel-button pixel-button--danger" onclick="App.runAction(() => Goals.removeGoal(${g.id}))">REPEAL</button>
+                        </div>`;
+                    }).join('') : `<div class="decree-empty">No bedtime bell set.</div>`}
                 </div>
-                ${appGoals.length > 0 ? appGoals.map(g => `
-                    <div class="goal-item">
-                        <div class="goal-info">
-                            <div class="goal-type">App Limit</div>
-                            <div class="goal-desc">${App.escapeHtml(g.app_name)}: ${App.formatTime(g.target_minutes)} per day</div>
-                        </div>
-                        <button class="btn btn-danger btn-sm" onclick="App.runAction(() => Goals.removeGoal(${g.id}))">Remove</button>
-                    </div>
-                `).join('') : `
-                    <div class="card" style="margin-bottom: 24px; text-align: center; padding: 32px;">
-                        <p style="color: var(--text-muted);">No per-app limits set.</p>
-                    </div>
-                `}
-
-                <!-- Bedtime Reminder -->
-                <div class="section-header" style="margin-top: 32px;">
-                    <h2>Bedtime Reminder</h2>
-                    ${bedtimeGoals.length === 0 ? `<button class="btn btn-primary btn-sm" onclick="App.runAction(() => Goals.addBedtime())">Set Bedtime</button>` : ''}
-                </div>
-                ${bedtimeGoals.length > 0 ? bedtimeGoals.map(g => {
-                    const hr = g.bedtime_hour;
-                    const min = (g.bedtime_minute || 0).toString().padStart(2, '0');
-                    const ampm = hr >= 12 ? 'PM' : 'AM';
-                    const h12 = hr > 12 ? hr - 12 : (hr === 0 ? 12 : hr);
-                    return `
-                    <div class="goal-item">
-                        <div class="goal-info">
-                            <div class="goal-type">Bedtime</div>
-                            <div class="goal-desc">${h12}:${min} ${ampm}</div>
-                        </div>
-                        <button class="btn btn-danger btn-sm" onclick="App.runAction(() => Goals.removeGoal(${g.id}))">Remove</button>
-                    </div>`;
-                }).join('') : `
-                    <div class="card" style="margin-bottom: 24px; text-align: center; padding: 32px;">
-                        <p style="color: var(--text-muted);">No bedtime reminder set.</p>
-                    </div>
-                `}
             </div>
         `;
     },
 
     addDailyGoal() {
         App.openModal(`
-            <div class="modal">
-                <h2>Set Daily Goal</h2>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Hours</label>
-                        <input type="number" id="goalHours" min="0" max="23" value="2">
+            <div class="pixel-modal">
+                <h2 class="pixel-modal__title">ISSUE DAILY DECREE</h2>
+                <div class="pixel-modal__row">
+                    <div class="pixel-modal__group">
+                        <label class="pixel-modal__label">HOURS</label>
+                        <input class="pixel-modal__input" type="number" id="goalHours" min="0" max="23" value="2">
                     </div>
-                    <div class="form-group">
-                        <label>Minutes</label>
-                        <input type="number" id="goalMinutes" min="0" max="59" value="0">
+                    <div class="pixel-modal__group">
+                        <label class="pixel-modal__label">MINUTES</label>
+                        <input class="pixel-modal__input" type="number" id="goalMinutes" min="0" max="59" value="0">
                     </div>
                 </div>
-                <div class="modal-actions">
-                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-                    <button class="btn btn-primary" onclick="App.runAction(() => Goals.saveDailyGoal())">Save</button>
+                <div class="pixel-modal__actions">
+                    <button class="pixel-button" onclick="this.closest('.modal-overlay').remove()">CANCEL</button>
+                    <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Goals.saveDailyGoal())">SAVE</button>
                 </div>
             </div>
         `, '#goalHours');
@@ -120,26 +109,26 @@ const Goals = {
     async addAppLimit(prefillAppName = '') {
         const appNames = await App.getAppSuggestions();
         App.openModal(`
-            <div class="modal">
-                <h2>Add App Limit</h2>
-                <div class="form-group">
-                    <label>App Name</label>
-                    <input type="text" id="limitAppName" list="limitAppOptions" placeholder="Choose or type an app" value="${App.escapeAttr(prefillAppName)}">
+            <div class="pixel-modal">
+                <h2 class="pixel-modal__title">ADD RESIDENT DECREE</h2>
+                <div class="pixel-modal__group">
+                    <label class="pixel-modal__label">RESIDENT</label>
+                    <input class="pixel-modal__input" type="text" id="limitAppName" list="limitAppOptions" placeholder="choose or type an app" value="${App.escapeAttr(prefillAppName)}">
                     ${App.appDatalist('limitAppOptions', appNames)}
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Hours</label>
-                        <input type="number" id="limitHours" min="0" max="23" value="1">
+                <div class="pixel-modal__row">
+                    <div class="pixel-modal__group">
+                        <label class="pixel-modal__label">HOURS</label>
+                        <input class="pixel-modal__input" type="number" id="limitHours" min="0" max="23" value="1">
                     </div>
-                    <div class="form-group">
-                        <label>Minutes</label>
-                        <input type="number" id="limitMinutes" min="0" max="59" value="0">
+                    <div class="pixel-modal__group">
+                        <label class="pixel-modal__label">MINUTES</label>
+                        <input class="pixel-modal__input" type="number" id="limitMinutes" min="0" max="59" value="0">
                     </div>
                 </div>
-                <div class="modal-actions">
-                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-                    <button class="btn btn-primary" onclick="App.runAction(() => Goals.saveAppLimit())">Save</button>
+                <div class="pixel-modal__actions">
+                    <button class="pixel-button" onclick="this.closest('.modal-overlay').remove()">CANCEL</button>
+                    <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Goals.saveAppLimit())">SAVE</button>
                 </div>
             </div>
         `, '#limitAppName');
@@ -168,21 +157,21 @@ const Goals = {
 
     addBedtime() {
         App.openModal(`
-            <div class="modal">
-                <h2>Set Bedtime Reminder</h2>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Hour (24h format)</label>
-                        <input type="number" id="bedHour" min="0" max="23" value="22">
+            <div class="pixel-modal">
+                <h2 class="pixel-modal__title">SET BEDTIME BELL</h2>
+                <div class="pixel-modal__row">
+                    <div class="pixel-modal__group">
+                        <label class="pixel-modal__label">HOUR (24H)</label>
+                        <input class="pixel-modal__input" type="number" id="bedHour" min="0" max="23" value="22">
                     </div>
-                    <div class="form-group">
-                        <label>Minute</label>
-                        <input type="number" id="bedMinute" min="0" max="59" value="0">
+                    <div class="pixel-modal__group">
+                        <label class="pixel-modal__label">MINUTE</label>
+                        <input class="pixel-modal__input" type="number" id="bedMinute" min="0" max="59" value="0">
                     </div>
                 </div>
-                <div class="modal-actions">
-                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-                    <button class="btn btn-primary" onclick="App.runAction(() => Goals.saveBedtime())">Save</button>
+                <div class="pixel-modal__actions">
+                    <button class="pixel-button" onclick="this.closest('.modal-overlay').remove()">CANCEL</button>
+                    <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Goals.saveBedtime())">SAVE</button>
                 </div>
             </div>
         `, '#bedHour');

@@ -1,4 +1,4 @@
-/* ── Statistics View ──────────────────────────────────────────────── */
+/* ── Chronicle (stats) view ──────────────────────────────────────────── */
 
 const Stats = {
     view: 'daily',
@@ -15,21 +15,18 @@ const Stats = {
 
         container.innerHTML = `
             <div class="fade-in">
-                <div class="page-header">
-                    <h1>Statistics</h1>
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <div class="tab-toggle">
-                            <button class="${this.view === 'daily' ? 'active' : ''}" onclick="Stats.view='daily'; Stats.render(document.getElementById('content'))">Daily</button>
-                            <button class="${this.view === 'weekly' ? 'active' : ''}" onclick="Stats.view='weekly'; Stats.render(document.getElementById('content'))">Weekly</button>
-                        </div>
-                        <div class="date-nav">
-                            <button onclick="App.prevDate()">&#8249;</button>
-                            <span class="date-label">${App.formatDate(date)}</span>
-                            <button onclick="App.nextDate()">&#8250;</button>
-                        </div>
+                <h1 class="page-heading">The Chronicle</h1>
+                <div class="page-bar">
+                    <div class="chronicle-toggle">
+                        <button class="${this.view === 'daily' ? 'is-active' : ''}" onclick="Stats.view='daily'; Stats.render(document.getElementById('content'))">DAILY</button>
+                        <button class="${this.view === 'weekly' ? 'is-active' : ''}" onclick="Stats.view='weekly'; Stats.render(document.getElementById('content'))">WEEKLY</button>
+                    </div>
+                    <div class="chronicle-datenav">
+                        <button class="pixel-button" onclick="App.prevDate()">&#8249;</button>
+                        <span>${App.formatDate(date)}</span>
+                        <button class="pixel-button" onclick="App.nextDate()">&#8250;</button>
                     </div>
                 </div>
-
                 ${this.view === 'daily' ? this.renderDaily(daily) : this.renderWeekly(weekly)}
             </div>
         `;
@@ -37,45 +34,42 @@ const Stats = {
 
     renderDaily(stats) {
         return `
-            <div class="cards-grid">
-                <div class="card">
-                    <div class="card-header"><span class="card-title">Total Screen Time</span></div>
-                    <div class="card-value">${App.formatTime(stats.total_minutes)}</div>
-                </div>
+            <div class="chronicle-hero">
+                <div class="chronicle-hero__label">TOTAL SCREEN TIME</div>
+                <div class="chronicle-hero__value">${App.formatTime(stats.total_minutes)}</div>
             </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Pickups</div>
-                    <div class="stat-value">${stats.pickups_count}</div>
-                    <div class="stat-detail">times today</div>
+            <div class="chronicle-grid">
+                <div class="chronicle-tile">
+                    <div class="chronicle-tile__label">PICKUPS</div>
+                    <div class="chronicle-tile__value">${stats.pickups_count}</div>
+                    <div class="chronicle-tile__detail">times today</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Checking Every</div>
-                    <div class="stat-value">${stats.checking_every_minutes || '—'}</div>
-                    <div class="stat-detail">minutes</div>
+                <div class="chronicle-tile">
+                    <div class="chronicle-tile__label">CHECKING EVERY</div>
+                    <div class="chronicle-tile__value">${stats.checking_every_minutes || '—'}</div>
+                    <div class="chronicle-tile__detail">minutes</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Longest Detox</div>
-                    <div class="stat-value">${App.formatTime(stats.longest_detox_minutes)}</div>
-                    <div class="stat-detail">away from screen</div>
+                <div class="chronicle-tile">
+                    <div class="chronicle-tile__label">LONGEST DETOX</div>
+                    <div class="chronicle-tile__value">${App.formatTime(stats.longest_detox_minutes)}</div>
+                    <div class="chronicle-tile__detail">away from screen</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Continuous Use</div>
-                    <div class="stat-value">${App.formatTime(stats.continuous_use_minutes)}</div>
-                    <div class="stat-detail">longest session</div>
+                <div class="chronicle-tile">
+                    <div class="chronicle-tile__label">CONTINUOUS USE</div>
+                    <div class="chronicle-tile__value">${App.formatTime(stats.continuous_use_minutes)}</div>
+                    <div class="chronicle-tile__detail">longest session</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">First Pickup</div>
-                    <div class="stat-value" style="font-size: 22px;">${stats.first_pickup || '—'}</div>
+                <div class="chronicle-tile">
+                    <div class="chronicle-tile__label">FIRST PICKUP</div>
+                    <div class="chronicle-tile__value">${stats.first_pickup || '—'}</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Last Pickup</div>
-                    <div class="stat-value" style="font-size: 22px;">${stats.last_pickup || '—'}</div>
+                <div class="chronicle-tile">
+                    <div class="chronicle-tile__label">LAST PICKUP</div>
+                    <div class="chronicle-tile__value">${stats.last_pickup || '—'}</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Most Used App</div>
-                    <div class="stat-value" style="font-size: 18px;">${stats.most_used_app ? App.escapeHtml(stats.most_used_app) : '—'}</div>
+                <div class="chronicle-tile">
+                    <div class="chronicle-tile__label">MOST USED</div>
+                    <div class="chronicle-tile__value" style="font-size: var(--fs-lg);">${stats.most_used_app ? App.escapeHtml(stats.most_used_app) : '—'}</div>
                 </div>
             </div>
         `;
@@ -84,27 +78,27 @@ const Stats = {
     renderWeekly(weekly) {
         setTimeout(() => this.renderWeeklyChart(weekly), 0);
         return `
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Daily Average</div>
-                    <div class="stat-value">${App.formatTime(weekly.daily_average)}</div>
+            <div class="chronicle-grid">
+                <div class="chronicle-tile">
+                    <div class="chronicle-tile__label">DAILY AVERAGE</div>
+                    <div class="chronicle-tile__value">${App.formatTime(weekly.daily_average)}</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Weekly Total</div>
-                    <div class="stat-value">${App.formatTime(weekly.weekly_total)}</div>
+                <div class="chronicle-tile">
+                    <div class="chronicle-tile__label">WEEKLY TOTAL</div>
+                    <div class="chronicle-tile__value">${App.formatTime(weekly.weekly_total)}</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Shortest Day</div>
-                    <div class="stat-value">${App.formatTime(weekly.shortest_day)}</div>
+                <div class="chronicle-tile">
+                    <div class="chronicle-tile__label">SHORTEST DAY</div>
+                    <div class="chronicle-tile__value">${App.formatTime(weekly.shortest_day)}</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label">Longest Day</div>
-                    <div class="stat-value">${App.formatTime(weekly.longest_day)}</div>
+                <div class="chronicle-tile">
+                    <div class="chronicle-tile__label">LONGEST DAY</div>
+                    <div class="chronicle-tile__value">${App.formatTime(weekly.longest_day)}</div>
                 </div>
             </div>
 
-            <div class="chart-container">
-                <h3>Daily Breakdown</h3>
+            <div class="chronicle-chart">
+                <h3>DAILY BREAKDOWN</h3>
                 <div class="chart-wrapper">
                     <canvas id="weeklyStatsChart"></canvas>
                 </div>
@@ -122,16 +116,16 @@ const Stats = {
                 datasets: [{
                     label: 'Screen Time',
                     data: weekly.days.map(d => d.minutes),
-                    backgroundColor: 'rgba(0, 113, 227, 0.15)',
-                    borderColor: '#0071e3',
+                    backgroundColor: 'rgba(91, 143, 185, 0.35)',
+                    borderColor: '#5b8fb9',
                     borderWidth: 0,
-                    borderRadius: 6,
-                    hoverBackgroundColor: 'rgba(0, 113, 227, 0.3)',
+                    borderRadius: 0,
+                    hoverBackgroundColor: 'rgba(91, 143, 185, 0.6)',
                 }, {
                     label: 'Average',
                     data: weekly.days.map(() => weekly.daily_average),
                     type: 'line',
-                    borderColor: '#ff9500',
+                    borderColor: '#d16a8f',
                     borderWidth: 2,
                     borderDash: [5, 5],
                     pointRadius: 0,
