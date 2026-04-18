@@ -310,7 +310,7 @@ const App = {
 
     async renderTab(content, tab) {
         switch (tab) {
-            case 'dashboard': return Dashboard.render(content);
+            case 'dashboard': return Isle.render(content);
             case 'apps': return Apps.render(content);
             case 'stats': return Stats.render(content);
             case 'goals': return Goals.render(content);
