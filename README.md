@@ -145,8 +145,8 @@ Press `Ctrl+C` in the terminal, or run:
 
 - **Monitor** — A background Python process polls the frontmost app every 2 seconds using `osascript`. It records usage, tracks sessions, detects pickups (screen unlock → app use), ignores idle periods when configured, enforces blocks, and checks goals.
 - **Database** — SQLite with WAL mode for safe concurrent reads/writes. Stores raw usage observations, aggregated sessions, pickups, goals, blocks, and settings.
-- **Server** — Flask serves the REST API and static frontend files. All API routes include error handling with date validation.
-- **Frontend** — Vanilla HTML/CSS/JS with Chart.js for interactive graphs. Inter font via Google Fonts. Dark mode support with system preference detection. No build step, no Node.js required. If Chart.js is unavailable, the app still renders and skips chart drawing.
+- **Server** — Flask serves the REST API and the static `web/` bundle. All API routes include error handling with date validation.
+- **Web** — Vanilla HTML/CSS/JS with Chart.js for interactive graphs. Inter font via Google Fonts. Dark mode support with system preference detection. No build step, no Node.js required. If Chart.js is unavailable, the app still renders and skips chart drawing.
 
 ---
 
@@ -157,7 +157,7 @@ detox/
 ├── start.sh              # One-command launcher
 ├── stop.sh               # Clean shutdown
 ├── requirements.txt      # flask, pillow
-├── backend/
+├── agent/                # On-device macOS daemon (osascript, pkill)
 │   ├── server.py         # Flask API + static file serving + error handling
 │   ├── monitor.py        # Background app tracking daemon
 │   ├── database.py       # SQLite schema + query helpers + data export
@@ -165,7 +165,7 @@ detox/
 │   ├── notifier.py       # macOS notification wrapper
 │   ├── cards.py          # Shareable card PNG generation
 │   └── config.py         # Paths, defaults, categories
-├── frontend/
+├── web/                  # Static dashboard (vanilla HTML/CSS/JS, no build)
 │   ├── index.html        # SPA shell with sidebar, toast container
 │   ├── css/style.css     # Light + dark theme, glassmorphism, animations
 │   └── js/
@@ -177,6 +177,12 @@ detox/
 │       ├── blocker.js    # Block/whitelist UI with toast feedback
 │       ├── cards.js      # Share card UI
 │       └── settings.js   # Dark mode, data export, categories, keyboard shortcuts
+├── api/                  # Reserved for hosted FastAPI tier (Phase 2+)
+├── infra/                # docker-compose.dev.yml + future deploy configs
+├── docs/
+│   ├── specs/            # Design specs
+│   ├── plans/            # Implementation plans (one per phase)
+│   └── adr/              # Architecture decision records
 └── data/                 # Created at runtime (gitignored)
     ├── screentime.db
     └── cards/
@@ -188,9 +194,9 @@ detox/
 
 | Component | Technology |
 |-----------|-----------|
-| Backend | Python 3.9, Flask |
+| Agent | Python 3.9, Flask |
 | Database | SQLite (WAL mode) |
-| Frontend | Vanilla JS, Chart.js, Inter font |
+| Web | Vanilla JS, Chart.js, Inter font |
 | App Detection | `osascript` (AppleScript) |
 | Notifications | macOS Notification Center |
 | Card Generation | Pillow (PIL) |
