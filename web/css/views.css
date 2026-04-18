@@ -326,3 +326,56 @@
     color: var(--dc-ink-soft);
     margin-top: var(--sp-1);
 }
+
+/* ── Charter (goals) ─────────────────────────────────────────────────── */
+.charter-section { margin-bottom: var(--sp-6); }
+
+.charter-section__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--sp-3);
+    gap: var(--sp-3);
+    flex-wrap: wrap;
+}
+
+.charter-section__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-display);
+    color: var(--dc-ink);
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+.decree {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--dc-parchment);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    margin-bottom: var(--sp-2);
+}
+.decree__kind {
+    font-family: var(--font-display);
+    font-size: 10px;
+    color: var(--dc-ink-soft);
+    letter-spacing: 0.5px;
+}
+.decree__body {
+    font-family: var(--font-game);
+    font-size: var(--fs-lg);
+    color: var(--dc-ink);
+    margin-top: 2px;
+}
+
+.decree-empty {
+    padding: var(--sp-5);
+    text-align: center;
+    background: var(--dc-parchment);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    font-family: var(--font-game);
+    font-size: var(--fs-md);
+    color: var(--dc-ink-soft);
+}
