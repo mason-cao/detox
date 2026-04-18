@@ -57,6 +57,8 @@
     --bg-card:        var(--dc-parchment);
     --text:           var(--dc-ink);
     --text-secondary: var(--dc-ink-soft);
+    --chart-grid:     rgba(42, 30, 42, 0.15);
+    --chart-tick:     #5a4a5a;
 }
 
 /* Dark-mode: app.js toggles [data-theme="dark"] on <html>. */
@@ -70,6 +72,8 @@
     --bg-card:        #2a2438;
     --text:           #e8ddf0;
     --text-secondary: #b0a8c0;
+    --chart-grid:     rgba(232, 221, 240, 0.12);
+    --chart-tick:     #b0a8c0;
 }
 
 /* Pixel-perfect rendering for scaled SVG / image assets. */
