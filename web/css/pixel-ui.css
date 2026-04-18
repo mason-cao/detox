@@ -1,0 +1,94 @@
+/* Reusable pixel-art UI primitives. Layered on top of tokens.css. */
+
+/* ── Panel: parchment card with 2-color pixel border ─────────────────── */
+.pixel-panel {
+    background: var(--dc-parchment);
+    color: var(--dc-ink);
+    border: none;
+    padding: var(--sp-4);
+    position: relative;
+    /* Fake pixel border: 2px outer ink + 1px inner highlight. */
+    box-shadow:
+        0 0 0 2px var(--dc-ink),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+    font-family: var(--font-ui);
+}
+
+.pixel-panel--dark {
+    background: var(--dc-night);
+    color: #e8ddf0;
+    box-shadow:
+        0 0 0 2px var(--dc-ink),
+        inset 0 0 0 1px rgba(181, 156, 255, 0.2);
+}
+
+/* ── Button: chunky pressable tile ───────────────────────────────────── */
+.pixel-button {
+    font-family: var(--font-display);
+    font-size: var(--fs-display);
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--dc-parchment);
+    color: var(--dc-ink);
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    box-shadow:
+        0 0 0 2px var(--dc-ink),
+        0 4px 0 0 var(--dc-ink);
+    transition: transform 80ms steps(2), box-shadow 80ms steps(2);
+    user-select: none;
+}
+
+.pixel-button:hover {
+    background: var(--dc-noon);
+}
+
+.pixel-button:active {
+    transform: translateY(3px);
+    box-shadow:
+        0 0 0 2px var(--dc-ink),
+        0 1px 0 0 var(--dc-ink);
+}
+
+.pixel-button--primary {
+    background: var(--dc-coin);
+}
+
+.pixel-button--danger {
+    background: var(--dc-danger);
+    color: #fff;
+}
+
+/* ── Chip: inline currency / counter pill ────────────────────────────── */
+.pixel-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-1) var(--sp-3);
+    font-family: var(--font-game);
+    font-size: var(--fs-lg);
+    line-height: 1;
+    background: var(--dc-parchment);
+    color: var(--dc-ink);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    min-height: 32px;
+}
+
+.pixel-chip__glyph {
+    font-size: var(--fs-md);
+    line-height: 1;
+}
+
+.pixel-chip--sunlight .pixel-chip__glyph { color: var(--dc-coin); }
+.pixel-chip--shard    .pixel-chip__glyph { color: var(--dc-shard); }
+
+/* ── Divider: dotted line, pixel-style ───────────────────────────────── */
+.pixel-divider {
+    height: 2px;
+    background: repeating-linear-gradient(
+        to right,
+        var(--dc-ink) 0 4px,
+        transparent 4px 8px
+    );
+    margin: var(--sp-4) 0;
+}
