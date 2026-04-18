@@ -49,12 +49,27 @@
     --ink-current:   var(--dc-ink);
 }
 
-/* Dark mode overrides the *defaults*; isle.js overrides again based on hour. */
-body.dark-mode {
+/* Wire Dawn Cove into the legacy --bg/--text chain so non-Isle tabs inherit
+   the warm palette even before Plan 3 reskins their internals. These override
+   style.css because tokens.css is loaded AFTER it (see index.html order). */
+:root {
+    --bg:             var(--dc-sand);
+    --bg-card:        var(--dc-parchment);
+    --text:           var(--dc-ink);
+    --text-secondary: var(--dc-ink-soft);
+}
+
+/* Dark-mode: app.js toggles [data-theme="dark"] on <html>. */
+:root[data-theme="dark"] {
     --sky-top:       var(--dc-night);
     --sky-bottom:    #2a3050;
     --ground-tint:   #4a4060;
     --ink-current:   #e8ddf0;
+
+    --bg:             #1a1f3a;
+    --bg-card:        #2a2438;
+    --text:           #e8ddf0;
+    --text-secondary: #b0a8c0;
 }
 
 /* Pixel-perfect rendering for scaled SVG / image assets. */
