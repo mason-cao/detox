@@ -6,63 +6,70 @@
     <title>Detox</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/tokens.css?v=20260417">
+    <link rel="stylesheet" href="/css/pixel-ui.css?v=20260417">
+    <link rel="stylesheet" href="/css/hud.css?v=20260417">
+    <link rel="stylesheet" href="/css/isle.css?v=20260417">
     <link rel="stylesheet" href="/css/style.css?v=20260416">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <div id="app">
-        <nav id="sidebar">
-            <div class="logo">
-                <span class="logo-text">detox</span>
+        <header id="hud">
+            <span class="hud-logo">DETOX</span>
+            <div class="hud-currencies">
+                <span class="pixel-chip pixel-chip--sunlight" id="hudSunlight" title="Sunlight — earned from detoxed minutes">
+                    <span class="pixel-chip__glyph">☀</span>
+                    <span data-role="value">0</span>
+                </span>
+                <span class="pixel-chip pixel-chip--shard" id="hudShards" title="Starshards — earned from streaks and milestones">
+                    <span class="pixel-chip__glyph">✦</span>
+                    <span data-role="value">0</span>
+                </span>
             </div>
-            <ul class="nav-links">
-                <li><a href="#" data-tab="dashboard" class="active">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-                    <span>Dashboard</span>
-                </a></li>
-                <li><a href="#" data-tab="apps">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M3 12h18"/></svg>
-                    <span>Apps</span>
-                </a></li>
-                <li><a href="#" data-tab="stats">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16l4-6 4 3 5-7"/></svg>
-                    <span>Statistics</span>
-                </a></li>
-                <li><a href="#" data-tab="goals">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
-                    <span>Goals</span>
-                </a></li>
-                <li><a href="#" data-tab="blocker">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    <span>Blocker</span>
-                </a></li>
-                <li><a href="#" data-tab="cards">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-                    <span>Share</span>
-                </a></li>
-                <li><a href="#" data-tab="settings">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                    <span>Settings</span>
-                </a></li>
-            </ul>
-            <div class="sidebar-footer">
-                <button class="theme-toggle-btn" id="themeToggle" onclick="App.toggleDarkMode()">
-                    <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                    <span class="theme-toggle-label">Dark Mode</span>
+            <div class="hud-actions">
+                <span class="hud-status" id="monitor-status">
+                    <span class="hud-status__dot"></span>
+                    <span class="status-text">Checking…</span>
+                </span>
+                <button class="hud-icon-button" id="themeToggle" onclick="App.toggleDarkMode()" title="Toggle theme (D)">
+                    <svg id="themeIcon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                 </button>
+                <button class="hud-icon-button" onclick="HUD.openHelp()" title="Help (?)">?</button>
             </div>
-            <div class="monitor-status" id="monitor-status">
-                <span class="status-dot"></span>
-                <span class="status-text">Checking...</span>
-            </div>
-        </nav>
+        </header>
         <main id="content"></main>
+        <nav id="tab-rail">
+            <button class="tab-rail__item is-active" data-tab="dashboard"><span class="tab-rail__glyph">🏝</span>Isle</button>
+            <button class="tab-rail__item" data-tab="apps"><span class="tab-rail__glyph">🏘</span>Residents</button>
+            <button class="tab-rail__item" data-tab="stats"><span class="tab-rail__glyph">📜</span>Chronicle</button>
+            <button class="tab-rail__item" data-tab="goals"><span class="tab-rail__glyph">✒</span>Charter</button>
+            <button class="tab-rail__item" data-tab="blocker"><span class="tab-rail__glyph">⚖</span>Rule Board</button>
+            <button class="tab-rail__item" data-tab="cards"><span class="tab-rail__glyph">🏪</span>Market</button>
+            <button class="tab-rail__item" data-tab="cards"><span class="tab-rail__glyph">✉</span>Postcards</button>
+            <button class="tab-rail__item" data-tab="settings"><span class="tab-rail__glyph">🏛</span>Study</button>
+        </nav>
+    </div>
+
+    <div class="help-overlay" id="helpOverlay" onclick="if(event.target===this)HUD.closeHelp()">
+        <div class="help-overlay__panel pixel-panel">
+            <h2 class="help-overlay__title">How the Isle works</h2>
+            <div class="help-overlay__body">
+                <p>Each app you use is a <strong>resident</strong> of your isle. The ones you spend the most time with get the biggest plots.</p>
+                <p><strong>Sunlight (☀)</strong> grows while you stay under your daily budget. <strong>Starshards (✦)</strong> come from streaks and milestones — they're the rarer currency.</p>
+                <p>The sky and sun/moon track your local time. Close the app, touch grass, come back tomorrow.</p>
+                <p>Shortcuts: <kbd>1</kbd>–<kbd>8</kbd> switch tabs, <kbd>D</kbd> toggles theme, <kbd>?</kbd> opens this panel, <kbd>Esc</kbd> closes it.</p>
+                <button class="pixel-button" onclick="HUD.closeHelp()" style="margin-top: var(--sp-4)">Got it</button>
+            </div>
+        </div>
     </div>
 
     <div class="toast-container" id="toastContainer"></div>
 
     <script src="/js/app.js?v=20260416"></script>
+    <script src="/js/hud.js?v=20260417"></script>
+    <script src="/js/isle.js?v=20260417"></script>
     <script src="/js/dashboard.js?v=20260416"></script>
     <script src="/js/apps.js?v=20260416"></script>
     <script src="/js/stats.js?v=20260416"></script>

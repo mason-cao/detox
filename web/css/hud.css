@@ -1,0 +1,157 @@
+/* Top bar + bottom tab rail. Sits above all tab content. */
+
+/* ── App layout: HUD-wrapped content ─────────────────────────────────── */
+#app {
+    display: grid;
+    grid-template-rows: var(--hud-top-h) 1fr var(--hud-rail-h);
+    min-height: 100vh;
+    background: var(--dc-sand);
+}
+
+/* Old sidebar layout is replaced — reset any stray width constraints. */
+#content {
+    overflow: auto;
+    padding: var(--sp-4);
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────────── */
+#hud {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: 0 var(--sp-4);
+    background: var(--dc-parchment);
+    box-shadow: 0 2px 0 0 var(--dc-ink);
+    font-family: var(--font-display);
+    font-size: var(--fs-display);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.hud-logo {
+    font-family: var(--font-display);
+    font-size: var(--fs-display);
+    color: var(--dc-ink);
+    letter-spacing: 1px;
+    margin-right: auto;
+}
+
+.hud-currencies {
+    display: flex;
+    gap: var(--sp-3);
+}
+
+.hud-actions {
+    display: flex;
+    gap: var(--sp-2);
+    align-items: center;
+}
+
+.hud-icon-button {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--dc-parchment);
+    color: var(--dc-ink);
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    font-family: var(--font-display);
+    font-size: var(--fs-display);
+}
+
+.hud-icon-button:hover { background: var(--dc-noon); }
+
+/* ── Bottom tab rail ─────────────────────────────────────────────────── */
+#tab-rail {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    background: var(--dc-parchment);
+    box-shadow: 0 -2px 0 0 var(--dc-ink);
+    position: sticky;
+    bottom: 0;
+    z-index: 50;
+}
+
+.tab-rail__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-1);
+    padding: var(--sp-2);
+    font-family: var(--font-display);
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    color: var(--dc-ink-soft);
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+}
+
+.tab-rail__item:hover { color: var(--dc-ink); background: rgba(0, 0, 0, 0.04); }
+.tab-rail__item.is-active { color: var(--dc-ink); background: var(--dc-noon); }
+
+.tab-rail__glyph { font-size: 18px; line-height: 1; }
+
+/* ── Monitor status dot ──────────────────────────────────────────────── */
+.hud-status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    font-family: var(--font-game);
+    font-size: var(--fs-md);
+    color: var(--dc-ink-soft);
+}
+
+.hud-status__dot {
+    width: 8px;
+    height: 8px;
+    background: var(--dc-ok);
+    box-shadow: 0 0 0 1px var(--dc-ink);
+}
+
+.hud-status--offline .hud-status__dot { background: var(--dc-danger); }
+
+/* ── Help overlay (minimalist, text-only for Plan 2) ─────────────────── */
+.help-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 31, 58, 0.75);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: var(--sp-4);
+}
+
+.help-overlay.is-open { display: flex; }
+
+.help-overlay__panel {
+    max-width: 560px;
+    width: 100%;
+}
+
+.help-overlay__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-display);
+    margin: 0 0 var(--sp-4) 0;
+}
+
+.help-overlay__body {
+    font-family: var(--font-ui);
+    font-size: var(--fs-sm);
+    line-height: 1.6;
+}
+
+.help-overlay__body kbd {
+    font-family: var(--font-game);
+    background: var(--dc-ink);
+    color: var(--dc-parchment);
+    padding: 2px 6px;
+    margin: 0 2px;
+}
