@@ -475,13 +475,12 @@ const App = {
         try {
             const data = await this.api('/api/status');
             const el = document.getElementById('monitor-status');
-            const dot = el.querySelector('.status-dot');
             const text = el.querySelector('.status-text');
             if (data.monitor_running) {
-                dot.className = 'status-dot online';
+                el.classList.remove('hud-status--offline');
                 text.textContent = 'Monitoring';
             } else {
-                dot.className = 'status-dot offline';
+                el.classList.add('hud-status--offline');
                 text.textContent = 'Monitor offline';
             }
         } catch (e) {
