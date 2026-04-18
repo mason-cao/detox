@@ -71,21 +71,21 @@ const Goals = {
 
     addDailyGoal() {
         App.openModal(`
-            <div class="modal">
-                <h2>Set Daily Goal</h2>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Hours</label>
-                        <input type="number" id="goalHours" min="0" max="23" value="2">
+            <div class="pixel-modal">
+                <h2 class="pixel-modal__title">ISSUE DAILY DECREE</h2>
+                <div class="pixel-modal__row">
+                    <div class="pixel-modal__group">
+                        <label class="pixel-modal__label">HOURS</label>
+                        <input class="pixel-modal__input" type="number" id="goalHours" min="0" max="23" value="2">
                     </div>
-                    <div class="form-group">
-                        <label>Minutes</label>
-                        <input type="number" id="goalMinutes" min="0" max="59" value="0">
+                    <div class="pixel-modal__group">
+                        <label class="pixel-modal__label">MINUTES</label>
+                        <input class="pixel-modal__input" type="number" id="goalMinutes" min="0" max="59" value="0">
                     </div>
                 </div>
-                <div class="modal-actions">
-                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-                    <button class="btn btn-primary" onclick="App.runAction(() => Goals.saveDailyGoal())">Save</button>
+                <div class="pixel-modal__actions">
+                    <button class="pixel-button" onclick="this.closest('.modal-overlay').remove()">CANCEL</button>
+                    <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Goals.saveDailyGoal())">SAVE</button>
                 </div>
             </div>
         `, '#goalHours');
@@ -109,26 +109,26 @@ const Goals = {
     async addAppLimit(prefillAppName = '') {
         const appNames = await App.getAppSuggestions();
         App.openModal(`
-            <div class="modal">
-                <h2>Add App Limit</h2>
-                <div class="form-group">
-                    <label>App Name</label>
-                    <input type="text" id="limitAppName" list="limitAppOptions" placeholder="Choose or type an app" value="${App.escapeAttr(prefillAppName)}">
+            <div class="pixel-modal">
+                <h2 class="pixel-modal__title">ADD RESIDENT DECREE</h2>
+                <div class="pixel-modal__group">
+                    <label class="pixel-modal__label">RESIDENT</label>
+                    <input class="pixel-modal__input" type="text" id="limitAppName" list="limitAppOptions" placeholder="choose or type an app" value="${App.escapeAttr(prefillAppName)}">
                     ${App.appDatalist('limitAppOptions', appNames)}
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Hours</label>
-                        <input type="number" id="limitHours" min="0" max="23" value="1">
+                <div class="pixel-modal__row">
+                    <div class="pixel-modal__group">
+                        <label class="pixel-modal__label">HOURS</label>
+                        <input class="pixel-modal__input" type="number" id="limitHours" min="0" max="23" value="1">
                     </div>
-                    <div class="form-group">
-                        <label>Minutes</label>
-                        <input type="number" id="limitMinutes" min="0" max="59" value="0">
+                    <div class="pixel-modal__group">
+                        <label class="pixel-modal__label">MINUTES</label>
+                        <input class="pixel-modal__input" type="number" id="limitMinutes" min="0" max="59" value="0">
                     </div>
                 </div>
-                <div class="modal-actions">
-                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-                    <button class="btn btn-primary" onclick="App.runAction(() => Goals.saveAppLimit())">Save</button>
+                <div class="pixel-modal__actions">
+                    <button class="pixel-button" onclick="this.closest('.modal-overlay').remove()">CANCEL</button>
+                    <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Goals.saveAppLimit())">SAVE</button>
                 </div>
             </div>
         `, '#limitAppName');
@@ -157,21 +157,21 @@ const Goals = {
 
     addBedtime() {
         App.openModal(`
-            <div class="modal">
-                <h2>Set Bedtime Reminder</h2>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Hour (24h format)</label>
-                        <input type="number" id="bedHour" min="0" max="23" value="22">
+            <div class="pixel-modal">
+                <h2 class="pixel-modal__title">SET BEDTIME BELL</h2>
+                <div class="pixel-modal__row">
+                    <div class="pixel-modal__group">
+                        <label class="pixel-modal__label">HOUR (24H)</label>
+                        <input class="pixel-modal__input" type="number" id="bedHour" min="0" max="23" value="22">
                     </div>
-                    <div class="form-group">
-                        <label>Minute</label>
-                        <input type="number" id="bedMinute" min="0" max="59" value="0">
+                    <div class="pixel-modal__group">
+                        <label class="pixel-modal__label">MINUTE</label>
+                        <input class="pixel-modal__input" type="number" id="bedMinute" min="0" max="59" value="0">
                     </div>
                 </div>
-                <div class="modal-actions">
-                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-                    <button class="btn btn-primary" onclick="App.runAction(() => Goals.saveBedtime())">Save</button>
+                <div class="pixel-modal__actions">
+                    <button class="pixel-button" onclick="this.closest('.modal-overlay').remove()">CANCEL</button>
+                    <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Goals.saveBedtime())">SAVE</button>
                 </div>
             </div>
         `, '#bedHour');
