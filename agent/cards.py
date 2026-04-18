@@ -4,8 +4,8 @@ import os
 import time
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
-from backend.config import CARDS_DIR
-from backend import database as db
+from agent.config import CARDS_DIR
+from agent import database as db
 
 
 def get_font(size, bold=False):

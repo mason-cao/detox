@@ -1,4 +1,4 @@
-"""Flask web server serving the dashboard API and frontend static files."""
+"""Flask web server serving the dashboard API and web static files."""
 
 import os
 import re
@@ -9,15 +9,15 @@ from functools import wraps
 from datetime import datetime, timedelta
 from flask import Flask, jsonify, request, send_from_directory
 
-from backend.config import (
+from agent.config import (
     CARDS_DIR,
     DEFAULT_SETTINGS,
-    FRONTEND_DIR,
+    WEB_DIR,
     MAX_IDLE_TIMEOUT_MINUTES,
     PID_FILE,
     SERVER_PORT,
 )
-from backend import database as db
+from agent import database as db
 
 app = Flask(__name__, static_folder=None)
 
@@ -159,22 +159,22 @@ def api_route(f):
 
 @app.route("/")
 def index():
-    return send_from_directory(FRONTEND_DIR, "index.html")
+    return send_from_directory(WEB_DIR, "index.html")
 
 
 @app.route("/css/<path:filename>")
 def serve_css(filename):
-    return send_from_directory(os.path.join(FRONTEND_DIR, "css"), filename)
+    return send_from_directory(os.path.join(WEB_DIR, "css"), filename)
 
 
 @app.route("/js/<path:filename>")
 def serve_js(filename):
-    return send_from_directory(os.path.join(FRONTEND_DIR, "js"), filename)
+    return send_from_directory(os.path.join(WEB_DIR, "js"), filename)
 
 
 @app.route("/assets/<path:filename>")
 def serve_assets(filename):
-    return send_from_directory(os.path.join(FRONTEND_DIR, "assets"), filename)
+    return send_from_directory(os.path.join(WEB_DIR, "assets"), filename)
 
 
 # ── Dashboard API ────────────────────────────────────────────────────────
@@ -405,7 +405,7 @@ def api_categories_set():
 @app.route("/api/cards/generate", methods=["POST"])
 @api_route
 def api_cards_generate():
-    from backend.cards import generate_card
+    from agent.cards import generate_card
 
     data = get_json_object(required=False)
     date = validate_date(data.get("date", datetime.now().strftime("%Y-%m-%d")))

@@ -5,7 +5,7 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 DB_PATH = os.path.join(DATA_DIR, "screentime.db")
 PID_FILE = os.path.join(DATA_DIR, "monitor.pid")
 CARDS_DIR = os.path.join(DATA_DIR, "cards")
-FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
+WEB_DIR = os.path.join(BASE_DIR, "web")
 
 POLL_INTERVAL = 2  # seconds between active app checks
 SERVER_PORT = 5050

@@ -11,15 +11,15 @@ import subprocess
 import re
 from datetime import datetime
 
-from backend.config import (
+from agent.config import (
     DEFAULT_IDLE_TIMEOUT_MINUTES,
     MAX_IDLE_TIMEOUT_MINUTES,
     PID_FILE,
     POLL_INTERVAL,
 )
-from backend import database as db
-from backend.blocker import kill_app
-from backend.notifier import notify
+from agent import database as db
+from agent.blocker import kill_app
+from agent.notifier import notify
 
 
 class Monitor:
