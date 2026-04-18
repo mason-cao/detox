@@ -1,0 +1,45 @@
+# Local dev stack for the future FastAPI tier (Phase 2+).
+#
+# Not used by the agent today — the agent writes to a local SQLite file at
+# data/screentime.db. This compose file will host Postgres + Redis once the
+# cloud port lands, and is committed now so Phase 2 can start without infra
+# side-quests.
+#
+# Usage (Phase 2+):
+#   docker compose -f infra/docker-compose.dev.yml up -d
+#   docker compose -f infra/docker-compose.dev.yml down
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: detox-postgres-dev
+    environment:
+      POSTGRES_USER: detox
+      POSTGRES_PASSWORD: detox
+      POSTGRES_DB: detox
+    ports:
+      - "5432:5432"
+    volumes:
+      - detox-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U detox -d detox"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: detox-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - detox-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  detox-postgres-data:
+  detox-redis-data:
