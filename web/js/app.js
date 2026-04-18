@@ -325,8 +325,8 @@ const App = {
         const token = ++this.renderToken;
         this.currentTab = tab;
 
-        document.querySelectorAll('.nav-links a').forEach(a => {
-            a.classList.toggle('active', a.dataset.tab === tab);
+        document.querySelectorAll('[data-tab]').forEach(el => {
+            el.classList.toggle('is-active', el.dataset.tab === tab);
         });
 
         const content = document.getElementById('content');
@@ -463,7 +463,8 @@ const App = {
                 case '4': this.showTab('goals'); break;
                 case '5': this.showTab('blocker'); break;
                 case '6': this.showTab('cards'); break;
-                case '7': this.showTab('settings'); break;
+                case '7': this.showTab('cards'); break;
+                case '8': this.showTab('settings'); break;
             }
         });
     },
@@ -503,10 +504,10 @@ const App = {
     init() {
         this.initTheme();
 
-        document.querySelectorAll('.nav-links a').forEach(a => {
-            a.addEventListener('click', (e) => {
+        document.querySelectorAll('[data-tab]').forEach(el => {
+            el.addEventListener('click', (e) => {
                 e.preventDefault();
-                this.showTab(a.dataset.tab);
+                this.showTab(el.dataset.tab);
             });
         });
 
