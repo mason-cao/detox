@@ -243,3 +243,86 @@
 }
 .chart-wrapper { position: relative; height: 240px; }
 .chart-wrapper.small { height: 160px; }
+
+/* ── Chronicle (stats) ───────────────────────────────────────────────── */
+.chronicle-toggle {
+    display: inline-flex;
+    background: var(--dc-parchment);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+}
+.chronicle-toggle button {
+    font-family: var(--font-display);
+    font-size: var(--fs-display);
+    padding: var(--sp-2) var(--sp-3);
+    background: transparent;
+    color: var(--dc-ink-soft);
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+}
+.chronicle-toggle button.is-active {
+    background: var(--dc-noon);
+    color: var(--dc-ink);
+}
+
+.chronicle-datenav {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    font-family: var(--font-game);
+    font-size: var(--fs-lg);
+    color: var(--dc-ink);
+}
+
+.chronicle-hero {
+    padding: var(--sp-5);
+    background: var(--dc-parchment);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    margin-bottom: var(--sp-4);
+    text-align: center;
+}
+.chronicle-hero__label {
+    font-family: var(--font-display);
+    font-size: var(--fs-display);
+    color: var(--dc-ink-soft);
+    letter-spacing: 1px;
+}
+.chronicle-hero__value {
+    font-family: var(--font-game);
+    font-size: 48px;
+    color: var(--dc-ink);
+    line-height: 1;
+    margin-top: var(--sp-2);
+}
+
+.chronicle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-4);
+}
+
+.chronicle-tile {
+    padding: var(--sp-3);
+    background: var(--dc-parchment);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+}
+.chronicle-tile__label {
+    font-family: var(--font-display);
+    font-size: 10px;
+    color: var(--dc-ink-soft);
+    letter-spacing: 0.5px;
+}
+.chronicle-tile__value {
+    font-family: var(--font-game);
+    font-size: var(--fs-xl);
+    color: var(--dc-ink);
+    margin-top: var(--sp-1);
+    line-height: 1;
+}
+.chronicle-tile__detail {
+    font-family: var(--font-ui);
+    font-size: var(--fs-xs);
+    color: var(--dc-ink-soft);
+    margin-top: var(--sp-1);
+}
