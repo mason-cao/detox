@@ -41,7 +41,7 @@ mkdir -p data/cards
 
 # 3. Initialize database
 echo "[2/4] Initializing database..."
-python3 -c "from backend.database import init_db; init_db()"
+python3 -c "from agent.database import init_db; init_db()"
 echo "  ✓ Database ready"
 
 # 4. Start monitor daemon
@@ -49,7 +49,7 @@ echo "[3/4] Starting monitor..."
 if [ -f data/monitor.pid ] && kill -0 "$(cat data/monitor.pid)" 2>/dev/null; then
     echo "  ✓ Monitor already running (PID $(cat data/monitor.pid))"
 else
-    python3 -m backend.monitor > data/monitor.log 2>&1 &
+    python3 -m agent.monitor > data/monitor.log 2>&1 &
     MONITOR_PID=$!
     STARTED_MONITOR=1
     echo "$MONITOR_PID" > data/monitor.pid
@@ -73,4 +73,4 @@ echo ""
 (sleep 2 && open http://localhost:5050) &
 
 # Run Flask server (foreground — Ctrl+C stops everything)
-python3 -m backend.server
+python3 -m agent.server

@@ -2,7 +2,7 @@ import sqlite3
 import time
 from datetime import datetime, timedelta
 from contextlib import contextmanager
-from backend.config import (
+from agent.config import (
     DB_PATH,
     DEFAULT_CATEGORIES,
     DEFAULT_SETTINGS,

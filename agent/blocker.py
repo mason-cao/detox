@@ -1,5 +1,5 @@
 import subprocess
-from backend.notifier import notify
+from agent.notifier import notify
 
 
 def kill_app(app_name):
