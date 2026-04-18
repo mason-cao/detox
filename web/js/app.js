@@ -310,7 +310,7 @@ const App = {
 
     async renderTab(content, tab) {
         switch (tab) {
-            case 'dashboard': return Dashboard.render(content);
+            case 'dashboard': return Isle.render(content);
             case 'apps': return Apps.render(content);
             case 'stats': return Stats.render(content);
             case 'goals': return Goals.render(content);
@@ -325,8 +325,8 @@ const App = {
         const token = ++this.renderToken;
         this.currentTab = tab;
 
-        document.querySelectorAll('.nav-links a').forEach(a => {
-            a.classList.toggle('active', a.dataset.tab === tab);
+        document.querySelectorAll('[data-tab]').forEach(el => {
+            el.classList.toggle('is-active', el.dataset.tab === tab);
         });
 
         const content = document.getElementById('content');
@@ -463,7 +463,8 @@ const App = {
                 case '4': this.showTab('goals'); break;
                 case '5': this.showTab('blocker'); break;
                 case '6': this.showTab('cards'); break;
-                case '7': this.showTab('settings'); break;
+                case '7': this.showTab('cards'); break;
+                case '8': this.showTab('settings'); break;
             }
         });
     },
@@ -474,13 +475,12 @@ const App = {
         try {
             const data = await this.api('/api/status');
             const el = document.getElementById('monitor-status');
-            const dot = el.querySelector('.status-dot');
             const text = el.querySelector('.status-text');
             if (data.monitor_running) {
-                dot.className = 'status-dot online';
+                el.classList.remove('hud-status--offline');
                 text.textContent = 'Monitoring';
             } else {
-                dot.className = 'status-dot offline';
+                el.classList.add('hud-status--offline');
                 text.textContent = 'Monitor offline';
             }
         } catch (e) {
@@ -503,15 +503,16 @@ const App = {
     init() {
         this.initTheme();
 
-        document.querySelectorAll('.nav-links a').forEach(a => {
-            a.addEventListener('click', (e) => {
+        document.querySelectorAll('[data-tab]').forEach(el => {
+            el.addEventListener('click', (e) => {
                 e.preventDefault();
-                this.showTab(a.dataset.tab);
+                this.showTab(el.dataset.tab);
             });
         });
 
         this.initKeyboardShortcuts();
         this.showTab('dashboard');
+        if (window.HUD) HUD.init();
         this.checkMonitor();
         this.refreshFocusMode();
         this.startAutoRefresh();

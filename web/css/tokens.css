@@ -1,0 +1,64 @@
+/* Dawn Cove — Detox Isle design tokens. */
+
+:root {
+    /* ── Palette (Dawn Cove) ─────────────────────────────────────────── */
+    --dc-dawn:       #ffb27a;  /* sunrise peach */
+    --dc-noon:       #ffd98a;  /* mid-morning gold */
+    --dc-dusk:       #d16a8f;  /* evening rose */
+    --dc-night:      #1a1f3a;  /* midnight navy */
+    --dc-parchment:  #fff4d6;  /* panel background, warm */
+    --dc-sand:       #e8c896;  /* ground tile base */
+    --dc-moss:       #6b8e4e;  /* grass accents */
+    --dc-sea:        #5b8fb9;  /* water / sky-horizon */
+    --dc-ink:        #2a1e2a;  /* body text, pixel outlines */
+    --dc-ink-soft:   #5a4a5a;  /* secondary text */
+    --dc-coin:       #ffd04a;  /* Sunlight currency */
+    --dc-shard:      #b59cff;  /* Starshard currency */
+    --dc-danger:     #c4453a;  /* law / block color */
+    --dc-ok:         #4a9b6e;  /* approval / completed */
+
+    /* ── Typography ──────────────────────────────────────────────────── */
+    --font-display:  'Press Start 2P', 'Courier New', monospace;
+    --font-game:     'VT323', 'Courier New', monospace;
+    --font-ui:       'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+    --fs-xs:   12px;
+    --fs-sm:   14px;
+    --fs-md:   16px;
+    --fs-lg:   20px;
+    --fs-xl:   28px;
+    --fs-display: 14px;   /* Press Start 2P is chunky — keep display small */
+
+    /* ── Spacing (4px rhythm) ────────────────────────────────────────── */
+    --sp-1: 4px;
+    --sp-2: 8px;
+    --sp-3: 12px;
+    --sp-4: 16px;
+    --sp-5: 24px;
+    --sp-6: 32px;
+    --sp-8: 48px;
+
+    /* ── HUD sizing ──────────────────────────────────────────────────── */
+    --hud-top-h:    56px;
+    --hud-rail-h:   64px;
+
+    /* ── Day/night cycle (set by isle.js) ────────────────────────────── */
+    --sky-top:       var(--dc-dawn);
+    --sky-bottom:    var(--dc-noon);
+    --ground-tint:   var(--dc-sand);
+    --ink-current:   var(--dc-ink);
+}
+
+/* Dark mode overrides the *defaults*; isle.js overrides again based on hour. */
+body.dark-mode {
+    --sky-top:       var(--dc-night);
+    --sky-bottom:    #2a3050;
+    --ground-tint:   #4a4060;
+    --ink-current:   #e8ddf0;
+}
+
+/* Pixel-perfect rendering for scaled SVG / image assets. */
+.pixel-art {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
