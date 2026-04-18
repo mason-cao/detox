@@ -16,7 +16,7 @@ if [ -n "$SERVER_PIDS" ]; then
     for pid in $SERVER_PIDS; do
         cmd="$(ps -p "$pid" -o command= 2>/dev/null || true)"
         case "$cmd" in
-            *"backend.server"*)
+            *"agent.server"*)
                 kill "$pid" 2>/dev/null && SERVER_STOPPED=1
                 ;;
             *)
