@@ -1,0 +1,21 @@
+/* Per-tab Dawn Cove styling. Builds on pixel-ui.css primitives. */
+
+/* ── Page header (shared across Residents, Chronicle, Charter) ───────── */
+.page-heading {
+    font-family: var(--font-display);
+    font-size: var(--fs-display);
+    color: var(--dc-ink);
+    letter-spacing: 1px;
+    margin: 0 0 var(--sp-4) 0;
+}
+
+.page-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-4);
+    flex-wrap: wrap;
+}
+
+/* Residents, Chronicle, Charter sections get filled in Tasks 2, 4, 5. */
