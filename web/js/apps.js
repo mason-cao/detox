@@ -43,28 +43,23 @@ const Apps = {
 
         container.innerHTML = `
             <div class="fade-in">
-                <div class="page-header">
-                    <h1>Apps</h1>
-                </div>
+                <h1 class="page-heading">The Residents' Registry</h1>
                 ${apps.length === 0 ? `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📱</div>
-                        <h3>No apps tracked yet</h3>
-                        <p>The monitor will start tracking apps as you use them.</p>
+                    <div class="registry-empty">
+                        No one lives on the isle yet.<br>
+                        Open any app for a few seconds — they'll move in.
                     </div>
                 ` : `
-                    <div class="search-box">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        <input type="text" class="search-input" id="appSearch"
-                            placeholder="Search apps..." value="${App.escapeAttr(this.searchQuery)}"
+                    <div class="registry-search">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" id="appSearch"
+                            placeholder="call for a resident…"
+                            value="${App.escapeAttr(this.searchQuery)}"
                             oninput="Apps.filterApps(this.value)">
-                        <span class="search-kbd">/</span>
                     </div>
-                    <div class="chart-container">
-                        <ul class="app-list" id="appsList">
-                            ${this.renderAppList(apps)}
-                        </ul>
-                    </div>
+                    <ul class="registry-list" id="appsList">
+                        ${this.renderAppList(apps)}
+                    </ul>
                 `}
             </div>
         `;
@@ -76,7 +71,7 @@ const Apps = {
             : apps;
 
         if (filtered.length === 0) {
-            return '<div class="empty-state" style="padding: 24px;"><p>No apps match your search.</p></div>';
+            return '<li class="registry-empty">No residents match that call.</li>';
         }
 
         const maxMin = apps[0].total_minutes;
@@ -89,31 +84,27 @@ const Apps = {
             const isBlocked = this.blockedNames.has(app.app_name);
             const isWhitelisted = this.whitelistedNames.has(app.app_name);
             return `
-            <li class="app-item" onclick="Apps.showDetail(${appArg})">
-                <div class="app-icon" style="background: ${App.appColor(app.app_name)}">
-                    ${firstLetter}
+            <li class="resident" onclick="Apps.showDetail(${appArg})">
+                <div class="resident__portrait" style="background: ${App.appColor(app.app_name)}">${firstLetter}</div>
+                <div class="resident__info">
+                    <div class="resident__name">${appName}</div>
+                    <div class="resident__category">${category}</div>
                 </div>
-                <div class="app-info">
-                    <div class="app-name">${appName}</div>
-                    <div class="app-category">${category}</div>
+                <div class="resident__bar">
+                    <div class="resident__bar-fill" style="width: ${(app.total_minutes / maxMin * 100)}%; background: ${App.appColor(app.app_name)}"></div>
                 </div>
-                <div class="app-bar-wrapper">
-                    <div class="app-bar">
-                        <div class="app-bar-fill" style="width: ${(app.total_minutes / maxMin * 100)}%; background: ${App.appColor(app.app_name)}"></div>
-                    </div>
-                </div>
-                <div class="app-actions">
-                    <button class="icon-btn ${hasLimit ? 'active' : ''}" title="${hasLimit ? 'Change limit' : 'Set limit'}" onclick="event.stopPropagation(); App.runAction(() => Apps.quickLimit(${appArg}))">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                <div class="resident__actions">
+                    <button class="resident__action ${hasLimit ? 'is-on' : ''}" title="${hasLimit ? 'Change limit' : 'Set limit'}" onclick="event.stopPropagation(); App.runAction(() => Apps.quickLimit(${appArg}))">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
                     </button>
-                    <button class="icon-btn ${isBlocked ? 'danger-active' : ''}" title="${isBlocked ? 'Blocked' : 'Block app'}" onclick="event.stopPropagation(); App.runAction(() => Apps.quickBlock(${appArg}))">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                    <button class="resident__action ${isBlocked ? 'is-danger-on' : ''}" title="${isBlocked ? 'Blocked' : 'Block app'}" onclick="event.stopPropagation(); App.runAction(() => Apps.quickBlock(${appArg}))">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
                     </button>
-                    <button class="icon-btn ${isWhitelisted ? 'success-active' : ''}" title="${isWhitelisted ? 'Allowed in Focus Mode' : 'Categorize'}" onclick="event.stopPropagation(); App.runAction(() => Apps.quickCategory(${appArg}))">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10l-8 8-8-8V4h16z"/><circle cx="12" cy="8" r="1"/></svg>
+                    <button class="resident__action ${isWhitelisted ? 'is-ok-on' : ''}" title="${isWhitelisted ? 'Allowed in Focus Mode' : 'Categorize'}" onclick="event.stopPropagation(); App.runAction(() => Apps.quickCategory(${appArg}))">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10l-8 8-8-8V4h16z"/><circle cx="12" cy="8" r="1"/></svg>
                     </button>
                 </div>
-                <div class="app-time">${App.formatTime(app.total_minutes)}</div>
+                <div class="resident__time">${App.formatTime(app.total_minutes)}</div>
             </li>
         `;
         }).join('');
@@ -164,60 +155,41 @@ const Apps = {
 
         container.innerHTML = `
             <div class="fade-in">
-                <div class="page-header">
-                    <h1>
-                        <a class="view-link" onclick="Apps.detailApp=null; Apps.searchQuery=''; App.showTab('apps')" style="font-size: 16px; margin-right: 8px;">← Back</a>
-                        <span class="app-icon" style="background: ${App.appColor(appName)}; display: inline-flex; width: 36px; height: 36px; vertical-align: middle; margin-right: 8px; font-size: 14px;">
-                            ${firstLetter}
-                        </span>
-                        ${appNameEsc}
-                    </h1>
-                    <div class="date-nav">
-                        <button onclick="App.prevDate(); Apps.showDetail(${appArg})" >&#8249;</button>
-                        <span class="date-label">${App.formatDate(App.currentDate)}</span>
-                        <button onclick="App.nextDate(); Apps.showDetail(${appArg})" >&#8250;</button>
+                <div class="resident-detail__header">
+                    <a class="resident-detail__back" onclick="Apps.detailApp=null; Apps.searchQuery=''; App.showTab('apps')">← BACK</a>
+                    <span class="resident-detail__portrait" style="background: ${App.appColor(appName)}">${firstLetter}</span>
+                    <h1 class="resident-detail__title">${appNameEsc}</h1>
+                    <div class="resident-detail__date-nav">
+                        <button class="pixel-button" onclick="App.prevDate(); Apps.showDetail(${appArg})">&#8249;</button>
+                        <span>${App.formatDate(App.currentDate)}</span>
+                        <button class="pixel-button" onclick="App.nextDate(); Apps.showDetail(${appArg})">&#8250;</button>
                     </div>
                 </div>
 
-                <div class="detail-actions">
-                    <button class="btn btn-secondary btn-sm ${hasLimit ? 'active-action' : ''}" onclick="App.runAction(() => Apps.quickLimit(${appArg}))">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-                        ${hasLimit ? 'Change Limit' : 'Set Limit'}
-                    </button>
-                    <button class="btn btn-secondary btn-sm ${isBlocked ? 'danger-action' : ''}" onclick="App.runAction(() => Apps.quickBlock(${appArg}))">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-                        ${isBlocked ? 'Blocked' : 'Block App'}
-                    </button>
-                    <button class="btn btn-secondary btn-sm" onclick="App.runAction(() => Apps.quickCategory(${appArg}))">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10l-8 8-8-8V4h16z"/><circle cx="12" cy="8" r="1"/></svg>
-                        Categorize
-                    </button>
+                <div class="resident-detail__actions">
+                    <button class="pixel-button ${hasLimit ? 'pixel-button--primary' : ''}" onclick="App.runAction(() => Apps.quickLimit(${appArg}))">${hasLimit ? 'CHANGE LIMIT' : 'SET LIMIT'}</button>
+                    <button class="pixel-button ${isBlocked ? 'pixel-button--danger' : ''}" onclick="App.runAction(() => Apps.quickBlock(${appArg}))">${isBlocked ? 'BLOCKED' : 'BLOCK'}</button>
+                    <button class="pixel-button" onclick="App.runAction(() => Apps.quickCategory(${appArg}))">CATEGORIZE</button>
                 </div>
 
-                <div class="cards-grid">
-                    <div class="card">
-                        <div class="card-header"><span class="card-title">${App.escapeHtml(App.formatDate(App.currentDate))}</span></div>
-                        <div class="card-value">${App.formatTime(selectedTotal)}</div>
-                        ${hasLimit || isBlocked || isWhitelisted ? `<div class="app-status-row">
-                            ${hasLimit ? '<span class="status-pill">Limit set</span>' : ''}
-                            ${isBlocked ? '<span class="status-pill danger">Blocked</span>' : ''}
-                            ${isWhitelisted ? '<span class="status-pill success">Focus allowed</span>' : ''}
-                        </div>` : ''}
-                    </div>
+                <div class="resident-detail__summary">
+                    <div class="resident-detail__summary-date">${App.escapeHtml(App.formatDate(App.currentDate))}</div>
+                    <div class="resident-detail__summary-value">${App.formatTime(selectedTotal)}</div>
+                    ${hasLimit || isBlocked || isWhitelisted ? `<div style="margin-top: var(--sp-2);">
+                        ${hasLimit ? '<span class="status-pill">Limit set</span>' : ''}
+                        ${isBlocked ? '<span class="status-pill status-pill--danger">Blocked</span>' : ''}
+                        ${isWhitelisted ? '<span class="status-pill status-pill--ok">Focus allowed</span>' : ''}
+                    </div>` : ''}
                 </div>
 
-                <div class="chart-container">
-                    <h3>Hourly Usage</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="appHourlyChart"></canvas>
-                    </div>
+                <div class="chronicle-chart">
+                    <h3>HOURLY USAGE</h3>
+                    <div class="chart-wrapper"><canvas id="appHourlyChart"></canvas></div>
                 </div>
 
-                <div class="chart-container">
-                    <h3>Last 7 Days</h3>
-                    <div class="chart-wrapper small">
-                        <canvas id="appDailyChart"></canvas>
-                    </div>
+                <div class="chronicle-chart">
+                    <h3>LAST 7 DAYS</h3>
+                    <div class="chart-wrapper small"><canvas id="appDailyChart"></canvas></div>
                 </div>
             </div>
         `;
@@ -242,7 +214,7 @@ const Apps = {
                     backgroundColor: App.appColor(appName) + '99',
                     borderColor: App.appColor(appName),
                     borderWidth: 1,
-                    borderRadius: 4,
+                    borderRadius: 0,
                 }],
             },
             options: {
@@ -270,7 +242,7 @@ const Apps = {
                     backgroundColor: App.appColor(appName) + '66',
                     borderColor: App.appColor(appName),
                     borderWidth: 1,
-                    borderRadius: 6,
+                    borderRadius: 0,
                 }],
             },
             options: {
