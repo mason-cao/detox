@@ -513,6 +513,7 @@ const App = {
 
         this.initKeyboardShortcuts();
         this.showTab('dashboard');
+        if (window.HUD) HUD.init();
         this.checkMonitor();
         this.refreshFocusMode();
         this.startAutoRefresh();
