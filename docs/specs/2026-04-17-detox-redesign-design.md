@@ -285,10 +285,11 @@ Every commit below is one atomic change. Ordering matches phase sequence. Messag
 - `feat(chronicle): reskin stats as parchment ledger`
 - `feat(charter): reskin goals as decrees with wax seals`
 - `feat(rules): reskin blocker as rule board + sheriff/gate animations`
-- `feat(market): add store view with sunlight/starshard economy`
-- `feat(rewards): local ledger for sunlight earn + daily cap`
-- `feat(rewards): hall of honor + streak milestones`
 - `feat(postcards): reskin cards generator with island snapshot template`
+- `feat(study): reskin settings as the mayor's study`
+- `feat(market): add store view with sunlight/starshard economy`  _(deferred from Plan 4 — needs economy schema; scoped to its own plan)_
+- `feat(rewards): local ledger for sunlight earn + daily cap`  _(bundled with Market plan)_
+- `feat(rewards): hall of honor + streak milestones`
 - `feat(help): minimalist ? in HUD opens tour, game-rules, keys, changelog`
 - `feat(a11y): honor prefers-reduced-motion across isle, weather, and help overlay`
 - `refactor(db): add category_blocks table, migrate from __category__ hack`
