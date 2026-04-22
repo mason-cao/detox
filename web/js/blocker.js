@@ -18,125 +18,99 @@ const Blocker = {
             'Entertainment',
             'Communication',
             ...categories.map(c => c.category),
-        ])].sort((a, b) => a.localeCompare(b));
+        ].filter(Boolean))].sort((a, b) => a.localeCompare(b));
+
+        const ruleEntry = (block, { allow = false } = {}) => {
+            const appName = App.escapeHtml(block.app_name);
+            const firstLetter = App.escapeHtml(block.app_name.charAt(0).toUpperCase());
+            const detail = allow
+                ? 'Gate stays open during lockdown'
+                : block.daily_limit_minutes
+                    ? `Daily ration expires after ${App.formatTime(block.daily_limit_minutes)}`
+                    : 'Always banished';
+            const portraitStyle = allow ? '' : ` style="background: ${App.appColor(block.app_name)}"`;
+
+            return `
+                <div class="rule-entry${allow ? ' rule-entry--allow' : ''}">
+                    <div class="rule-entry__portrait"${portraitStyle}>${firstLetter}</div>
+                    <div>
+                        <div class="rule-entry__name">${appName}</div>
+                        <div class="rule-entry__detail">${detail}</div>
+                    </div>
+                    <button class="pixel-button pixel-button--danger" onclick="App.runAction(() => Blocker.removeBlock(${App.inlineArg(block.app_name)}))">
+                        ${allow ? 'REMOVE' : 'LIFT'}
+                    </button>
+                </div>
+            `;
+        };
 
         container.innerHTML = `
             <div class="fade-in">
-                <div class="page-header">
-                    <h1>App Blocker</h1>
-                </div>
+                <h1 class="page-heading">The Rule Board</h1>
 
                 ${whitelistMode ? `
-                    <div class="focus-mode-card">
+                    <div class="lockdown-banner">
                         <div>
-                            <div class="focus-mode-card-title">Full Lockdown Active</div>
-                            <div class="focus-mode-card-detail">Non-whitelisted apps are being closed automatically.</div>
+                            <div class="lockdown-banner__title">FULL LOCKDOWN</div>
+                            <div class="lockdown-banner__detail">Non-whitelisted residents are being escorted home.</div>
                         </div>
-                        <button class="focus-exit-btn" onclick="App.runAction(() => App.exitFocusMode())">Exit Focus Mode</button>
+                        <button class="pixel-button pixel-button--danger" onclick="App.runAction(() => App.exitFocusMode())">EXIT</button>
                     </div>
                 ` : ''}
 
-                <!-- Whitelist Mode Toggle -->
-                <div class="card" style="margin-bottom: 24px;">
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <div>
-                            <div style="font-weight: 600; font-size: 15px;">Full Lockdown (Focus Mode)</div>
-                            <div style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
-                                Block ALL apps except those in your whitelist
-                            </div>
-                        </div>
-                        <label class="toggle">
-                            <input type="checkbox" ${whitelistMode ? 'checked' : ''} onchange="App.runAction(() => Blocker.toggleWhitelist(event.target.checked))">
-                            <span class="toggle-slider"></span>
-                        </label>
+                <div class="rule-toggle-panel">
+                    <div>
+                        <div class="rule-toggle-panel__title">FULL LOCKDOWN</div>
+                        <div class="rule-toggle-panel__detail">Close every resident except whitelisted ones.</div>
                     </div>
+                    <label class="rule-board__toggle" aria-label="Toggle full lockdown">
+                        <input type="checkbox" ${whitelistMode ? 'checked' : ''} onchange="App.runAction(() => Blocker.toggleWhitelist(event.target.checked))">
+                        <span class="rule-board__knob" aria-hidden="true"></span>
+                    </label>
                 </div>
 
-                <!-- Blocked Apps -->
-                <div class="section-header">
-                    <h2>Blocked Apps</h2>
-                    <button class="btn btn-primary btn-sm" onclick="App.runAction(() => Blocker.addBlock())">Block App</button>
+                <div class="charter-section__header">
+                    <h2 class="charter-section__title">BLOCKED RESIDENTS</h2>
+                    <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Blocker.addBlock())">ADD</button>
                 </div>
-                <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
-                    These apps will be force-quit when opened (or after their time limit).
-                </p>
-                ${blockedApps.length > 0 ? blockedApps.map(b => {
-                    const appName = App.escapeHtml(b.app_name);
-                    const firstLetter = App.escapeHtml(b.app_name.charAt(0).toUpperCase());
-                    return `
-                    <div class="block-item">
-                        <div class="block-item-info">
-                            <div class="app-icon" style="background: ${App.appColor(b.app_name)}; width: 32px; height: 32px; font-size: 13px;">
-                                ${firstLetter}
-                            </div>
-                            <div>
-                                <div class="block-item-name">${appName}</div>
-                                <div class="block-item-detail">
-                                    ${b.daily_limit_minutes ? `After ${App.formatTime(b.daily_limit_minutes)}` : 'Always blocked'}
-                                </div>
-                            </div>
-                        </div>
-                        <button class="btn btn-danger btn-sm" onclick="App.runAction(() => Blocker.removeBlock(${App.inlineArg(b.app_name)}))">Unblock</button>
+                <p class="rule-board__copy">These residents are sent home on sight.</p>
+                ${blockedApps.length > 0 ? `
+                    <div class="rule-list">
+                        ${blockedApps.map(b => ruleEntry(b)).join('')}
                     </div>
-                `;
-                }).join('') : `
-                    <div class="card" style="margin-bottom: 24px; text-align: center; padding: 32px;">
-                        <p style="color: var(--text-muted);">No apps blocked.</p>
-                    </div>
+                ` : `
+                    <div class="rule-empty">No residents are banished.</div>
                 `}
 
-                <!-- Whitelisted Apps -->
-                <div class="section-header" style="margin-top: 32px;">
-                    <h2>Whitelisted Apps</h2>
-                    <button class="btn btn-primary btn-sm" onclick="App.runAction(() => Blocker.addWhitelist())">Add to Whitelist</button>
+                <div class="charter-section__header">
+                    <h2 class="charter-section__title">WHITELISTED RESIDENTS</h2>
+                    <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Blocker.addWhitelist())">ADD</button>
                 </div>
-                <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
-                    These apps are always allowed, even in Focus Mode.
-                </p>
-                ${whitelisted.length > 0 ? whitelisted.map(b => {
-                    const appName = App.escapeHtml(b.app_name);
-                    const firstLetter = App.escapeHtml(b.app_name.charAt(0).toUpperCase());
-                    return `
-                    <div class="block-item">
-                        <div class="block-item-info">
-                            <div class="app-icon" style="background: var(--green); width: 32px; height: 32px; font-size: 13px;">
-                                ${firstLetter}
-                            </div>
-                            <div>
-                                <div class="block-item-name">${appName}</div>
-                                <div class="block-item-detail">Always allowed</div>
-                            </div>
-                        </div>
-                        <button class="btn btn-danger btn-sm" onclick="App.runAction(() => Blocker.removeBlock(${App.inlineArg(b.app_name)}))">Remove</button>
+                <p class="rule-board__copy">These residents are always allowed, even in lockdown.</p>
+                ${whitelisted.length > 0 ? `
+                    <div class="rule-list">
+                        ${whitelisted.map(b => ruleEntry(b, { allow: true })).join('')}
                     </div>
-                `;
-                }).join('') : `
-                    <div class="card" style="text-align: center; padding: 32px;">
-                        <p style="color: var(--text-muted);">No whitelisted apps. Add apps here to allow them during Focus Mode.</p>
-                    </div>
+                ` : `
+                    <div class="rule-empty">No residents are cleared for lockdown.</div>
                 `}
 
-                <!-- Block by Category -->
-                <div class="section-header" style="margin-top: 32px;">
-                    <h2>Block by Category</h2>
+                <div class="charter-section__header">
+                    <h2 class="charter-section__title">CATEGORY DECREES</h2>
                 </div>
-                <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
-                    Block all apps in a category at once.
-                </p>
-                <div class="cards-grid">
+                <p class="rule-board__copy">Block every resident in a category at once.</p>
+                <div class="category-grid">
                     ${categoryNames.map(cat => {
                         const isBlocked = blocked.some(b => b.app_name === `__category__${cat}`);
                         const catArg = App.inlineArg(cat);
                         return `
-                        <div class="card cat-card" onclick="App.runAction(() => Blocker.toggleCategory(${catArg}, ${!isBlocked}))">
-                            <div style="display: flex; align-items: center; justify-content: space-between;">
-                                <div>
-                                    <div style="font-weight: 600;">${App.escapeHtml(cat)}</div>
-                                    <div style="color: var(--text-muted); font-size: 12px;">${isBlocked ? 'Blocked' : 'Allowed'}</div>
-                                </div>
-                                <div class="cat-status-dot" style="background: ${isBlocked ? 'var(--red)' : 'var(--green)'};"></div>
+                        <button type="button" class="category-tile${isBlocked ? ' category-tile--blocked' : ''}" onclick="App.runAction(() => Blocker.toggleCategory(${catArg}, ${!isBlocked}))">
+                            <div>
+                                <div class="category-tile__name">${App.escapeHtml(cat)}</div>
+                                <div class="category-tile__state">${isBlocked ? 'BLOCKED' : 'ALLOWED'}</div>
                             </div>
-                        </div>`;
+                            <div class="category-tile__dot"></div>
+                        </button>`;
                     }).join('')}
                 </div>
             </div>
@@ -213,7 +187,7 @@ const Blocker = {
         });
         App.invalidateAppSuggestions();
         document.querySelector('.modal-overlay').remove();
-        App.toast(`${appName} has been blocked`, 'success');
+        App.toast(`${appName} banished`, 'success');
         this.render(document.getElementById('content'));
     },
 
@@ -252,7 +226,7 @@ const Blocker = {
         await App.api(`/api/blocks/${encodeURIComponent(appName)}`, { method: 'DELETE' });
         App.invalidateAppSuggestions();
         const label = appName.startsWith('__category__') ? appName.replace('__category__', '') : appName;
-        App.toast(`${label} unblocked`, 'info');
+        App.toast(appName.startsWith('__category__') ? `${label} residents pardoned` : `${label} decree lifted`, 'info');
         this.render(document.getElementById('content'));
     },
 
@@ -263,10 +237,10 @@ const Blocker = {
                 method: 'POST',
                 body: { app_name: name, block_type: 'blocked' },
             });
-            App.toast(`${category} apps blocked`, 'warning');
+            App.toast(`${category} residents banished`, 'warning');
         } else {
             await App.api(`/api/blocks/${encodeURIComponent(name)}`, { method: 'DELETE' });
-            App.toast(`${category} apps unblocked`, 'info');
+            App.toast(`${category} residents pardoned`, 'info');
         }
         this.render(document.getElementById('content'));
     },
