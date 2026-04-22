@@ -138,33 +138,33 @@ const Blocker = {
     async addBlock(prefillAppName = '') {
         const appNames = await App.getAppSuggestions();
         App.openModal(`
-            <div class="modal">
-                <h2>Block App</h2>
-                <div class="form-group">
-                    <label>App Name</label>
-                    <input type="text" id="blockAppName" list="blockAppOptions" placeholder="Choose or type an app" value="${App.escapeAttr(prefillAppName)}">
+            <div class="pixel-modal">
+                <h2 class="pixel-modal__title">BANISH A RESIDENT</h2>
+                <div class="pixel-modal__group">
+                    <label class="pixel-modal__label">RESIDENT</label>
+                    <input class="pixel-modal__input" type="text" id="blockAppName" list="blockAppOptions" placeholder="choose or type an app" value="${App.escapeAttr(prefillAppName)}">
                     ${App.appDatalist('blockAppOptions', appNames)}
                 </div>
-                <div class="form-group">
-                    <label>Block Type</label>
-                    <select id="blockType" onchange="document.getElementById('limitFields').style.display = this.value === 'limit' ? 'flex' : 'none'">
-                        <option value="always">Always block</option>
+                <div class="pixel-modal__group">
+                    <label class="pixel-modal__label">DECREE</label>
+                    <select class="pixel-modal__input" id="blockType" onchange="document.getElementById('limitFields').style.display = this.value === 'limit' ? 'grid' : 'none'">
+                        <option value="always">Always banished</option>
                         <option value="limit">After time limit</option>
                     </select>
                 </div>
-                <div class="form-row" id="limitFields" style="display: none;">
-                    <div class="form-group">
-                        <label>Hours</label>
-                        <input type="number" id="blockHours" min="0" max="23" value="1">
+                <div class="pixel-modal__row" id="limitFields" style="display: none;">
+                    <div class="pixel-modal__group">
+                        <label class="pixel-modal__label">HOURS</label>
+                        <input class="pixel-modal__input" type="number" id="blockHours" min="0" max="23" value="1">
                     </div>
-                    <div class="form-group">
-                        <label>Minutes</label>
-                        <input type="number" id="blockMinutes" min="0" max="59" value="0">
+                    <div class="pixel-modal__group">
+                        <label class="pixel-modal__label">MINUTES</label>
+                        <input class="pixel-modal__input" type="number" id="blockMinutes" min="0" max="59" value="0">
                     </div>
                 </div>
-                <div class="modal-actions">
-                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-                    <button class="btn btn-primary" onclick="App.runAction(() => Blocker.saveBlock())">Block</button>
+                <div class="pixel-modal__actions">
+                    <button class="pixel-button" onclick="this.closest('.modal-overlay').remove()">CANCEL</button>
+                    <button class="pixel-button pixel-button--danger" onclick="App.runAction(() => Blocker.saveBlock())">BANISH</button>
                 </div>
             </div>
         `, '#blockAppName');
@@ -194,16 +194,16 @@ const Blocker = {
     async addWhitelist(prefillAppName = '') {
         const appNames = await App.getAppSuggestions();
         App.openModal(`
-            <div class="modal">
-                <h2>Add to Whitelist</h2>
-                <div class="form-group">
-                    <label>App Name</label>
-                    <input type="text" id="whitelistAppName" list="whitelistAppOptions" placeholder="Choose or type an app" value="${App.escapeAttr(prefillAppName)}">
+            <div class="pixel-modal">
+                <h2 class="pixel-modal__title">WHITELIST A RESIDENT</h2>
+                <div class="pixel-modal__group">
+                    <label class="pixel-modal__label">RESIDENT</label>
+                    <input class="pixel-modal__input" type="text" id="whitelistAppName" list="whitelistAppOptions" placeholder="choose or type an app" value="${App.escapeAttr(prefillAppName)}">
                     ${App.appDatalist('whitelistAppOptions', appNames)}
                 </div>
-                <div class="modal-actions">
-                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-                    <button class="btn btn-primary" onclick="App.runAction(() => Blocker.saveWhitelist())">Add</button>
+                <div class="pixel-modal__actions">
+                    <button class="pixel-button" onclick="this.closest('.modal-overlay').remove()">CANCEL</button>
+                    <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Blocker.saveWhitelist())">ALLOW</button>
                 </div>
             </div>
         `, '#whitelistAppName');
