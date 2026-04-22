@@ -26,120 +26,136 @@ const Settings = {
 
         container.innerHTML = `
             <div class="fade-in">
-                <div class="page-header">
-                    <h1>Settings</h1>
+                <h1 class="page-heading">The Mayor's Study</h1>
+
+                <div class="study-section">
+                    <div class="study-section__header">
+                        <h2 class="study-section__title">APPEARANCE</h2>
+                    </div>
+                    <div class="study-panel">
+                        <div class="study-row">
+                            <div>
+                                <div class="study-row__label">CANDLELIGHT</div>
+                                <div class="study-row__detail">Switch between dawn and midnight palettes.</div>
+                            </div>
+                            <label class="rule-board__toggle" aria-label="Toggle candlelight">
+                                <input type="checkbox" ${isDark ? 'checked' : ''} onchange="App.toggleDarkMode()">
+                                <span class="rule-board__knob" aria-hidden="true"></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Appearance -->
-                <div class="section-header">
-                    <h2>Appearance</h2>
-                </div>
-                <div class="card" style="margin-bottom: 24px;">
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <div>
-                            <div style="font-weight: 600; font-size: 15px;">Dark Mode</div>
-                            <div style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
-                                Switch between light and dark themes
+                <div class="study-section">
+                    <div class="study-section__header">
+                        <h2 class="study-section__title">TRACKING</h2>
+                    </div>
+                    <div class="study-panel">
+                        <div class="study-row">
+                            <div>
+                                <div class="study-row__label">IDLE DETECTION</div>
+                                <div class="study-row__detail">Stop counting screen time after no keyboard or pointer activity.</div>
                             </div>
                         </div>
-                        <label class="toggle">
-                            <input type="checkbox" ${isDark ? 'checked' : ''} onchange="App.toggleDarkMode()">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Tracking -->
-                <div class="section-header">
-                    <h2>Tracking</h2>
-                </div>
-                <div class="card" style="margin-bottom: 24px;">
-                    <div style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">Idle Detection</div>
-                    <div style="color: var(--text-muted); font-size: 13px;">
-                        Stop counting screen time after no keyboard or pointer activity.
-                    </div>
-                    <div class="export-row">
-                        <div class="form-group">
-                            <label>Idle Timeout</label>
-                            <input type="number" id="idleTimeoutMinutes" min="0" max="120" value="${idleTimeout}">
-                        </div>
-                        <button class="btn btn-primary btn-sm" onclick="App.runAction(() => Settings.saveIdleTimeout())">Save</button>
-                    </div>
-                    <div style="color: var(--text-muted); font-size: 12px; margin-top: 10px;">Use 0 minutes to disable idle detection.</div>
-                </div>
-
-                <!-- Data Export -->
-                <div class="section-header">
-                    <h2>Data Export</h2>
-                </div>
-                <div class="card" style="margin-bottom: 24px;">
-                    <div style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">Export Your Data</div>
-                    <div style="color: var(--text-muted); font-size: 13px;">
-                        Download your screen time data as CSV or JSON.
-                    </div>
-                    <div class="export-row">
-                        <div class="form-group">
-                            <label>Start Date</label>
-                            <input type="date" id="exportStart" value="${weekAgo}">
-                        </div>
-                        <div class="form-group">
-                            <label>End Date</label>
-                            <input type="date" id="exportEnd" value="${today}">
-                        </div>
-                        <button class="btn btn-primary btn-sm" onclick="App.runAction(() => Settings.exportData('csv'))">Export CSV</button>
-                        <button class="btn btn-secondary btn-sm" onclick="App.runAction(() => Settings.exportData('json'))">Export JSON</button>
-                    </div>
-                </div>
-
-                <!-- App Categories -->
-                <div class="section-header">
-                    <h2>App Categories</h2>
-                    <button class="btn btn-primary btn-sm" onclick="App.runAction(() => Settings.addCategory())">Categorize App</button>
-                </div>
-                <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
-                    Assign apps to categories for better organization and category-based blocking.
-                </p>
-                <div class="cards-grid" style="margin-bottom: 32px;">
-                    ${Object.entries(catGroups).map(([cat, apps]) => `
-                        <div class="card">
-                            <div class="card-header">
-                                <span class="card-title" style="color: ${App.categoryColor(cat)}">${App.escapeHtml(cat)}</span>
-                                <span style="font-size: 12px; color: var(--text-muted);">${apps.length} apps</span>
+                        <div class="study-form">
+                            <div class="pixel-modal__group">
+                                <label class="pixel-modal__label">IDLE TIMEOUT (min)</label>
+                                <input class="pixel-modal__input" type="number" id="idleTimeoutMinutes" min="0" max="120" value="${idleTimeout}">
                             </div>
-                            <div style="font-size: 13px; color: var(--text-muted); line-height: 1.8;">
-                                ${apps.slice(0, 8).map(app => App.escapeHtml(app)).join(', ')}${apps.length > 8 ? `, +${apps.length - 8} more` : ''}
+                            <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Settings.saveIdleTimeout())">SAVE</button>
+                        </div>
+                        <div class="study-row__detail">Use 0 minutes to disable idle detection.</div>
+                    </div>
+                </div>
+
+                <div class="study-section">
+                    <div class="study-section__header">
+                        <h2 class="study-section__title">DATA EXPORT</h2>
+                    </div>
+                    <div class="study-panel">
+                        <div class="study-row">
+                            <div>
+                                <div class="study-row__label">EXPORT YOUR DATA</div>
+                                <div class="study-row__detail">Download a CSV or JSON dump of your sessions.</div>
                             </div>
                         </div>
-                    `).join('')}
-                </div>
-
-                <!-- Keyboard Shortcuts -->
-                <div class="section-header">
-                    <h2>Keyboard Shortcuts</h2>
-                </div>
-                <div class="kbd-grid" style="margin-bottom: 32px;">
-                    <div class="kbd-item"><kbd>←</kbd><kbd>→</kbd> <span class="kbd-desc">Navigate dates</span></div>
-                    <div class="kbd-item"><kbd>D</kbd> <span class="kbd-desc">Toggle dark mode</span></div>
-                    <div class="kbd-item"><kbd>/</kbd> <span class="kbd-desc">Search apps</span></div>
-                    <div class="kbd-item"><kbd>1</kbd>-<kbd>7</kbd> <span class="kbd-desc">Switch tabs</span></div>
-                    <div class="kbd-item"><kbd>Esc</kbd> <span class="kbd-desc">Close modals</span></div>
-                </div>
-
-                <!-- About -->
-                <div class="section-header">
-                    <h2>About Detox</h2>
-                </div>
-                <div class="card">
-                    <div style="text-align: center; padding: 20px;">
-                        <div style="font-size: 48px; margin-bottom: 12px;">🧘</div>
-                        <div style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">Detox</div>
-                        <div style="color: var(--text-muted); font-size: 13px;">
-                            Screen Time Tracker for macOS<br>
-                            Take control of your digital habits.
+                        <div class="study-form">
+                            <div class="pixel-modal__group">
+                                <label class="pixel-modal__label">START DATE</label>
+                                <input class="pixel-modal__input" type="date" id="exportStart" value="${weekAgo}">
+                            </div>
+                            <div class="pixel-modal__group">
+                                <label class="pixel-modal__label">END DATE</label>
+                                <input class="pixel-modal__input" type="date" id="exportEnd" value="${today}">
+                            </div>
+                            <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Settings.exportData('csv'))">EXPORT CSV</button>
+                            <button class="pixel-button" onclick="App.runAction(() => Settings.exportData('json'))">EXPORT JSON</button>
                         </div>
-                        <div style="margin-top: 16px; color: var(--text-muted); font-size: 12px;">
-                            Monitor polls active app every 2 seconds.<br>
-                            Data stored locally in SQLite.
+                    </div>
+                </div>
+
+                <div class="study-section">
+                    <div class="study-section__header">
+                        <h2 class="study-section__title">CATEGORIES</h2>
+                        <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Settings.addCategory())">CATEGORIZE</button>
+                    </div>
+                    <p class="rule-board__copy">Assign residents to categories for decrees and the Chronicle breakdown.</p>
+                    <div class="category-catalog">
+                        ${Object.entries(catGroups).map(([cat, apps]) => {
+                            const categoryName = App.escapeHtml(cat);
+                            const appList = apps.slice(0, 8).map(app => App.escapeHtml(app)).join(', ');
+                            const overflow = apps.length > 8 ? `, +${apps.length - 8} more` : '';
+                            return `
+                                <div class="category-card">
+                                    <div class="category-card__header">
+                                        <span class="category-card__name" style="color: ${App.categoryColor(cat)}">${categoryName}</span>
+                                        <span class="category-card__count">${apps.length} apps</span>
+                                    </div>
+                                    <div class="category-card__apps">${appList}${overflow}</div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <div class="study-section">
+                    <div class="study-section__header">
+                        <h2 class="study-section__title">SHORTCUTS</h2>
+                    </div>
+                    <div class="kbd-scroll">
+                        <div class="kbd-scroll__row">
+                            <span class="kbd-scroll__keys"><span class="kbd-scroll__key">←</span><span class="kbd-scroll__key">→</span></span>
+                            <span>Navigate dates</span>
+                        </div>
+                        <div class="kbd-scroll__row">
+                            <span class="kbd-scroll__keys"><span class="kbd-scroll__key">D</span></span>
+                            <span>Toggle candlelight</span>
+                        </div>
+                        <div class="kbd-scroll__row">
+                            <span class="kbd-scroll__keys"><span class="kbd-scroll__key">/</span></span>
+                            <span>Search residents</span>
+                        </div>
+                        <div class="kbd-scroll__row">
+                            <span class="kbd-scroll__keys"><span class="kbd-scroll__key">1</span>-<span class="kbd-scroll__key">8</span></span>
+                            <span>Switch tabs</span>
+                        </div>
+                        <div class="kbd-scroll__row">
+                            <span class="kbd-scroll__keys"><span class="kbd-scroll__key">Esc</span></span>
+                            <span>Close modals</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="study-section">
+                    <div class="study-section__header">
+                        <h2 class="study-section__title">ABOUT</h2>
+                    </div>
+                    <div class="about-study">
+                        <div class="about-study__sigil">🏛</div>
+                        <div class="about-study__title">DETOX ISLE</div>
+                        <div class="about-study__copy">
+                            A private screen-time tracker for macOS.<br>
+                            Monitor polls every 2 seconds. Data stays on this Mac.
                         </div>
                     </div>
                 </div>
