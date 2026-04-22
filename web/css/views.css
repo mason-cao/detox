@@ -433,3 +433,29 @@
     gap: var(--sp-2);
     margin-top: var(--sp-4);
 }
+
+/* ── Market (placeholder) ────────────────────────────────────────────── */
+.market-placeholder {
+    padding: var(--sp-8) var(--sp-4);
+    background: var(--dc-parchment);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    text-align: center;
+}
+.market-placeholder__seal {
+    font-size: 64px;
+    line-height: 1;
+    margin-bottom: var(--sp-4);
+}
+.market-placeholder__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-display);
+    color: var(--dc-ink);
+    letter-spacing: 1px;
+    margin-bottom: var(--sp-3);
+}
+.market-placeholder__body {
+    font-family: var(--font-game);
+    font-size: var(--fs-lg);
+    color: var(--dc-ink-soft);
+    line-height: 1.5;
+}
