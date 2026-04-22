@@ -9,9 +9,20 @@ const Market = {
                 <div class="market-placeholder">
                     <div class="market-placeholder__seal">🏪</div>
                     <div class="market-placeholder__title">THE STALLS ARE CLOSED</div>
+                    <div class="market-placeholder__pledge">
+                        The mayor does not accept gold from the outside world.
+                    </div>
                     <div class="market-placeholder__body">
-                        The mayor is still building the economy.<br>
-                        Return when Sunlight can be earned and spent.
+                        Sunlight and Starshards will open this bazaar for decorations,
+                        building skins, weather charms, outfits, maps, and sounds.
+                    </div>
+                    <div class="market-placeholder__categories" aria-label="Planned market categories">
+                        <span>DECOR</span>
+                        <span>BUILDINGS</span>
+                        <span>WEATHER</span>
+                        <span>OUTFITS</span>
+                        <span>MAPS</span>
+                        <span>SOUNDS</span>
                     </div>
                 </div>
             </div>

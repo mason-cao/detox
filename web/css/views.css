@@ -437,8 +437,11 @@
 /* ── Market (placeholder) ────────────────────────────────────────────── */
 .market-placeholder {
     padding: var(--sp-8) var(--sp-4);
-    background: var(--dc-parchment);
-    box-shadow: 0 0 0 2px var(--dc-ink);
+    background: var(--dc-night);
+    color: #e8ddf0;
+    box-shadow:
+        0 0 0 2px var(--dc-ink),
+        inset 0 0 0 2px rgba(255, 255, 255, 0.08);
     text-align: center;
 }
 .market-placeholder__seal {
@@ -449,13 +452,38 @@
 .market-placeholder__title {
     font-family: var(--font-display);
     font-size: var(--fs-display);
-    color: var(--dc-ink);
+    color: var(--dc-coin);
     letter-spacing: 1px;
+    margin-bottom: var(--sp-3);
+}
+.market-placeholder__pledge {
+    font-family: var(--font-game);
+    font-size: var(--fs-lg);
+    color: var(--dc-shard);
+    line-height: 1.4;
     margin-bottom: var(--sp-3);
 }
 .market-placeholder__body {
     font-family: var(--font-game);
     font-size: var(--fs-lg);
-    color: var(--dc-ink-soft);
+    color: #e8ddf0;
     line-height: 1.5;
+    max-width: 640px;
+    margin: 0 auto;
+}
+.market-placeholder__categories {
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-2);
+    flex-wrap: wrap;
+    margin-top: var(--sp-5);
+}
+.market-placeholder__categories span {
+    padding: var(--sp-2) var(--sp-3);
+    background: rgba(255, 244, 214, 0.08);
+    box-shadow: 0 0 0 2px rgba(232, 221, 240, 0.35);
+    font-family: var(--font-display);
+    font-size: 10px;
+    color: #e8ddf0;
+    letter-spacing: 0.5px;
 }
