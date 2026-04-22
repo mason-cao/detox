@@ -220,21 +220,21 @@ const Settings = {
         const selectedCategory = existing ? existing.category : 'Productivity';
 
         App.openModal(`
-            <div class="modal">
-                <h2>Categorize App</h2>
-                <div class="form-group">
-                    <label>App Name</label>
-                    <input type="text" id="catAppName" list="categoryAppOptions" placeholder="Choose or type an app" value="${App.escapeAttr(prefillAppName)}">
+            <div class="pixel-modal">
+                <h2 class="pixel-modal__title">CATEGORIZE RESIDENT</h2>
+                <div class="pixel-modal__group">
+                    <label class="pixel-modal__label">RESIDENT</label>
+                    <input class="pixel-modal__input" type="text" id="catAppName" list="categoryAppOptions" placeholder="choose or type an app" value="${App.escapeAttr(prefillAppName)}">
                     ${App.appDatalist('categoryAppOptions', appNames)}
                 </div>
-                <div class="form-group">
-                    <label>Category</label>
-                    <input type="text" id="catCategory" list="categoryOptions" value="${App.escapeAttr(selectedCategory)}">
+                <div class="pixel-modal__group">
+                    <label class="pixel-modal__label">CATEGORY</label>
+                    <input class="pixel-modal__input" type="text" id="catCategory" list="categoryOptions" value="${App.escapeAttr(selectedCategory)}">
                     ${App.datalist('categoryOptions', categoryOptions)}
                 </div>
-                <div class="modal-actions">
-                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-                    <button class="btn btn-primary" onclick="App.runAction(() => Settings.saveCategory())">Save</button>
+                <div class="pixel-modal__actions">
+                    <button class="pixel-button" onclick="this.closest('.modal-overlay').remove()">CANCEL</button>
+                    <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Settings.saveCategory())">SAVE</button>
                 </div>
             </div>
         `, '#catAppName');
