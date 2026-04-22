@@ -315,6 +315,7 @@ const App = {
             case 'stats': return Stats.render(content);
             case 'goals': return Goals.render(content);
             case 'blocker': return Blocker.render(content);
+            case 'market': return Market.render(content);
             case 'cards': return Cards.render(content);
             case 'settings': return Settings.render(content);
             default: throw new Error(`Unknown tab: ${tab}`);
