@@ -487,3 +487,183 @@
     color: #e8ddf0;
     letter-spacing: 0.5px;
 }
+
+/* ── Rule Board ─────────────────────────────────────────────────────── */
+.rule-board__copy {
+    font-family: var(--font-game);
+    font-size: var(--fs-lg);
+    color: var(--dc-ink-soft);
+    margin: 0 0 var(--sp-3) 0;
+}
+
+.lockdown-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--dc-danger);
+    color: #fff;
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    margin-bottom: var(--sp-4);
+}
+.lockdown-banner__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-display);
+    letter-spacing: 0.5px;
+}
+.lockdown-banner__detail {
+    font-family: var(--font-game);
+    font-size: var(--fs-md);
+    margin-top: 2px;
+    opacity: 0.9;
+}
+
+.rule-toggle-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--dc-parchment);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    margin-bottom: var(--sp-5);
+}
+.rule-toggle-panel__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-display);
+    color: var(--dc-ink);
+    letter-spacing: 0.5px;
+}
+.rule-toggle-panel__detail {
+    font-family: var(--font-game);
+    font-size: var(--fs-md);
+    color: var(--dc-ink-soft);
+    margin-top: 2px;
+}
+
+.rule-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-5);
+}
+.rule-entry {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: var(--sp-3);
+    background: var(--dc-parchment);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+}
+.rule-entry__portrait {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 12px;
+    color: #fff;
+    box-shadow: 0 0 0 2px var(--dc-ink);
+}
+.rule-entry--allow .rule-entry__portrait { background: var(--dc-ok); }
+.rule-entry__name {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    color: var(--dc-ink);
+    font-size: var(--fs-md);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.rule-entry__detail {
+    font-family: var(--font-game);
+    font-size: var(--fs-md);
+    color: var(--dc-ink-soft);
+    margin-top: 2px;
+}
+.rule-empty {
+    padding: var(--sp-5);
+    text-align: center;
+    background: var(--dc-parchment);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    font-family: var(--font-game);
+    font-size: var(--fs-md);
+    color: var(--dc-ink-soft);
+    margin-bottom: var(--sp-5);
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-4);
+}
+.category-tile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    padding: var(--sp-3);
+    background: var(--dc-parchment);
+    color: var(--dc-ink);
+    border: none;
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    cursor: pointer;
+    font-family: var(--font-ui);
+    text-align: left;
+}
+.category-tile:hover { background: var(--dc-noon); }
+.category-tile--blocked { background: var(--dc-night); color: #fff; }
+.category-tile--blocked:hover { background: var(--dc-danger); }
+.category-tile__name {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.5px;
+}
+.category-tile__state {
+    font-family: var(--font-game);
+    font-size: var(--fs-md);
+    margin-top: 2px;
+    opacity: 0.85;
+}
+.category-tile__dot {
+    width: 12px;
+    height: 12px;
+    flex: 0 0 auto;
+    box-shadow: 0 0 0 2px var(--dc-ink);
+}
+.category-tile--blocked .category-tile__dot { background: var(--dc-danger); }
+.category-tile:not(.category-tile--blocked) .category-tile__dot { background: var(--dc-ok); }
+
+.rule-board__toggle {
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    background: var(--dc-sand);
+    box-shadow: inset 0 0 0 2px var(--dc-ink);
+    position: relative;
+    cursor: pointer;
+    vertical-align: middle;
+    flex: 0 0 auto;
+}
+.rule-board__toggle input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+.rule-board__knob {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 16px;
+    height: 16px;
+    background: var(--dc-ink);
+    transition: left 140ms steps(4), background 140ms steps(4);
+}
+.rule-board__toggle input:checked + .rule-board__knob {
+    left: 24px;
+    background: var(--dc-danger);
+}
