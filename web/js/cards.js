@@ -1,4 +1,4 @@
-/* ── Shareable Cards View ─────────────────────────────────────────── */
+/* ── Postcards View ───────────────────────────────────────────────── */
 
 const Cards = {
     generatedUrl: null,
@@ -9,26 +9,25 @@ const Cards = {
 
         container.innerHTML = `
             <div class="fade-in">
-                <div class="page-header">
-                    <h1>Share Card</h1>
-                    <div class="date-nav">
-                        <button onclick="App.prevDate()">&#8249;</button>
-                        <span class="date-label">${App.formatDate(date)}</span>
-                        <button onclick="App.nextDate()">&#8250;</button>
+                <div class="page-bar">
+                    <h1 class="page-heading">Postcards</h1>
+                    <div class="postcard-date-nav">
+                        <button class="pixel-button" onclick="App.prevDate()">&#8249;</button>
+                        <span>${App.formatDate(date)}</span>
+                        <button class="pixel-button" onclick="App.nextDate()">&#8250;</button>
                     </div>
                 </div>
 
-                <div class="card" style="text-align: center; padding: 40px;">
-                    <p style="color: var(--text-muted); margin-bottom: 24px;">
-                        Generate a personalized card showing your screen time stats.<br>
-                        Share it with friends to encourage healthier habits!
-                    </p>
-                    <button class="btn btn-primary" onclick="Cards.generate('${date}')" id="generateBtn">
-                        Generate Card
+                <div class="postcard-intro">
+                    <div class="postcard-intro__copy">
+                        Stamp a postcard for today's island and send it to a friend. No one sees your data but you.
+                    </div>
+                    <button class="pixel-button pixel-button--primary" onclick="Cards.generate('${date}')" id="generateBtn">
+                        STAMP POSTCARD
                     </button>
                 </div>
 
-                <div id="cardPreview" style="margin-top: 32px;"></div>
+                <div id="cardPreview"></div>
             </div>
         `;
 
@@ -39,7 +38,7 @@ const Cards = {
 
     async generate(date) {
         const btn = document.getElementById('generateBtn');
-        btn.textContent = 'Generating...';
+        btn.textContent = 'STAMPING...';
         btn.disabled = true;
 
         try {
@@ -49,11 +48,11 @@ const Cards = {
             });
             this.generatedUrl = result.url;
             this.showPreview(result.url);
-            App.toast('Card generated!', 'success');
+            App.toast('Postcard stamped', 'success');
         } catch (e) {
-            btn.textContent = 'Error - Try Again';
+            btn.textContent = 'ERROR - TRY AGAIN';
             btn.disabled = false;
-            App.toast('Failed to generate card', 'error');
+            App.toast('Failed to stamp postcard', 'error');
         }
     },
 
@@ -62,13 +61,13 @@ const Cards = {
         if (!preview) return;
         const safeUrl = App.escapeAttr(url);
         preview.innerHTML = `
-            <div style="text-align: center;">
-                <div class="card-preview">
-                    <img src="${safeUrl}" alt="Screen Time Card">
+            <div class="postcard-preview">
+                <div class="postcard-preview__frame">
+                    <img src="${safeUrl}" alt="Island postcard">
                 </div>
-                <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: center;">
-                    <a href="${safeUrl}" download="detox-card.png" class="btn btn-primary">Download PNG</a>
-                    <button class="btn btn-secondary" onclick="Cards.generatedUrl=null; Cards.render(document.getElementById('content'))">Generate New</button>
+                <div class="postcard-preview__actions">
+                    <a href="${safeUrl}" download="detox-postcard.png" class="pixel-button pixel-button--primary">DOWNLOAD</a>
+                    <button class="pixel-button" onclick="Cards.generatedUrl=null; Cards.render(document.getElementById('content'))">STAMP ANOTHER</button>
                 </div>
             </div>
         `;

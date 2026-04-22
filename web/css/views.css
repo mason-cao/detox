@@ -667,3 +667,54 @@
     left: 24px;
     background: var(--dc-danger);
 }
+
+/* ── Postcards (share cards) ─────────────────────────────────────────── */
+.postcard-intro {
+    padding: var(--sp-5);
+    background: var(--dc-parchment);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    text-align: center;
+    margin-bottom: var(--sp-4);
+}
+.postcard-intro__copy {
+    font-family: var(--font-game);
+    font-size: var(--fs-lg);
+    color: var(--dc-ink);
+    margin-bottom: var(--sp-4);
+    line-height: 1.4;
+}
+.postcard-date-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    font-family: var(--font-game);
+    font-size: var(--fs-lg);
+    color: var(--dc-ink);
+}
+
+.postcard-preview {
+    padding: var(--sp-5);
+    background: var(--dc-parchment);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    text-align: center;
+}
+.postcard-preview__frame {
+    display: inline-block;
+    padding: var(--sp-2);
+    background: var(--dc-sand);
+    box-shadow: 0 0 0 3px var(--dc-ink);
+    margin-bottom: var(--sp-4);
+}
+.postcard-preview__frame img {
+    display: block;
+    max-width: 100%;
+    max-height: 60vh;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+.postcard-preview__actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-3);
+    flex-wrap: wrap;
+}
