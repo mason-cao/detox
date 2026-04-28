@@ -7,12 +7,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css?v=20260428">
-    <link rel="stylesheet" href="/css/tokens.css?v=20260428">
-    <link rel="stylesheet" href="/css/pixel-ui.css?v=20260428">
-    <link rel="stylesheet" href="/css/hud.css?v=20260428">
-    <link rel="stylesheet" href="/css/isle.css?v=20260428">
-    <link rel="stylesheet" href="/css/views.css?v=20260428">
+    <link rel="stylesheet" href="/css/style.css?v=20260428h">
+    <link rel="stylesheet" href="/css/tokens.css?v=20260428h">
+    <link rel="stylesheet" href="/css/pixel-ui.css?v=20260428h">
+    <link rel="stylesheet" href="/css/hud.css?v=20260428h">
+    <link rel="stylesheet" href="/css/isle.css?v=20260428h">
+    <link rel="stylesheet" href="/css/views.css?v=20260428h">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -53,31 +53,79 @@
         </nav>
     </div>
 
-    <div class="help-overlay" id="helpOverlay" onclick="if(event.target===this)HUD.closeHelp()">
-        <div class="help-overlay__panel pixel-panel">
-            <h2 class="help-overlay__title">How the Isle works</h2>
+    <div class="help-overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle" onclick="if(event.target===this)HUD.closeHelp()">
+        <div class="help-overlay__panel pixel-panel" tabindex="-1">
+            <div class="help-overlay__header">
+                <h2 class="help-overlay__title" id="helpTitle">Isle Guide</h2>
+                <button class="hud-icon-button" type="button" onclick="HUD.closeHelp()" aria-label="Close help">×</button>
+            </div>
+            <div class="help-tabs" role="tablist" aria-label="Help sections">
+                <button class="help-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="helpTour" data-help-tab="tour" onclick="HUD.selectHelpTab('tour')">Tour</button>
+                <button class="help-tab" type="button" role="tab" aria-selected="false" aria-controls="helpRules" data-help-tab="rules" onclick="HUD.selectHelpTab('rules')">Game</button>
+                <button class="help-tab" type="button" role="tab" aria-selected="false" aria-controls="helpKeys" data-help-tab="keys" onclick="HUD.selectHelpTab('keys')">Keys</button>
+                <button class="help-tab" type="button" role="tab" aria-selected="false" aria-controls="helpNews" data-help-tab="news" onclick="HUD.selectHelpTab('news')">What's New</button>
+            </div>
             <div class="help-overlay__body">
-                <p>Each app you use is a <strong>resident</strong> of your isle. The ones you spend the most time with get the biggest plots.</p>
-                <p><strong>Sunlight (☀)</strong> grows while you stay under your daily budget. <strong>Starshards (✦)</strong> come from streaks and milestones — they're the rarer currency.</p>
-                <p>The sky and sun/moon track your local time. Close the app, touch grass, come back tomorrow.</p>
-                <p>Shortcuts: <kbd>1</kbd>–<kbd>8</kbd> switch tabs, <kbd>D</kbd> toggles theme, <kbd>?</kbd> opens this panel, <kbd>Esc</kbd> closes it.</p>
-                <button class="pixel-button" onclick="HUD.closeHelp()" style="margin-top: var(--sp-4)">Got it</button>
+                <section class="help-panel is-active" id="helpTour" role="tabpanel" data-help-panel="tour">
+                    <div class="help-tour" aria-live="polite">
+                        <div class="help-tour__eyebrow" id="helpTourStep">Step 1 of 8</div>
+                        <h3 class="help-tour__title" id="helpTourTitle">The Isle</h3>
+                        <p class="help-tour__body" id="helpTourBody">Start here for live weather, top residents, and the current state of your day.</p>
+                        <div class="help-tour__progress" id="helpTourProgress" aria-hidden="true"></div>
+                        <div class="help-tour__actions">
+                            <button class="pixel-button" type="button" onclick="HUD.prevTourStep()">PREV</button>
+                            <button class="pixel-button pixel-button--primary" type="button" onclick="HUD.nextTourStep()">NEXT</button>
+                        </div>
+                    </div>
+                </section>
+                <section class="help-panel" id="helpRules" role="tabpanel" data-help-panel="rules" hidden>
+                    <div class="help-rule-grid">
+                        <div class="help-rule"><strong>☀ Sunlight</strong><span>Earned from minutes left under daily and per-app limits. Capped at 120 per day.</span></div>
+                        <div class="help-rule"><strong>✦ Starshards</strong><span>Awarded by streak days, clean weeks, and named milestones.</span></div>
+                        <div class="help-rule"><strong>Weather</strong><span>Sunny means under goal, clouds mean close, storm means over.</span></div>
+                        <div class="help-rule"><strong>Refunds</strong><span>Market items refund 100% for 24 hours, then 50% after that.</span></div>
+                        <div class="help-rule"><strong>Resident states</strong><span>✓ under limit, ⚠ near limit, ✗ over limit, 🚫 blocked or banished.</span></div>
+                        <div class="help-rule"><strong>Streaks</strong><span>Days at or under the daily goal extend the streak. Days without a goal are neutral.</span></div>
+                    </div>
+                </section>
+                <section class="help-panel" id="helpKeys" role="tabpanel" data-help-panel="keys" hidden>
+                    <div class="help-key-list">
+                        <div><kbd>1</kbd><span>Isle</span></div>
+                        <div><kbd>2</kbd><span>Residents</span></div>
+                        <div><kbd>3</kbd><span>Chronicle</span></div>
+                        <div><kbd>4</kbd><span>Charter</span></div>
+                        <div><kbd>5</kbd><span>Rule Board</span></div>
+                        <div><kbd>6</kbd><span>Market</span></div>
+                        <div><kbd>7</kbd><span>Postcards</span></div>
+                        <div><kbd>8</kbd><span>Study</span></div>
+                        <div><kbd>←</kbd><kbd>→</kbd><span>Date navigation</span></div>
+                        <div><kbd>?</kbd><span>Open help</span></div>
+                        <div><kbd>/</kbd><span>Search residents</span></div>
+                        <div><kbd>D</kbd><span>Toggle theme</span></div>
+                        <div><kbd>Esc</kbd><span>Close overlay</span></div>
+                    </div>
+                </section>
+                <section class="help-panel" id="helpNews" role="tabpanel" data-help-panel="news" hidden>
+                    <div class="help-news-list" id="helpNewsList" aria-live="polite">
+                        <div class="help-news-empty">Loading changelog...</div>
+                    </div>
+                </section>
             </div>
         </div>
     </div>
 
     <div class="toast-container" id="toastContainer"></div>
 
-    <script src="/js/app.js?v=20260428"></script>
-    <script src="/js/hud.js?v=20260428"></script>
-    <script src="/js/isle.js?v=20260428"></script>
-    <script src="/js/dashboard.js?v=20260428"></script>
-    <script src="/js/apps.js?v=20260428"></script>
-    <script src="/js/stats.js?v=20260428"></script>
-    <script src="/js/goals.js?v=20260428"></script>
-    <script src="/js/blocker.js?v=20260428"></script>
-    <script src="/js/market.js?v=20260428"></script>
-    <script src="/js/cards.js?v=20260428"></script>
-    <script src="/js/settings.js?v=20260428"></script>
+    <script src="/js/app.js?v=20260428h"></script>
+    <script src="/js/hud.js?v=20260428h"></script>
+    <script src="/js/isle.js?v=20260428h"></script>
+    <script src="/js/dashboard.js?v=20260428h"></script>
+    <script src="/js/apps.js?v=20260428h"></script>
+    <script src="/js/stats.js?v=20260428h"></script>
+    <script src="/js/goals.js?v=20260428h"></script>
+    <script src="/js/blocker.js?v=20260428h"></script>
+    <script src="/js/market.js?v=20260428h"></script>
+    <script src="/js/cards.js?v=20260428h"></script>
+    <script src="/js/settings.js?v=20260428h"></script>
 </body>
 </html>

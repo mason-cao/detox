@@ -63,6 +63,24 @@ MARKET_CATALOG = [
     },
 ]
 
+CHANGELOG_ENTRIES = [
+    {
+        "date": "2026-04-28",
+        "title": "Market and rewards ledger",
+        "body": "The Market now supports earned Sunlight, Starshards, inventory, refunds, and Hall of Honor awards.",
+    },
+    {
+        "date": "2026-04-18",
+        "title": "Rule Board and Mayor's Study",
+        "body": "Blocker controls and settings moved into the Detox Isle visual system.",
+    },
+    {
+        "date": "2026-04-17",
+        "title": "Detox Isle foundation",
+        "body": "The local dashboard gained the HUD, bottom ribbon, pixel tokens, and isometric Isle home.",
+    },
+]
+
 DEFAULT_CATEGORIES = {
     "Safari": "Productivity",
     "Google Chrome": "Productivity",
