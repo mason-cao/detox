@@ -6,6 +6,8 @@ const HUD = {
     helpTourIndex: 0,
     helpTourIntervalId: null,
     lastFocusedElement: null,
+    motionMedia: null,
+    motionListenerBound: false,
     tourSteps: [
         ['The Isle', 'Start here for live weather, top residents, and the current state of your day.'],
         ['Residents', 'Open the registry to inspect every tracked app, assign categories, and set per-app decrees.'],
@@ -40,6 +42,7 @@ const HUD = {
         if (!localStorage.getItem('detox-help-seen')) {
             setTimeout(() => this.openHelp('tour'), 700);
         }
+        this.bindMotionPreference();
     },
 
     isTyping(el) {
@@ -93,6 +96,28 @@ const HUD = {
         localStorage.setItem('detox-help-seen', '1');
         this.selectHelpTab(tab);
         requestAnimationFrame(() => panel.focus());
+    },
+
+    bindMotionPreference() {
+        if (!this.motionMedia) {
+            this.motionMedia = window.matchMedia('(prefers-reduced-motion: reduce)');
+        }
+        if (this.motionListenerBound) return;
+
+        const onChange = () => {
+            if (App.prefersReducedMotion()) {
+                this.stopTourTimer();
+            } else if (this.isHelpOpen()) {
+                const activeTab = document.querySelector('[data-help-tab].is-active');
+                if (activeTab?.dataset.helpTab === 'tour') this.startTourTimer();
+            }
+        };
+        if (this.motionMedia.addEventListener) {
+            this.motionMedia.addEventListener('change', onChange);
+        } else if (this.motionMedia.addListener) {
+            this.motionMedia.addListener(onChange);
+        }
+        this.motionListenerBound = true;
     },
 
     closeHelp() {
@@ -210,13 +235,15 @@ const HUD = {
             return;
         }
 
-        if (e.key === 'ArrowRight') {
+        const activeTab = document.querySelector('[data-help-tab].is-active');
+
+        if (e.key === 'ArrowRight' && activeTab?.dataset.helpTab === 'tour') {
             e.preventDefault();
             this.nextTourStep();
             return;
         }
 
-        if (e.key === 'ArrowLeft') {
+        if (e.key === 'ArrowLeft' && activeTab?.dataset.helpTab === 'tour') {
             e.preventDefault();
             this.prevTourStep();
             return;
