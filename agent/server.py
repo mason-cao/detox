@@ -147,6 +147,8 @@ def api_route(f):
                 value = request.args.get(field_name)
                 if value is not None:
                     validate_date(value, field_name)
+            if request.path.startswith("/api/"):
+                db.run_rollup_if_needed()
             return f(*args, **kwargs)
         except ApiError as e:
             return jsonify({"error": e.message}), e.status_code
@@ -398,6 +400,62 @@ def api_categories_set():
     category = require_text(data, "category")
     db.set_category(app_name, category)
     return jsonify({"ok": True})
+
+
+# ── Rewards and Market API ──────────────────────────────────────────────
+
+@app.route("/api/rewards/balance")
+@api_route
+def api_rewards_balance():
+    return jsonify(db.get_rewards_balance())
+
+
+@app.route("/api/rewards/awards")
+@api_route
+def api_rewards_awards():
+    return jsonify(db.get_rewards_awards())
+
+
+@app.route("/api/market/catalog")
+@api_route
+def api_market_catalog():
+    return jsonify(db.get_market_catalog())
+
+
+@app.route("/api/market/inventory")
+@api_route
+def api_market_inventory():
+    return jsonify(db.get_market_inventory())
+
+
+@app.route("/api/market/buy", methods=["POST"])
+@api_route
+def api_market_buy():
+    data = get_json_object()
+    item_key = require_text(data, "item_key")
+    try:
+        balance = db.buy_market_item(item_key)
+    except db.RewardError as e:
+        raise ApiError(e.code)
+    return jsonify({"ok": True, "balance": balance})
+
+
+@app.route("/api/market/refund", methods=["POST"])
+@api_route
+def api_market_refund():
+    data = get_json_object()
+    try:
+        spend_id = int(data.get("spend_id"))
+    except (TypeError, ValueError):
+        raise ApiError("unknown_spend")
+    if spend_id <= 0:
+        raise ApiError("unknown_spend")
+
+    try:
+        result = db.refund_market_item(spend_id)
+    except db.RewardError as e:
+        raise ApiError(e.code)
+    return jsonify({"ok": True, **result})
 
 
 # ── Cards API ────────────────────────────────────────────────────────────

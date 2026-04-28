@@ -1,18 +1,27 @@
 import sqlite3
 import time
+import calendar
 from datetime import datetime, timedelta
 from contextlib import contextmanager
 from agent.config import (
     DB_PATH,
+    DAILY_CAP_SUNLIGHT,
     DEFAULT_CATEGORIES,
     DEFAULT_SETTINGS,
     FOCUS_MODE_RECOVERY_APPS,
+    MARKET_CATALOG,
     POLL_INTERVAL,
     SESSION_GAP_THRESHOLD,
 )
 
 
 USAGE_MINUTES_SQL = f"COUNT(*) * {float(POLL_INTERVAL)} / 60.0"
+
+
+class RewardError(Exception):
+    def __init__(self, code):
+        super().__init__(code)
+        self.code = code
 
 
 def get_connection():
@@ -91,6 +100,33 @@ def init_db():
                 key TEXT PRIMARY KEY,
                 value TEXT
             );
+
+            CREATE TABLE IF NOT EXISTS rewards_ledger (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                kind TEXT NOT NULL CHECK (kind IN ('spend', 'refund')),
+                currency TEXT NOT NULL CHECK (currency IN ('sunlight', 'starshard')),
+                amount INTEGER NOT NULL,
+                item_key TEXT NOT NULL,
+                spend_id INTEGER,
+                created_at REAL NOT NULL,
+                FOREIGN KEY (spend_id) REFERENCES rewards_ledger(id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_rewards_ledger_kind ON rewards_ledger(kind);
+            CREATE INDEX IF NOT EXISTS idx_rewards_ledger_item ON rewards_ledger(item_key);
+
+            CREATE TABLE IF NOT EXISTS rewards_awards (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                kind TEXT NOT NULL CHECK (kind IN ('streak_day', 'clean_week', 'milestone')),
+                detail TEXT NOT NULL,
+                currency TEXT NOT NULL DEFAULT 'starshard',
+                amount INTEGER NOT NULL,
+                awarded_for_date TEXT NOT NULL,
+                awarded_at REAL NOT NULL,
+                UNIQUE (kind, detail, awarded_for_date)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_rewards_awards_date ON rewards_awards(awarded_for_date);
         """)
 
         # Seed default categories
@@ -308,6 +344,449 @@ def get_daily_stats(date):
 def get_weekly_stats(week_start):
     """Get weekly statistics."""
     return get_weekly_data(week_start)
+
+
+# ── Rewards and market ─────────────────────────────────────────────────
+
+REFUND_FULL_WINDOW_SECONDS = 24 * 60 * 60
+MILESTONE_AWARDS = {
+    7: ("first_7_streak", 1),
+    14: ("first_14_streak", 2),
+    30: ("first_30_streak", 5),
+}
+
+
+def _today_str():
+    return datetime.now().strftime("%Y-%m-%d")
+
+
+def _date_from_str(value):
+    return datetime.strptime(value, "%Y-%m-%d").date()
+
+
+def _date_range(start, end):
+    current = _date_from_str(start)
+    end_date = _date_from_str(end)
+    while current <= end_date:
+        yield current.strftime("%Y-%m-%d")
+        current += timedelta(days=1)
+
+
+def _catalog_by_key():
+    return {item["key"]: dict(item) for item in MARKET_CATALOG}
+
+
+def get_market_catalog():
+    return [dict(item) for item in MARKET_CATALOG]
+
+
+def _get_active_daily_total_goal(conn):
+    row = conn.execute(
+        """SELECT target_minutes FROM goals
+           WHERE active = 1
+             AND type = 'daily_total'
+             AND target_minutes IS NOT NULL
+           ORDER BY id DESC
+           LIMIT 1"""
+    ).fetchone()
+    return int(row["target_minutes"]) if row else None
+
+
+def _get_active_app_limits(conn):
+    rows = conn.execute(
+        """SELECT app_name, MIN(target_minutes) as target_minutes
+           FROM goals
+           WHERE active = 1
+             AND type = 'app_limit'
+             AND app_name IS NOT NULL
+             AND target_minutes IS NOT NULL
+           GROUP BY app_name"""
+    ).fetchall()
+    return {r["app_name"]: int(r["target_minutes"]) for r in rows}
+
+
+def _usage_bounds(conn):
+    row = conn.execute(
+        "SELECT MIN(date) as first_date, MAX(date) as last_date FROM app_usage"
+    ).fetchone()
+    return row["first_date"], row["last_date"]
+
+
+def _daily_usage_totals(conn):
+    rows = conn.execute(
+        f"""SELECT date, {USAGE_MINUTES_SQL} as minutes
+           FROM app_usage
+           GROUP BY date"""
+    ).fetchall()
+    return {r["date"]: float(r["minutes"] or 0) for r in rows}
+
+
+def _app_usage_totals(conn, app_names):
+    if not app_names:
+        return {}
+    placeholders = ", ".join("?" for _ in app_names)
+    rows = conn.execute(
+        f"""SELECT date, app_name, {USAGE_MINUTES_SQL} as minutes
+           FROM app_usage
+           WHERE app_name IN ({placeholders})
+           GROUP BY date, app_name""",
+        tuple(app_names),
+    ).fetchall()
+    result = {}
+    for row in rows:
+        result.setdefault(row["date"], {})[row["app_name"]] = float(row["minutes"] or 0)
+    return result
+
+
+def _sunlight_for_date(date, daily_goal, app_limits, daily_usage, app_usage):
+    earned = 0
+    if daily_goal is not None:
+        earned += max(0, int(daily_goal - daily_usage.get(date, 0)))
+
+    per_app_usage = app_usage.get(date, {})
+    for app_name, target_minutes in app_limits.items():
+        earned += max(0, int(target_minutes - per_app_usage.get(app_name, 0)))
+
+    return min(earned, DAILY_CAP_SUNLIGHT)
+
+
+def _sunlight_earnings(conn):
+    daily_goal = _get_active_daily_total_goal(conn)
+    app_limits = _get_active_app_limits(conn)
+    if daily_goal is None and not app_limits:
+        return 0, 0
+
+    today = _today_str()
+    first_usage_date, _ = _usage_bounds(conn)
+    start_date = first_usage_date or today
+    if start_date > today:
+        start_date = today
+
+    daily_usage = _daily_usage_totals(conn)
+    app_usage = _app_usage_totals(conn, app_limits.keys())
+    earned_by_day = [
+        _sunlight_for_date(date, daily_goal, app_limits, daily_usage, app_usage)
+        for date in _date_range(start_date, today)
+    ]
+    sunlight_today = _sunlight_for_date(today, daily_goal, app_limits, daily_usage, app_usage)
+    return sunlight_today, sum(earned_by_day)
+
+
+def _ledger_totals(conn):
+    totals = {
+        ("spend", "sunlight"): 0,
+        ("refund", "sunlight"): 0,
+        ("spend", "starshard"): 0,
+        ("refund", "starshard"): 0,
+    }
+    rows = conn.execute(
+        """SELECT kind, currency, COALESCE(SUM(amount), 0) as amount
+           FROM rewards_ledger
+           GROUP BY kind, currency"""
+    ).fetchall()
+    for row in rows:
+        totals[(row["kind"], row["currency"])] = int(row["amount"] or 0)
+    return totals
+
+
+def _rewards_balance(conn):
+    sunlight_today, sunlight_lifetime = _sunlight_earnings(conn)
+    ledger = _ledger_totals(conn)
+    award_row = conn.execute(
+        """SELECT COALESCE(SUM(amount), 0) as amount
+           FROM rewards_awards
+           WHERE currency = 'starshard'"""
+    ).fetchone()
+    starshards_earned = int(award_row["amount"] or 0)
+
+    return {
+        "sunlight": int(
+            sunlight_lifetime
+            - ledger[("spend", "sunlight")]
+            + ledger[("refund", "sunlight")]
+        ),
+        "sunlight_today": int(sunlight_today),
+        "sunlight_cap": DAILY_CAP_SUNLIGHT,
+        "starshards": int(
+            starshards_earned
+            - ledger[("spend", "starshard")]
+            + ledger[("refund", "starshard")]
+        ),
+    }
+
+
+def get_rewards_balance():
+    with get_db() as conn:
+        return _rewards_balance(conn)
+
+
+def _is_streak_day(date, daily_goal, daily_usage):
+    if daily_goal is None:
+        return None
+    return daily_usage.get(date, 0) <= daily_goal
+
+
+def _insert_award(conn, kind, detail, amount, awarded_for_date):
+    conn.execute(
+        """INSERT OR IGNORE INTO rewards_awards
+           (kind, detail, currency, amount, awarded_for_date, awarded_at)
+           VALUES (?, ?, 'starshard', ?, ?, ?)""",
+        (kind, detail, amount, awarded_for_date, time.time()),
+    )
+
+
+def _milestone_awarded(conn, detail):
+    row = conn.execute(
+        "SELECT 1 FROM rewards_awards WHERE kind = 'milestone' AND detail = ? LIMIT 1",
+        (detail,),
+    ).fetchone()
+    return row is not None
+
+
+def _streak_award_dates(conn):
+    rows = conn.execute(
+        "SELECT awarded_for_date FROM rewards_awards WHERE kind = 'streak_day'"
+    ).fetchall()
+    return {row["awarded_for_date"] for row in rows}
+
+
+def _baseline_streak_length(first_date, day_before_start, daily_goal, daily_usage):
+    if not first_date or first_date > day_before_start:
+        return 0
+
+    streak_length = 0
+    for date in _date_range(first_date, day_before_start):
+        status = _is_streak_day(date, daily_goal, daily_usage)
+        if status is True:
+            streak_length += 1
+        elif status is False:
+            streak_length = 0
+    return streak_length
+
+
+def _is_clean_week(week_start, streak_dates):
+    start = _date_from_str(week_start)
+    return all(
+        (start + timedelta(days=i)).strftime("%Y-%m-%d") in streak_dates
+        for i in range(7)
+    )
+
+
+def _is_clean_month(date_obj, streak_dates):
+    days_in_month = calendar.monthrange(date_obj.year, date_obj.month)[1]
+    return all(
+        date_obj.replace(day=day).strftime("%Y-%m-%d") in streak_dates
+        for day in range(1, days_in_month + 1)
+    )
+
+
+def run_rollup_if_needed():
+    yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+
+    with get_db() as conn:
+        last_row = conn.execute(
+            "SELECT value FROM settings WHERE key = 'last_rollup_date'"
+        ).fetchone()
+        first_usage_date, _ = _usage_bounds(conn)
+
+        if last_row and last_row["value"]:
+            start_date = (
+                _date_from_str(last_row["value"]) + timedelta(days=1)
+            ).strftime("%Y-%m-%d")
+        else:
+            if not first_usage_date:
+                conn.execute(
+                    "INSERT OR REPLACE INTO settings (key, value) VALUES ('last_rollup_date', ?)",
+                    (yesterday,),
+                )
+                return
+            start_date = first_usage_date
+
+        if start_date > yesterday:
+            return
+
+        daily_goal = _get_active_daily_total_goal(conn)
+        if daily_goal is None:
+            conn.execute(
+                "INSERT OR REPLACE INTO settings (key, value) VALUES ('last_rollup_date', ?)",
+                (yesterday,),
+            )
+            return
+
+        daily_usage = _daily_usage_totals(conn)
+        streak_dates = _streak_award_dates(conn)
+        day_before_start = (
+            _date_from_str(start_date) - timedelta(days=1)
+        ).strftime("%Y-%m-%d")
+        streak_length = _baseline_streak_length(
+            first_usage_date,
+            day_before_start,
+            daily_goal,
+            daily_usage,
+        )
+
+        for current_date in _date_range(start_date, yesterday):
+            status = _is_streak_day(current_date, daily_goal, daily_usage)
+            if status is True:
+                streak_length += 1
+                detail = f"Day {streak_length} of streak"
+                _insert_award(conn, "streak_day", detail, 1, current_date)
+                streak_dates.add(current_date)
+
+                for threshold, (detail_key, amount) in MILESTONE_AWARDS.items():
+                    if streak_length >= threshold and not _milestone_awarded(conn, detail_key):
+                        _insert_award(conn, "milestone", detail_key, amount, current_date)
+            elif status is False:
+                streak_length = 0
+
+            current_obj = _date_from_str(current_date)
+            if current_obj.weekday() == 6:
+                week_start = (current_obj - timedelta(days=6)).strftime("%Y-%m-%d")
+                if _is_clean_week(week_start, streak_dates):
+                    _insert_award(
+                        conn,
+                        "clean_week",
+                        f"Week of {week_start}",
+                        3,
+                        current_date,
+                    )
+
+            if current_obj.day == calendar.monthrange(current_obj.year, current_obj.month)[1]:
+                detail_key = "first_clean_month"
+                if (
+                    not _milestone_awarded(conn, detail_key)
+                    and _is_clean_month(current_obj, streak_dates)
+                ):
+                    _insert_award(conn, "milestone", detail_key, 5, current_date)
+
+        conn.execute(
+            "INSERT OR REPLACE INTO settings (key, value) VALUES ('last_rollup_date', ?)",
+            (yesterday,),
+        )
+
+
+def get_rewards_awards():
+    with get_db() as conn:
+        rows = conn.execute(
+            """SELECT id, kind, detail, currency, amount, awarded_for_date, awarded_at
+               FROM rewards_awards
+               ORDER BY awarded_at DESC, id DESC"""
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
+def _unrefunded_spend_for_item(conn, item_key):
+    return conn.execute(
+        """SELECT s.id
+           FROM rewards_ledger s
+           WHERE s.kind = 'spend'
+             AND s.item_key = ?
+             AND NOT EXISTS (
+                 SELECT 1 FROM rewards_ledger r
+                 WHERE r.kind = 'refund' AND r.spend_id = s.id
+             )
+           LIMIT 1""",
+        (item_key,),
+    ).fetchone()
+
+
+def buy_market_item(item_key):
+    catalog = _catalog_by_key()
+    item = catalog.get(item_key)
+    if not item:
+        raise RewardError("unknown_item")
+
+    with get_db() as conn:
+        if _unrefunded_spend_for_item(conn, item_key):
+            raise RewardError("already_owned")
+
+        balance = _rewards_balance(conn)
+        balance_key = "sunlight" if item["currency"] == "sunlight" else "starshards"
+        if balance[balance_key] < item["price"]:
+            raise RewardError("insufficient_funds")
+
+        conn.execute(
+            """INSERT INTO rewards_ledger
+               (kind, currency, amount, item_key, spend_id, created_at)
+               VALUES ('spend', ?, ?, ?, NULL, ?)""",
+            (item["currency"], item["price"], item_key, time.time()),
+        )
+        return _rewards_balance(conn)
+
+
+def _refund_details(spend_created_at, original_amount):
+    if time.time() - float(spend_created_at) <= REFUND_FULL_WINDOW_SECONDS:
+        return int(original_amount), 100
+    return int(original_amount) // 2, 50
+
+
+def get_market_inventory():
+    catalog = _catalog_by_key()
+    with get_db() as conn:
+        rows = conn.execute(
+            """SELECT s.id, s.item_key, s.currency, s.amount, s.created_at
+               FROM rewards_ledger s
+               WHERE s.kind = 'spend'
+                 AND NOT EXISTS (
+                     SELECT 1 FROM rewards_ledger r
+                     WHERE r.kind = 'refund' AND r.spend_id = s.id
+                 )
+               ORDER BY s.created_at DESC, s.id DESC"""
+        ).fetchall()
+
+        inventory = []
+        for row in rows:
+            item = catalog.get(row["item_key"], {})
+            refund_amount, refund_pct = _refund_details(row["created_at"], row["amount"])
+            inventory.append({
+                "spend_id": row["id"],
+                "item_key": row["item_key"],
+                "name": item.get("name", row["item_key"]),
+                "currency": row["currency"],
+                "price": int(row["amount"]),
+                "purchased_at": row["created_at"],
+                "refund_amount": refund_amount,
+                "refund_pct": refund_pct,
+            })
+        return inventory
+
+
+def refund_market_item(spend_id):
+    with get_db() as conn:
+        spend = conn.execute(
+            """SELECT id, item_key, currency, amount, created_at
+               FROM rewards_ledger
+               WHERE id = ? AND kind = 'spend'""",
+            (spend_id,),
+        ).fetchone()
+        if not spend:
+            raise RewardError("unknown_spend")
+
+        refunded = conn.execute(
+            "SELECT 1 FROM rewards_ledger WHERE kind = 'refund' AND spend_id = ? LIMIT 1",
+            (spend_id,),
+        ).fetchone()
+        if refunded:
+            raise RewardError("already_refunded")
+
+        refund_amount, _ = _refund_details(spend["created_at"], spend["amount"])
+        conn.execute(
+            """INSERT INTO rewards_ledger
+               (kind, currency, amount, item_key, spend_id, created_at)
+               VALUES ('refund', ?, ?, ?, ?, ?)""",
+            (
+                spend["currency"],
+                refund_amount,
+                spend["item_key"],
+                spend["id"],
+                time.time(),
+            ),
+        )
+        return {
+            "refunded": refund_amount,
+            "currency": spend["currency"],
+            "balance": _rewards_balance(conn),
+        }
 
 
 # ── App queries ──────────────────────────────────────────────────────────
