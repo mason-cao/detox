@@ -7,6 +7,10 @@ const HUD = {
         this.refresh();
         // Poll every 30 seconds; no push channel yet.
         this.refreshIntervalId = setInterval(() => this.refresh(), 30000);
+        window.addEventListener('focus', () => this.refresh());
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) this.refresh();
+        });
 
         document.addEventListener('keydown', (e) => {
             if (e.key === '?' && !this.isTyping(e.target)) {
@@ -25,34 +29,34 @@ const HUD = {
 
     async refresh() {
         try {
-            const [dashboard, stats] = await Promise.all([
-                App.api('/api/dashboard'),
-                App.api('/api/stats/daily'),
-            ]);
-            this.updateCurrencies(dashboard, stats);
+            const balance = await App.api('/api/rewards/balance');
+            this.updateCurrencies(balance);
         } catch (_) {
             // Counters stay at their last known value; monitor status dot
             // already surfaces agent health separately.
         }
     },
 
-    updateCurrencies(dashboard, stats) {
-        const budget = dashboard.goal_target || 0;
-        const used = dashboard.total_minutes || 0;
-        // Sunlight: every minute under budget earns 1 ☀, capped at 120/day.
-        // If no budget is set, pay 0 — can't reward against an undefined goal.
-        const sunlight = budget > 0 ? Math.max(0, Math.min(120, Math.floor(budget - used))) : 0;
-        // Starshards: 1 per hour of longest detox today. Cheap proxy until
-        // Plan 4 introduces the real streak/milestone ledger.
-        const shards = Math.floor((stats.longest_detox_minutes || 0) / 60);
+    updateCurrencies(balance) {
+        const sunlightToday = balance.sunlight_today || 0;
+        const sunlightCap = balance.sunlight_cap || 120;
+        const sunlightLifetime = balance.sunlight || 0;
+        const starshards = balance.starshards || 0;
 
-        this.setChipValue('hudSunlight', sunlight);
-        this.setChipValue('hudShards', shards);
+        this.setChipValue('hudSunlight', `${sunlightToday} / ${sunlightCap}`);
+        this.setChipTitle('hudSunlight', `${sunlightLifetime} ☀ in lifetime balance`);
+        this.setChipValue('hudShards', starshards);
+        this.setChipTitle('hudShards', 'Starshards earned through streaks and milestones');
     },
 
     setChipValue(id, n) {
         const el = document.querySelector(`#${id} [data-role="value"]`);
         if (el) el.textContent = String(n);
+    },
+
+    setChipTitle(id, title) {
+        const el = document.getElementById(id);
+        if (el) el.title = title;
     },
 
     openHelp() {
