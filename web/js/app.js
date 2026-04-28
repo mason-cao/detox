@@ -463,7 +463,7 @@ const App = {
                 case '3': this.showTab('stats'); break;
                 case '4': this.showTab('goals'); break;
                 case '5': this.showTab('blocker'); break;
-                case '6': this.showTab('cards'); break;
+                case '6': this.showTab('market'); break;
                 case '7': this.showTab('cards'); break;
                 case '8': this.showTab('settings'); break;
             }
