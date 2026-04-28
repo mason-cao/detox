@@ -11,6 +11,7 @@ from flask import Flask, jsonify, request, send_from_directory
 
 from agent.config import (
     CARDS_DIR,
+    CHANGELOG_ENTRIES,
     DEFAULT_SETTINGS,
     WEB_DIR,
     MAX_IDLE_TIMEOUT_MINUTES,
@@ -219,6 +220,14 @@ def api_dashboard_weekly():
         week_start = validate_date(week_start, "week_start")
     data = db.get_weekly_data(week_start)
     return jsonify(data)
+
+
+# ── Help API ────────────────────────────────────────────────────────────
+
+@app.route("/api/changelog")
+@api_route
+def api_changelog():
+    return jsonify(CHANGELOG_ENTRIES)
 
 
 # ── Statistics API ───────────────────────────────────────────────────────

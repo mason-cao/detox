@@ -437,6 +437,8 @@ const App = {
                 }
                 return;
             }
+            const helpOverlay = document.getElementById('helpOverlay');
+            if (helpOverlay?.classList.contains('is-open')) return;
 
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
             if (e.metaKey || e.ctrlKey || e.altKey) return;
