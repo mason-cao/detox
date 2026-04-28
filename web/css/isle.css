@@ -51,6 +51,15 @@
 
 .isle__sky.is-night .isle__stars { opacity: 0.8; }
 
+.isle__sky.is-reduced-motion .isle__celestial,
+.isle__sky.is-reduced-motion .isle__stars {
+    transition: none;
+}
+
+.isle__sky.is-reduced-motion .isle__stars {
+    opacity: 0.45;
+}
+
 /* ── Ground (isometric grid) ─────────────────────────────────────────── */
 .isle__ground {
     position: relative;
@@ -118,4 +127,11 @@
     font-family: var(--font-game);
     font-size: var(--fs-lg);
     color: var(--dc-ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .isle__celestial,
+    .isle__stars {
+        transition: none;
+    }
 }

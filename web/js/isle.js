@@ -1,18 +1,18 @@
 /* Isle — isometric dashboard. Replaces Dashboard.render for the 'dashboard' tab. */
 
 const Isle = {
+    _motionMedia: null,
+    _motionListenerBound: false,
+
     async render(container) {
         const data = await App.api(`/api/dashboard?date=${App.currentDate}`);
         const apps = data.apps || [];
 
         container.innerHTML = this.scaffold();
+        this.bindMotionPreference();
         this.updateSky();
         this.renderPlots(apps);
-
-        // Update sky every minute — cheap, covers the edge case of the user
-        // leaving the dashboard open across sunset.
-        if (this._skyInterval) clearInterval(this._skyInterval);
-        this._skyInterval = setInterval(() => this.updateSky(), 60000);
+        this.syncSkyTimer();
     },
 
     scaffold() {
@@ -25,6 +25,41 @@ const Isle = {
                 <div class="isle__ground" id="isleGround"></div>
             </section>
         `;
+    },
+
+    bindMotionPreference() {
+        if (!this._motionMedia) {
+            this._motionMedia = window.matchMedia('(prefers-reduced-motion: reduce)');
+        }
+        if (this._motionListenerBound) return;
+
+        const onChange = () => {
+            this.updateSky();
+            this.syncSkyTimer();
+        };
+        if (this._motionMedia.addEventListener) {
+            this._motionMedia.addEventListener('change', onChange);
+        } else if (this._motionMedia.addListener) {
+            this._motionMedia.addListener(onChange);
+        }
+        this._motionListenerBound = true;
+    },
+
+    syncSkyTimer() {
+        if (this._skyInterval) {
+            clearInterval(this._skyInterval);
+            this._skyInterval = null;
+        }
+
+        const sky = document.getElementById('isleSky');
+        if (sky) {
+            sky.classList.toggle('is-reduced-motion', App.prefersReducedMotion());
+        }
+
+        if (!App.prefersReducedMotion()) {
+            // Update sky every minute for users who have not asked motion to be reduced.
+            this._skyInterval = setInterval(() => this.updateSky(), 60000);
+        }
     },
 
     updateSky() {
@@ -42,7 +77,7 @@ const Isle = {
         const celestial = document.getElementById('isleCelestial');
         if (celestial) {
             // Sun arcs 6am → 6pm, moon 6pm → 6am. Horizontal = time, vertical = parabolic.
-            const t = ((hours - 6 + 24) % 12) / 12; // 0..1 across daylight OR night
+            const t = App.prefersReducedMotion() ? 0.64 : ((hours - 6 + 24) % 12) / 12;
             const rect = sky.getBoundingClientRect();
             const x = t * (rect.width - 48);
             const y = rect.height - 48 - Math.sin(t * Math.PI) * (rect.height * 0.6);
