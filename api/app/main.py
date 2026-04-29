@@ -6,6 +6,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import Settings
+from .errors import ApiError, api_error_handler
+from .routers.dashboard import router as dashboard_router
 from .routers.health import router as health_router
 
 
@@ -21,6 +23,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         redoc_url="/redoc",
     )
     app.state.settings = settings
+    app.add_exception_handler(ApiError, api_error_handler)
 
     app.add_middleware(
         CORSMiddleware,
@@ -31,8 +34,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
 
     app.include_router(health_router)
+    app.include_router(dashboard_router)
     return app
 
 
 app = create_app()
-

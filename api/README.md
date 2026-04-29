@@ -24,7 +24,13 @@ Phase 2 has started with a minimal FastAPI service scaffold:
 
 - `app/main.py` — app factory, OpenAPI metadata, CORS middleware.
 - `app/config.py` — environment-backed runtime settings.
+- `app/errors.py` / `app/validation.py` — Flask-compatible error JSON and
+  shared date validation.
 - `app/routers/health.py` — `GET /healthz`.
+- `app/routers/dashboard.py` — `GET /api/dashboard` and
+  `GET /api/dashboard/weekly`, matching the local agent response shapes.
+- `app/services/dashboard.py` — temporary local SQLite adapter using
+  `agent.database` until the Postgres read models land.
 - `pyproject.toml` — API-only dependencies.
 
 Install the API dependencies from the repository root with:
@@ -42,6 +48,8 @@ python3 -m uvicorn api.app.main:app --reload --host 127.0.0.1 --port 8000
 Useful local URLs:
 
 - `http://127.0.0.1:8000/healthz`
+- `http://127.0.0.1:8000/api/dashboard`
+- `http://127.0.0.1:8000/api/dashboard/weekly`
 - `http://127.0.0.1:8000/docs`
 - `http://127.0.0.1:8000/openapi.json`
 
