@@ -10,12 +10,19 @@ def _split_csv(value: str) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
+def _env_or_none(key: str) -> str | None:
+    value = os.getenv(key)
+    return value.strip() if value and value.strip() else None
+
+
 @dataclass(frozen=True)
 class Settings:
     service_name: str = "Detox API"
     environment: str = "development"
     version: str = "0.1.0"
     cors_origins: tuple[str, ...] = ("http://localhost:5050", "http://127.0.0.1:5050")
+    dev_token: str | None = None
+    dev_user_id: str | None = None
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -25,5 +32,6 @@ class Settings:
             environment=os.getenv("API_ENV", cls.environment),
             version=os.getenv("API_VERSION", cls.version),
             cors_origins=tuple(_split_csv(origins)) if origins else cls.cors_origins,
+            dev_token=_env_or_none("DETOX_DEV_TOKEN"),
+            dev_user_id=_env_or_none("DETOX_DEV_USER_ID"),
         )
-

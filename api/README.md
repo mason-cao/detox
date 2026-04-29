@@ -40,7 +40,14 @@ Phase 2 has started with a minimal FastAPI service scaffold:
 - `app/services/` — temporary local SQLite adapters using `agent.database`
   until the Postgres read models land.
 - `app/dependencies.py` — query-date validation + rewards rollup applied to
-  every `/api` route, mirroring the Flask `@api_route` decorator.
+  every `/api` route, mirroring the Flask `@api_route` decorator. Also
+  resolves the optional `DETOX_DEV_TOKEN` bearer auth onto
+  `request.state.user_id`.
+- `app/auth.py` — local dev token middleware. When `DETOX_DEV_TOKEN` and
+  `DETOX_DEV_USER_ID` are both set, `/api/*` requests must present
+  `Authorization: Bearer <token>`; the matching UUID is stashed on the
+  request for downstream RLS use. Unset → no-op (matches today's
+  unauthenticated agent flow).
 - `migrations/` — Alembic environment + versioned migrations. The first
   revision (`0001_initial_schema_mirror`) lays down a faithful Postgres
   rendering of the ten on-device SQLite tables. Multi-tenancy (`user_id`
@@ -60,6 +67,19 @@ Then run the service from the repository root with:
 ```bash
 python3 -m uvicorn api.app.main:app --reload --host 127.0.0.1 --port 8000
 ```
+
+To exercise the multi-tenant Postgres schema end-to-end, point the service
+at the dev compose Postgres and require a bearer token on every request:
+
+```bash
+DETOX_DEV_TOKEN=local-dev \
+DETOX_DEV_USER_ID=00000000-0000-0000-0000-000000000001 \
+python3 -m uvicorn api.app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+With those env vars set, every ``/api/*`` request must carry
+``Authorization: Bearer local-dev``; without them the API stays open
+(matching today's unauthenticated agent dashboard).
 
 Useful local URLs:
 
