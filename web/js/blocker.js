@@ -3,16 +3,18 @@
 const Blocker = {
     async render(container) {
         destroyCharts();
-        const [blocks, settings, categories] = await Promise.all([
+        const [blocks, settings, categories, categoryBlocks] = await Promise.all([
             App.api('/api/blocks'),
             App.api('/api/settings'),
             App.api('/api/categories'),
+            App.api('/api/category-blocks'),
         ]);
 
         const whitelistMode = settings.whitelist_mode === '1';
         const blocked = blocks.filter(b => b.block_type === 'blocked');
-        const blockedApps = blocked.filter(b => !b.app_name.startsWith('__category__'));
+        const blockedApps = blocked;
         const whitelisted = blocks.filter(b => b.block_type === 'whitelisted');
+        const blockedCategories = new Set(categoryBlocks.map(block => block.category_name));
         const categoryNames = [...new Set([
             'Social',
             'Entertainment',
@@ -101,7 +103,7 @@ const Blocker = {
                 <p class="rule-board__copy">Block every resident in a category at once.</p>
                 <div class="category-grid">
                     ${categoryNames.map(cat => {
-                        const isBlocked = blocked.some(b => b.app_name === `__category__${cat}`);
+                        const isBlocked = blockedCategories.has(cat);
                         const catArg = App.inlineArg(cat);
                         return `
                         <button type="button" class="category-tile${isBlocked ? ' category-tile--blocked' : ''}" onclick="App.runAction(() => Blocker.toggleCategory(${catArg}, ${!isBlocked}))">
@@ -225,21 +227,19 @@ const Blocker = {
     async removeBlock(appName) {
         await App.api(`/api/blocks/${encodeURIComponent(appName)}`, { method: 'DELETE' });
         App.invalidateAppSuggestions();
-        const label = appName.startsWith('__category__') ? appName.replace('__category__', '') : appName;
-        App.toast(appName.startsWith('__category__') ? `${label} residents pardoned` : `${label} decree lifted`, 'info');
+        App.toast(`${appName} decree lifted`, 'info');
         this.render(document.getElementById('content'));
     },
 
     async toggleCategory(category, block) {
-        const name = `__category__${category}`;
         if (block) {
-            await App.api('/api/blocks', {
+            await App.api('/api/category-blocks', {
                 method: 'POST',
-                body: { app_name: name, block_type: 'blocked' },
+                body: { category_name: category },
             });
             App.toast(`${category} residents banished`, 'warning');
         } else {
-            await App.api(`/api/blocks/${encodeURIComponent(name)}`, { method: 'DELETE' });
+            await App.api(`/api/category-blocks/${encodeURIComponent(category)}`, { method: 'DELETE' });
             App.toast(`${category} residents pardoned`, 'info');
         }
         this.render(document.getElementById('content'));

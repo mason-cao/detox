@@ -19,7 +19,7 @@ const Apps = {
         );
         this.blockedNames = new Set(
             blocks
-                .filter(block => block.block_type === 'blocked' && !block.app_name.startsWith('__category__'))
+                .filter(block => block.block_type === 'blocked')
                 .map(block => block.app_name)
         );
         this.whitelistedNames = new Set(

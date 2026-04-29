@@ -96,6 +96,14 @@ def init_db():
                 daily_limit_minutes INTEGER
             );
 
+            CREATE TABLE IF NOT EXISTS category_blocks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                category_name TEXT NOT NULL UNIQUE,
+                active INTEGER NOT NULL DEFAULT 1
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_category_blocks_active ON category_blocks(active);
+
             CREATE TABLE IF NOT EXISTS settings (
                 key TEXT PRIMARY KEY,
                 value TEXT
@@ -127,6 +135,17 @@ def init_db():
             );
 
             CREATE INDEX IF NOT EXISTS idx_rewards_awards_date ON rewards_awards(awarded_for_date);
+        """)
+
+        conn.executescript("""
+            INSERT OR IGNORE INTO category_blocks (category_name, active)
+            SELECT substr(app_name, 13), 1
+            FROM app_blocks
+            WHERE app_name GLOB '__category__*'
+              AND block_type = 'blocked';
+
+            DELETE FROM app_blocks
+            WHERE app_name GLOB '__category__*';
         """)
 
         # Seed default categories
@@ -910,6 +929,35 @@ def remove_block(app_name):
         conn.execute("DELETE FROM app_blocks WHERE app_name = ?", (app_name,))
 
 
+def get_category_blocks():
+    with get_db() as conn:
+        rows = conn.execute(
+            """SELECT id, category_name, active
+               FROM category_blocks
+               WHERE active = 1
+               ORDER BY category_name"""
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def add_category_block(category_name):
+    with get_db() as conn:
+        conn.execute(
+            """INSERT INTO category_blocks (category_name, active)
+               VALUES (?, 1)
+               ON CONFLICT(category_name) DO UPDATE SET active = 1""",
+            (category_name,),
+        )
+
+
+def remove_category_block(category_name):
+    with get_db() as conn:
+        conn.execute(
+            "UPDATE category_blocks SET active = 0 WHERE category_name = ?",
+            (category_name,),
+        )
+
+
 def is_app_blocked(app_name):
     """Check if an app should be blocked right now."""
     with get_db() as conn:
@@ -976,8 +1024,8 @@ def is_app_blocked(app_name):
         ).fetchone()
         if cat:
             cat_block = conn.execute(
-                "SELECT 1 FROM app_blocks WHERE app_name = ? AND block_type = 'blocked'",
-                (f"__category__{cat['category']}",),
+                "SELECT 1 FROM category_blocks WHERE category_name = ? AND active = 1",
+                (cat["category"],),
             ).fetchone()
             if cat_block:
                 return True

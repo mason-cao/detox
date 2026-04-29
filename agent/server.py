@@ -276,7 +276,6 @@ def api_app_suggestions():
     names.update(
         b["app_name"]
         for b in db.get_blocks()
-        if not b["app_name"].startswith("__category__")
     )
     names.update(get_installed_app_names())
     frontmost = get_frontmost_app_name()
@@ -389,6 +388,30 @@ def api_blocks_create():
 @api_route
 def api_blocks_delete(app_name):
     db.remove_block(app_name)
+    return jsonify({"ok": True})
+
+
+# ── Category Blocks API ─────────────────────────────────────────────────
+
+@app.route("/api/category-blocks", methods=["GET"])
+@api_route
+def api_category_blocks_get():
+    return jsonify(db.get_category_blocks())
+
+
+@app.route("/api/category-blocks", methods=["POST"])
+@api_route
+def api_category_blocks_create():
+    data = get_json_object()
+    category_name = require_text(data, "category_name")
+    db.add_category_block(category_name)
+    return jsonify({"ok": True}), 201
+
+
+@app.route("/api/category-blocks/<category_name>", methods=["DELETE"])
+@api_route
+def api_category_blocks_delete(category_name):
+    db.remove_category_block(category_name)
     return jsonify({"ok": True})
 
 
