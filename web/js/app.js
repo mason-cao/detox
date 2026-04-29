@@ -44,6 +44,61 @@ const App = {
         return d.toLocaleDateString('en-US', { weekday: 'short' });
     },
 
+    describeGoalWeather(data = {}) {
+        const total = Number(data.total_minutes || 0);
+        const goal = Number(data.goal_target || 0);
+
+        if (!goal) {
+            return {
+                key: 'calm',
+                glyph: '◇',
+                label: 'Calm',
+                tone: 'No daily goal',
+                detail: 'Set a daily goal to turn on adherence weather.',
+                remaining: null,
+                ratio: null,
+            };
+        }
+
+        const remaining = Math.max(0, goal - total);
+        const over = Math.max(0, total - goal);
+        const ratio = total / goal;
+
+        if (ratio > 1) {
+            return {
+                key: 'storm',
+                glyph: '⚡',
+                label: 'Storm',
+                tone: `${this.formatTime(over)} over`,
+                detail: `Daily goal exceeded by ${this.formatTime(over)}.`,
+                remaining: -over,
+                ratio,
+            };
+        }
+
+        if (ratio >= 0.7) {
+            return {
+                key: 'cloudy',
+                glyph: '☁',
+                label: 'Cloudy',
+                tone: `${this.formatTime(remaining)} left`,
+                detail: `Approaching the daily goal with ${this.formatTime(remaining)} left.`,
+                remaining,
+                ratio,
+            };
+        }
+
+        return {
+            key: 'sunny',
+            glyph: '☀',
+            label: 'Sunny',
+            tone: `${this.formatTime(remaining)} left`,
+            detail: `Under the daily goal with ${this.formatTime(remaining)} left.`,
+            remaining,
+            ratio,
+        };
+    },
+
     /* ── Date Navigation ────────────────────────────────────────────── */
 
     prevDate() {
@@ -437,6 +492,8 @@ const App = {
                 }
                 return;
             }
+            const helpOverlay = document.getElementById('helpOverlay');
+            if (helpOverlay?.classList.contains('is-open')) return;
 
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
             if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -463,7 +520,7 @@ const App = {
                 case '3': this.showTab('stats'); break;
                 case '4': this.showTab('goals'); break;
                 case '5': this.showTab('blocker'); break;
-                case '6': this.showTab('cards'); break;
+                case '6': this.showTab('market'); break;
                 case '7': this.showTab('cards'); break;
                 case '8': this.showTab('settings'); break;
             }

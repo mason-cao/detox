@@ -11,6 +11,7 @@ from flask import Flask, jsonify, request, send_from_directory
 
 from agent.config import (
     CARDS_DIR,
+    CHANGELOG_ENTRIES,
     DEFAULT_SETTINGS,
     WEB_DIR,
     MAX_IDLE_TIMEOUT_MINUTES,
@@ -147,6 +148,8 @@ def api_route(f):
                 value = request.args.get(field_name)
                 if value is not None:
                     validate_date(value, field_name)
+            if request.path.startswith("/api/"):
+                db.run_rollup_if_needed()
             return f(*args, **kwargs)
         except ApiError as e:
             return jsonify({"error": e.message}), e.status_code
@@ -219,6 +222,14 @@ def api_dashboard_weekly():
     return jsonify(data)
 
 
+# ── Help API ────────────────────────────────────────────────────────────
+
+@app.route("/api/changelog")
+@api_route
+def api_changelog():
+    return jsonify(CHANGELOG_ENTRIES)
+
+
 # ── Statistics API ───────────────────────────────────────────────────────
 
 @app.route("/api/stats/daily")
@@ -265,7 +276,6 @@ def api_app_suggestions():
     names.update(
         b["app_name"]
         for b in db.get_blocks()
-        if not b["app_name"].startswith("__category__")
     )
     names.update(get_installed_app_names())
     frontmost = get_frontmost_app_name()
@@ -381,6 +391,30 @@ def api_blocks_delete(app_name):
     return jsonify({"ok": True})
 
 
+# ── Category Blocks API ─────────────────────────────────────────────────
+
+@app.route("/api/category-blocks", methods=["GET"])
+@api_route
+def api_category_blocks_get():
+    return jsonify(db.get_category_blocks())
+
+
+@app.route("/api/category-blocks", methods=["POST"])
+@api_route
+def api_category_blocks_create():
+    data = get_json_object()
+    category_name = require_text(data, "category_name")
+    db.add_category_block(category_name)
+    return jsonify({"ok": True}), 201
+
+
+@app.route("/api/category-blocks/<category_name>", methods=["DELETE"])
+@api_route
+def api_category_blocks_delete(category_name):
+    db.remove_category_block(category_name)
+    return jsonify({"ok": True})
+
+
 # ── Categories API ───────────────────────────────────────────────────────
 
 @app.route("/api/categories", methods=["GET"])
@@ -398,6 +432,62 @@ def api_categories_set():
     category = require_text(data, "category")
     db.set_category(app_name, category)
     return jsonify({"ok": True})
+
+
+# ── Rewards and Market API ──────────────────────────────────────────────
+
+@app.route("/api/rewards/balance")
+@api_route
+def api_rewards_balance():
+    return jsonify(db.get_rewards_balance())
+
+
+@app.route("/api/rewards/awards")
+@api_route
+def api_rewards_awards():
+    return jsonify(db.get_rewards_awards())
+
+
+@app.route("/api/market/catalog")
+@api_route
+def api_market_catalog():
+    return jsonify(db.get_market_catalog())
+
+
+@app.route("/api/market/inventory")
+@api_route
+def api_market_inventory():
+    return jsonify(db.get_market_inventory())
+
+
+@app.route("/api/market/buy", methods=["POST"])
+@api_route
+def api_market_buy():
+    data = get_json_object()
+    item_key = require_text(data, "item_key")
+    try:
+        balance = db.buy_market_item(item_key)
+    except db.RewardError as e:
+        raise ApiError(e.code)
+    return jsonify({"ok": True, "balance": balance})
+
+
+@app.route("/api/market/refund", methods=["POST"])
+@api_route
+def api_market_refund():
+    data = get_json_object()
+    try:
+        spend_id = int(data.get("spend_id"))
+    except (TypeError, ValueError):
+        raise ApiError("unknown_spend")
+    if spend_id <= 0:
+        raise ApiError("unknown_spend")
+
+    try:
+        result = db.refund_market_item(spend_id)
+    except db.RewardError as e:
+        raise ApiError(e.code)
+    return jsonify({"ok": True, **result})
 
 
 # ── Cards API ────────────────────────────────────────────────────────────

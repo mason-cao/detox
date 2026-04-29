@@ -4,7 +4,6 @@ records usage data, detects pickups, enforces app blocks, and checks goals.
 """
 
 import os
-import sys
 import time
 import signal
 import subprocess
@@ -175,70 +174,80 @@ class Monitor:
                         "It's past your bedtime! Time to put the screen away and rest.",
                     )
 
+    def stop(self):
+        """Signal the polling loop to exit on its next iteration."""
+        self.running = False
+
     def run(self):
-        """Main monitoring loop."""
-        print(f"[Monitor] Starting (PID {os.getpid()})...")
-
-        # Write PID file
-        with open(PID_FILE, "w") as f:
-            f.write(str(os.getpid()))
-
-        # Handle shutdown signals
-        def shutdown(signum, frame):
-            print("\n[Monitor] Shutting down...")
-            self.running = False
-            # Close current session
-            if self.current_app and self.session_start:
-                db.record_session(self.current_app, self.session_start, time.time())
-            # Remove PID file
-            if os.path.exists(PID_FILE):
-                os.remove(PID_FILE)
-            sys.exit(0)
-
-        signal.signal(signal.SIGTERM, shutdown)
-        signal.signal(signal.SIGINT, shutdown)
-
+        """Main monitoring loop. Returns when ``self.running`` is False."""
         goal_check_counter = 0
         settings_check_counter = 0
         self.refresh_tracking_settings()
 
-        while self.running:
-            now = time.time()
-            settings_check_counter += 1
-            if settings_check_counter >= 15:
-                self.refresh_tracking_settings()
-                settings_check_counter = 0
+        try:
+            while self.running:
+                now = time.time()
+                settings_check_counter += 1
+                if settings_check_counter >= 15:
+                    self.refresh_tracking_settings()
+                    settings_check_counter = 0
 
-            app_name = self.apply_idle_filter(self.get_frontmost_app())
+                app_name = self.apply_idle_filter(self.get_frontmost_app())
 
-            # Check pickup
-            self.check_pickup(app_name, now)
+                # Check pickup
+                self.check_pickup(app_name, now)
 
-            if app_name:
-                # Record raw usage
-                db.record_usage(app_name, now)
+                if app_name:
+                    # Record raw usage
+                    db.record_usage(app_name, now)
 
-                # Check for app change
-                if app_name != self.current_app:
-                    self.handle_app_change(app_name, now)
+                    # Check for app change
+                    if app_name != self.current_app:
+                        self.handle_app_change(app_name, now)
 
-                # Check blocks
-                self.check_blocks(app_name)
+                    # Check blocks
+                    self.check_blocks(app_name)
 
-            # Check goals every 30 seconds (15 polls)
-            goal_check_counter += 1
-            if goal_check_counter >= 15:
-                self.check_goals(now)
-                goal_check_counter = 0
+                # Check goals every 30 seconds (15 polls)
+                goal_check_counter += 1
+                if goal_check_counter >= 15:
+                    self.check_goals(now)
+                    goal_check_counter = 0
 
-            time.sleep(POLL_INTERVAL)
+                time.sleep(POLL_INTERVAL)
+        finally:
+            if self.current_app and self.session_start:
+                db.record_session(self.current_app, self.session_start, time.time())
+                self.current_app = None
+                self.session_start = None
+
+
+def run_cli():
+    """CLI entrypoint: PID file + signal handlers around ``Monitor.run``."""
+    print(f"[Monitor] Starting (PID {os.getpid()})...")
+
+    with open(PID_FILE, "w") as f:
+        f.write(str(os.getpid()))
+
+    monitor = Monitor()
+
+    def shutdown(_signum, _frame):
+        print("\n[Monitor] Shutting down...")
+        monitor.stop()
+
+    signal.signal(signal.SIGTERM, shutdown)
+    signal.signal(signal.SIGINT, shutdown)
+
+    try:
+        monitor.run()
+    finally:
+        if os.path.exists(PID_FILE):
+            os.remove(PID_FILE)
 
 
 def main():
-    # Initialize database
     db.init_db()
-    monitor = Monitor()
-    monitor.run()
+    run_cli()
 
 
 if __name__ == "__main__":
