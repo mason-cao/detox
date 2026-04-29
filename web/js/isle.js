@@ -1,30 +1,141 @@
 /* Isle — isometric dashboard. Replaces Dashboard.render for the 'dashboard' tab. */
 
 const Isle = {
+    _motionMedia: null,
+    _motionListenerBound: false,
+
     async render(container) {
         const data = await App.api(`/api/dashboard?date=${App.currentDate}`);
         const apps = data.apps || [];
+        const weather = App.describeGoalWeather(data);
 
-        container.innerHTML = this.scaffold();
+        if (window.HUD) HUD.updateWeather(weather);
+
+        container.innerHTML = this.scaffold(data, weather);
+        this.bindMotionPreference();
         this.updateSky();
         this.renderPlots(apps);
-
-        // Update sky every minute — cheap, covers the edge case of the user
-        // leaving the dashboard open across sunset.
-        if (this._skyInterval) clearInterval(this._skyInterval);
-        this._skyInterval = setInterval(() => this.updateSky(), 60000);
+        this.syncSkyTimer();
     },
 
-    scaffold() {
+    scaffold(data, weather) {
+        const date = data.date || App.currentDate;
+        const total = Number(data.total_minutes || 0);
+        const goal = Number(data.goal_target || 0);
+        const remaining = goal ? goal - total : null;
+        const nextDisabled = date >= toLocalDateString() ? 'disabled' : '';
+
         return `
-            <section class="isle">
+            <section class="isle" data-weather="${App.escapeAttr(weather.key)}">
                 <div class="isle__sky" id="isleSky">
                     <div class="isle__stars"></div>
                     <div class="isle__celestial" id="isleCelestial"></div>
+                    ${this.renderWeatherLayer(weather)}
+                    <div class="isle__datebar" aria-label="Date navigation">
+                        <button class="isle__date-button" type="button" onclick="App.prevDate()" aria-label="Previous day">←</button>
+                        <div class="isle__date-label">
+                            <span>The Isle</span>
+                            <strong>${App.escapeHtml(App.formatDate(date))}</strong>
+                        </div>
+                        <button class="isle__date-button" type="button" onclick="App.nextDate()" aria-label="Next day" ${nextDisabled}>→</button>
+                    </div>
+                    <div class="isle__weather-badge" title="${App.escapeAttr(weather.detail)}">
+                        <span aria-hidden="true">${weather.glyph}</span>
+                        <strong>${App.escapeHtml(weather.label)}</strong>
+                        <em>${App.escapeHtml(weather.tone)}</em>
+                    </div>
+                    <div class="isle__signboards">
+                        ${this.renderSignboard('Tracked', App.formatTime(total), 'Total tracked screen time on the selected day.')}
+                        ${this.renderSignboard('Goal', goal ? App.formatTime(goal) : 'Set one', 'Active daily-total goal.')}
+                        ${this.renderSignboard('Left', this.remainingLabel(remaining), weather.detail)}
+                    </div>
                 </div>
                 <div class="isle__ground" id="isleGround"></div>
             </section>
         `;
+    },
+
+    renderWeatherLayer(weather) {
+        const cloud = '<span class="weather-cloud"></span>';
+        const rain = Array.from({ length: 18 }, (_, index) => `<i style="--i:${index}"></i>`).join('');
+
+        if (weather.key === 'storm') {
+            return `
+                <div class="weather-layer weather-layer--storm" aria-hidden="true">
+                    ${cloud}${cloud}
+                    <span class="weather-lightning"></span>
+                    <span class="weather-rain">${rain}</span>
+                </div>
+            `;
+        }
+
+        if (weather.key === 'cloudy') {
+            return `
+                <div class="weather-layer weather-layer--cloudy" aria-hidden="true">
+                    ${cloud}${cloud}${cloud}
+                </div>
+            `;
+        }
+
+        if (weather.key === 'sunny') {
+            return `
+                <div class="weather-layer weather-layer--sunny" aria-hidden="true">
+                    <span class="weather-sunbeam"></span>
+                </div>
+            `;
+        }
+
+        return '<div class="weather-layer weather-layer--calm" aria-hidden="true"></div>';
+    },
+
+    renderSignboard(label, value, title) {
+        return `
+            <div class="isle-signboard" title="${App.escapeAttr(title)}">
+                <span>${App.escapeHtml(label)}</span>
+                <strong>${App.escapeHtml(value)}</strong>
+            </div>
+        `;
+    },
+
+    remainingLabel(remaining) {
+        if (remaining === null) return 'No goal';
+        if (remaining < 0) return `${App.formatTime(Math.abs(remaining))} over`;
+        return App.formatTime(remaining);
+    },
+
+    bindMotionPreference() {
+        if (!this._motionMedia) {
+            this._motionMedia = window.matchMedia('(prefers-reduced-motion: reduce)');
+        }
+        if (this._motionListenerBound) return;
+
+        const onChange = () => {
+            this.updateSky();
+            this.syncSkyTimer();
+        };
+        if (this._motionMedia.addEventListener) {
+            this._motionMedia.addEventListener('change', onChange);
+        } else if (this._motionMedia.addListener) {
+            this._motionMedia.addListener(onChange);
+        }
+        this._motionListenerBound = true;
+    },
+
+    syncSkyTimer() {
+        if (this._skyInterval) {
+            clearInterval(this._skyInterval);
+            this._skyInterval = null;
+        }
+
+        const sky = document.getElementById('isleSky');
+        if (sky) {
+            sky.classList.toggle('is-reduced-motion', App.prefersReducedMotion());
+        }
+
+        if (!App.prefersReducedMotion()) {
+            // Update sky every minute for users who have not asked motion to be reduced.
+            this._skyInterval = setInterval(() => this.updateSky(), 60000);
+        }
     },
 
     updateSky() {
@@ -42,7 +153,7 @@ const Isle = {
         const celestial = document.getElementById('isleCelestial');
         if (celestial) {
             // Sun arcs 6am → 6pm, moon 6pm → 6am. Horizontal = time, vertical = parabolic.
-            const t = ((hours - 6 + 24) % 12) / 12; // 0..1 across daylight OR night
+            const t = App.prefersReducedMotion() ? 0.64 : ((hours - 6 + 24) % 12) / 12;
             const rect = sky.getBoundingClientRect();
             const x = t * (rect.width - 48);
             const y = rect.height - 48 - Math.sin(t * Math.PI) * (rect.height * 0.6);

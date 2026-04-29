@@ -18,6 +18,69 @@ DEFAULT_SETTINGS = {
     "whitelist_mode": "0",
 }
 
+DAILY_CAP_SUNLIGHT = 120
+
+MARKET_CATALOG = [
+    {
+        "key": "lantern_path",
+        "name": "Lantern Path",
+        "description": "Soft amber lights along the main road.",
+        "currency": "sunlight",
+        "price": 30,
+        "category": "decor",
+    },
+    {
+        "key": "mayors_hat",
+        "name": "Mayor's Hat",
+        "description": "A modest tricorn for the resident-in-chief.",
+        "currency": "sunlight",
+        "price": 60,
+        "category": "outfit",
+    },
+    {
+        "key": "sunbeam_charm",
+        "name": "Sunbeam Charm",
+        "description": "Adds a warm bias to the weather overlay.",
+        "currency": "sunlight",
+        "price": 90,
+        "category": "weather",
+    },
+    {
+        "key": "lighthouse_skin",
+        "name": "Lighthouse Skin",
+        "description": "Re-skins the harbor lighthouse.",
+        "currency": "starshard",
+        "price": 2,
+        "category": "building",
+    },
+    {
+        "key": "cove_expansion",
+        "name": "Dawn Cove Annex",
+        "description": "Extends the map with a small annex.",
+        "currency": "starshard",
+        "price": 5,
+        "category": "map",
+    },
+]
+
+CHANGELOG_ENTRIES = [
+    {
+        "date": "2026-04-28",
+        "title": "Market and rewards ledger",
+        "body": "The Market now supports earned Sunlight, Starshards, inventory, refunds, and Hall of Honor awards.",
+    },
+    {
+        "date": "2026-04-18",
+        "title": "Rule Board and Mayor's Study",
+        "body": "Blocker controls and settings moved into the Detox Isle visual system.",
+    },
+    {
+        "date": "2026-04-17",
+        "title": "Detox Isle foundation",
+        "body": "The local dashboard gained the HUD, bottom ribbon, pixel tokens, and isometric Isle home.",
+    },
+]
+
 DEFAULT_CATEGORIES = {
     "Safari": "Productivity",
     "Google Chrome": "Productivity",
