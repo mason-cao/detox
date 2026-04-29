@@ -25,3 +25,7 @@ build-backend = "setuptools.build_meta"
 where = ["."]
 include = ["app*"]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".."]
+
