@@ -51,12 +51,22 @@ const HUD = {
     },
 
     async refresh() {
-        try {
-            const balance = await App.api('/api/rewards/balance');
-            this.updateCurrencies(balance);
-        } catch (_) {
+        const [balanceResult, weatherResult] = await Promise.allSettled([
+            App.api('/api/rewards/balance'),
+            App.api(`/api/dashboard?date=${App.currentDate}`),
+        ]);
+
+        if (balanceResult.status === 'fulfilled') {
+            this.updateCurrencies(balanceResult.value);
+        } else {
             // Counters stay at their last known value; monitor status dot
             // already surfaces agent health separately.
+        }
+
+        if (weatherResult.status === 'fulfilled') {
+            this.updateWeather(App.describeGoalWeather(weatherResult.value));
+        } else {
+            // Leave the previous weather chip visible if the dashboard route is unavailable.
         }
     },
 
@@ -80,6 +90,19 @@ const HUD = {
     setChipTitle(id, title) {
         const el = document.getElementById(id);
         if (el) el.title = title;
+    },
+
+    updateWeather(weather) {
+        const chip = document.getElementById('hudWeather');
+        if (!chip || !weather) return;
+
+        chip.dataset.weather = weather.key;
+        chip.title = weather.detail;
+
+        const glyph = chip.querySelector('[data-role="glyph"]');
+        const label = chip.querySelector('[data-role="label"]');
+        if (glyph) glyph.textContent = weather.glyph;
+        if (label) label.textContent = weather.label;
     },
 
     isHelpOpen() {
