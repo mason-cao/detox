@@ -42,6 +42,26 @@
     gap: var(--sp-3);
 }
 
+.hud-weather {
+    min-width: 104px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    padding: 0 var(--sp-3);
+    background: var(--dc-sand);
+    color: var(--dc-ink);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    font-family: var(--font-game);
+    font-size: var(--fs-lg);
+    white-space: nowrap;
+}
+
+.hud-weather[data-weather="sunny"] { background: #ffe38f; }
+.hud-weather[data-weather="cloudy"] { background: #dbe7e9; }
+.hud-weather[data-weather="storm"] { background: #4b5878; color: #fff4d6; }
+
 .hud-actions {
     display: flex;
     gap: var(--sp-2);
@@ -319,6 +339,26 @@
 }
 
 @media (max-width: 720px) {
+    #hud {
+        gap: var(--sp-2);
+        padding: 0 var(--sp-2);
+    }
+
+    .hud-logo {
+        font-size: 10px;
+    }
+
+    .hud-weather {
+        min-width: 36px;
+        width: 36px;
+        padding: 0;
+    }
+
+    .hud-weather [data-role="label"],
+    .status-text {
+        display: none;
+    }
+
     .help-tabs,
     .help-rule-grid,
     .help-key-list,
