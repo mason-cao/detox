@@ -4,11 +4,20 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from .config import Settings
 from .errors import ApiError, api_error_handler
+from .routers.apps import router as apps_router
+from .routers.blocks import router as blocks_router
 from .routers.dashboard import router as dashboard_router
+from .routers.goals import router as goals_router
 from .routers.health import router as health_router
+from .routers.settings import router as settings_router
+
+
+async def unexpected_error_handler(_request, exc: Exception) -> JSONResponse:
+    return JSONResponse({"error": str(exc)}, status_code=500)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -24,6 +33,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = settings
     app.add_exception_handler(ApiError, api_error_handler)
+    app.add_exception_handler(Exception, unexpected_error_handler)
 
     app.add_middleware(
         CORSMiddleware,
@@ -35,6 +45,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.include_router(health_router)
     app.include_router(dashboard_router)
+    app.include_router(apps_router)
+    app.include_router(goals_router)
+    app.include_router(blocks_router)
+    app.include_router(settings_router)
     return app
 
 

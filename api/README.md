@@ -29,8 +29,18 @@ Phase 2 has started with a minimal FastAPI service scaffold:
 - `app/routers/health.py` — `GET /healthz`.
 - `app/routers/dashboard.py` — `GET /api/dashboard` and
   `GET /api/dashboard/weekly`, matching the local agent response shapes.
-- `app/services/dashboard.py` — temporary local SQLite adapter using
-  `agent.database` until the Postgres read models land.
+- `app/routers/apps.py` — `GET /api/apps`, `GET /api/app-suggestions`,
+  `GET /api/apps/{app_name}`, `GET|POST /api/categories`.
+- `app/routers/goals.py` — `GET|POST /api/goals`,
+  `DELETE /api/goals/{goal_id}`.
+- `app/routers/blocks.py` — `GET|POST /api/blocks`,
+  `DELETE /api/blocks/{app_name}`, `GET|POST /api/category-blocks`,
+  `DELETE /api/category-blocks/{category_name}`.
+- `app/routers/settings.py` — `GET|POST /api/settings`.
+- `app/services/` — temporary local SQLite adapters using `agent.database`
+  until the Postgres read models land.
+- `app/dependencies.py` — query-date validation + rewards rollup applied to
+  every `/api` route, mirroring the Flask `@api_route` decorator.
 - `pyproject.toml` — API-only dependencies.
 
 Install the API dependencies from the repository root with:
@@ -50,6 +60,10 @@ Useful local URLs:
 - `http://127.0.0.1:8000/healthz`
 - `http://127.0.0.1:8000/api/dashboard`
 - `http://127.0.0.1:8000/api/dashboard/weekly`
+- `http://127.0.0.1:8000/api/apps`
+- `http://127.0.0.1:8000/api/goals`
+- `http://127.0.0.1:8000/api/blocks`
+- `http://127.0.0.1:8000/api/settings`
 - `http://127.0.0.1:8000/docs`
 - `http://127.0.0.1:8000/openapi.json`
 
