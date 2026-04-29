@@ -41,6 +41,12 @@ Phase 2 has started with a minimal FastAPI service scaffold:
   until the Postgres read models land.
 - `app/dependencies.py` — query-date validation + rewards rollup applied to
   every `/api` route, mirroring the Flask `@api_route` decorator.
+- `migrations/` — Alembic environment + versioned migrations. The first
+  revision (`0001_initial_schema_mirror`) lays down a faithful Postgres
+  rendering of the ten on-device SQLite tables. Multi-tenancy (`user_id`
+  + RLS) lands in a follow-up revision.
+- `alembic.ini` — Alembic config; the database URL is resolved at runtime
+  from `DETOX_DATABASE_URL` (see `migrations/env.py`).
 - `pyproject.toml` — API-only dependencies.
 
 Install the API dependencies from the repository root with:
@@ -66,6 +72,30 @@ Useful local URLs:
 - `http://127.0.0.1:8000/api/settings`
 - `http://127.0.0.1:8000/docs`
 - `http://127.0.0.1:8000/openapi.json`
+
+## Migrations
+
+Bring up the dev Postgres + Redis stack:
+
+```bash
+docker compose -f infra/docker-compose.dev.yml up -d
+```
+
+Then apply migrations from the `api/` directory:
+
+```bash
+cd api
+DETOX_DATABASE_URL=postgresql+psycopg://detox:detox@localhost:5432/detox \
+    alembic upgrade head
+```
+
+To inspect the generated SQL without touching a database, use the offline
+mode flag:
+
+```bash
+cd api
+alembic upgrade head --sql
+```
 
 ## Planned structure (Phase 2)
 
