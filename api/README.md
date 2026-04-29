@@ -93,6 +93,18 @@ Useful local URLs:
 - `http://127.0.0.1:8000/docs`
 - `http://127.0.0.1:8000/openapi.json`
 
+## Tests
+
+Contract tests in `api/tests/` stand up a temporary SQLite database and
+assert the Flask agent (`agent/server.py`) and the FastAPI service
+(`api/app/`) return identical JSON for every shared route. Install the
+dev dependencies and run from the repository root:
+
+```bash
+python3 -m pip install -e 'api[dev]'
+python3 -m pytest api/tests
+```
+
 ## Migrations
 
 Bring up the dev Postgres + Redis stack:
