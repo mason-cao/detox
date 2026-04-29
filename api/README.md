@@ -20,17 +20,41 @@ split when the cloud work begins.
 
 ## Current contents
 
-Nothing runnable yet. This is intentional.
+Phase 2 has started with a minimal FastAPI service scaffold:
+
+- `app/main.py` — app factory, OpenAPI metadata, CORS middleware.
+- `app/config.py` — environment-backed runtime settings.
+- `app/routers/health.py` — `GET /healthz`.
+- `pyproject.toml` — API-only dependencies.
+
+Install the API dependencies from the repository root with:
+
+```bash
+python3 -m pip install -e api
+```
+
+Then run the service from the repository root with:
+
+```bash
+python3 -m uvicorn api.app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Useful local URLs:
+
+- `http://127.0.0.1:8000/healthz`
+- `http://127.0.0.1:8000/docs`
+- `http://127.0.0.1:8000/openapi.json`
 
 ## Planned structure (Phase 2)
 
 ```
 api/
-  main.py              # FastAPI app factory
-  routers/             # /sessions, /pickups, /goals, /rewards, ...
-  models/              # SQLAlchemy models (Postgres schema)
-  services/            # aggregations, rewards ledger, RLS helpers
-  auth/                # Clerk integration + JWT verification
+  app/
+    main.py            # FastAPI app factory
+    routers/           # /sessions, /pickups, /goals, /rewards, ...
+    models/            # SQLAlchemy models (Postgres schema)
+    services/          # aggregations, rewards ledger, RLS helpers
+    auth/              # Clerk integration + JWT verification
   migrations/          # Alembic
   tests/               # pytest, hits a real Postgres (docker-compose.dev.yml)
   pyproject.toml
