@@ -40,6 +40,7 @@
 .hud-currencies {
     display: flex;
     gap: var(--sp-3);
+    flex-shrink: 0;
 }
 
 .hud-weather {
@@ -66,6 +67,7 @@
     display: flex;
     gap: var(--sp-2);
     align-items: center;
+    flex-shrink: 0;
 }
 
 .hud-icon-button {
@@ -376,5 +378,28 @@
 
     .help-news time {
         grid-row: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .hud-logo {
+        display: none;
+    }
+
+    .hud-currencies,
+    .hud-actions {
+        gap: var(--sp-1);
+    }
+
+    #hud .pixel-chip {
+        min-height: 32px;
+        padding: var(--sp-1) var(--sp-2);
+        gap: var(--sp-1);
+        font-size: var(--fs-md);
+    }
+
+    .hud-icon-button {
+        width: 32px;
+        height: 32px;
     }
 }
