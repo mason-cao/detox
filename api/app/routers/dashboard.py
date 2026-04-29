@@ -4,12 +4,17 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
+from ..dependencies import api_request_setup
 from ..services import dashboard as dashboard_service
 from ..validation import validate_date
 
-router = APIRouter(prefix="/api", tags=["dashboard"])
+router = APIRouter(
+    prefix="/api",
+    tags=["dashboard"],
+    dependencies=[Depends(api_request_setup)],
+)
 
 
 @router.get("/dashboard", summary="Daily dashboard")
