@@ -4,11 +4,19 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 DB_PATH = os.path.join(DATA_DIR, "screentime.db")
 PID_FILE = os.path.join(DATA_DIR, "monitor.pid")
+LOG_PATH = os.path.join(DATA_DIR, "monitor.log")
 CARDS_DIR = os.path.join(DATA_DIR, "cards")
 WEB_DIR = os.path.join(BASE_DIR, "web")
 
+APP_VERSION = "1.0.0"
+BUNDLE_IDENTIFIER = "com.detox.agent"
+LAUNCH_AGENT_PATH = os.path.expanduser(
+    "~/Library/LaunchAgents/com.detox.agent.plist"
+)
+
 POLL_INTERVAL = 2  # seconds between active app checks
 SERVER_PORT = 5050
+STALL_THRESHOLD_SECONDS = 30
 SESSION_GAP_THRESHOLD = 5  # seconds gap to consider a new session
 DEFAULT_IDLE_TIMEOUT_MINUTES = 5
 MAX_IDLE_TIMEOUT_MINUTES = 120
