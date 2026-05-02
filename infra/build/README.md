@@ -14,6 +14,21 @@ This directory owns the local macOS app bundle pipeline for Phase 3.
 
 The certificate, notarization profile, Sparkle framework, and private key are release blockers. Alias builds do not require them.
 
+Sparkle is pinned to 2.9.1. Download the official release archive and unpack the framework and tools into this directory:
+
+```bash
+curl -L -o /tmp/Sparkle-2.9.1.tar.xz \
+  https://github.com/sparkle-project/Sparkle/releases/download/2.9.1/Sparkle-2.9.1.tar.xz
+shasum -a 256 /tmp/Sparkle-2.9.1.tar.xz
+tar -xJf /tmp/Sparkle-2.9.1.tar.xz -C infra/build ./Sparkle.framework ./bin/sign_update ./bin/generate_keys
+```
+
+Expected archive SHA256:
+
+```text
+c0dde519fd2a43ddfc6a1eb76aec284d7d888fe281414f9177de3164d98ba4c7
+```
+
 ## Dev Build
 
 From this directory:
@@ -74,6 +89,20 @@ KEYCHAIN_PROFILE=detox-notary ./notarize.sh dist/Detox.app
 ## Sparkle Public Key
 
 `Info.plist.tmpl` keeps `__SPARKLE_PUB_KEY__` as a placeholder until Task 6 wires Sparkle. The public key will live in `infra/build/sparkle.pub`; the private key stays off-repo.
+
+Generate keys with the vendored tool:
+
+```bash
+infra/build/bin/generate_keys
+```
+
+Write the public key to `infra/build/sparkle.pub`. `build.sh` copies `Info.plist.tmpl` into `build/Info.plist` and substitutes that key before running py2app. If `sparkle.pub` is absent, the placeholder remains so unsigned dev builds still work.
+
+Sign a DMG for an appcast enclosure:
+
+```bash
+SPARKLE_PRIV_KEY=/path/to/ed25519_private_key ./sparkle_sign.sh dist/Detox-1.0.0.dmg
+```
 
 The appcast URL is:
 

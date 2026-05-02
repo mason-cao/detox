@@ -4,6 +4,7 @@ Run from this directory directly, or through infra/build/build.sh once the
 signed release pipeline lands.
 """
 
+import os
 import pathlib
 import sys
 
@@ -15,6 +16,10 @@ BUILD_DIR = pathlib.Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 APP = [str(ROOT / "agent" / "__main__.py")]
+INFO_PLIST = pathlib.Path(
+    os.environ.get("DETOX_INFO_PLIST", BUILD_DIR / "Info.plist.tmpl")
+)
+SPARKLE_FRAMEWORK = BUILD_DIR / "Sparkle.framework"
 
 DATA_FILES = [
     ("web", [str(p) for p in (ROOT / "web").rglob("*") if p.is_file()]),
@@ -23,10 +28,10 @@ DATA_FILES = [
 OPTIONS = {
     "argv_emulation": False,
     "iconfile": str(BUILD_DIR / "icon.icns"),
-    "plist": str(BUILD_DIR / "Info.plist.tmpl"),
+    "plist": str(INFO_PLIST),
     "packages": ["agent", "flask", "rumps"],
     "includes": ["pkg_resources"],
-    "frameworks": [],  # Sparkle.framework is added in the Sparkle task.
+    "frameworks": [str(SPARKLE_FRAMEWORK)] if (SPARKLE_FRAMEWORK / "Sparkle").exists() else [],
     "resources": [],
     "strip": True,
 }
