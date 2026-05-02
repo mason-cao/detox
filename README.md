@@ -86,20 +86,65 @@ Detox is a macOS screen time tracker that monitors your app usage in real time, 
 
 ---
 
-## Quick Start
+## Install (DMG)
+
+Download the latest macOS build:
+
+[Download Detox 1.0.0](https://detox.app/releases/Detox-1.0.0.dmg)
+
+Open the DMG, then drag `Detox.app` into `/Applications`.
+
+On first launch, macOS needs Accessibility permission so Detox can read the frontmost app:
+
+**System Settings -> Privacy & Security -> Accessibility -> enable Detox**
+
+After launch:
+
+1. Click the Detox lantern in the menu bar.
+2. Toggle **Launch at Login** if you want Detox to start automatically.
+3. Choose **Open Dashboard** to view [http://localhost:5050](http://localhost:5050).
+
+Sparkle keeps the app patched in place, so manual update downloads are not needed after installation.
+
+### Install (Homebrew)
+
+```bash
+brew tap mason-cao/detox
+brew install --cask detox
+```
+
+The cask formula is a follow-up to the DMG release path. Until it lands, use the DMG or the source install below.
+
+---
+
+## Dev (from source)
 
 ### Requirements
 - macOS (Apple Silicon or Intel)
 - Python 3.9+
 
-### Run
+Install dependencies once from the repo root:
+
+```bash
+python3 -m pip install -r requirements.txt
+```
+
+### Menu-Bar App
+
+```bash
+python3 -m agent
+```
+
+This starts the Detox menu-bar app, monitor, and local dashboard server.
+
+### Headless Run
 
 ```bash
 ./start.sh
 ```
 
 That's it. The script handles everything:
-1. Installs dependencies (`flask`, `pillow`)
+1. Installs dependencies from `requirements.txt`
 2. Initializes the database
 3. Starts the background monitor
 4. Launches the dashboard at [http://localhost:5050](http://localhost:5050)
@@ -109,7 +154,7 @@ That's it. The script handles everything:
 
 The monitor needs to detect which app is in the foreground. macOS will prompt you to grant Accessibility access:
 
-**System Settings → Privacy & Security → Accessibility → Toggle on Terminal** (or whichever terminal app you use)
+**System Settings -> Privacy & Security -> Accessibility -> Toggle on Terminal** (or whichever terminal app you use)
 
 ### Stop
 
@@ -156,7 +201,7 @@ Press `Ctrl+C` in the terminal, or run:
 detox/
 ├── start.sh              # One-command launcher
 ├── stop.sh               # Clean shutdown
-├── requirements.txt      # flask, pillow
+├── requirements.txt      # Flask, Pillow, rumps, PyObjC
 ├── agent/                # On-device macOS daemon (osascript, pkill)
 │   ├── server.py         # Flask API + static file serving + error handling
 │   ├── monitor.py        # Background app tracking daemon
@@ -194,7 +239,7 @@ detox/
 
 | Component | Technology |
 |-----------|-----------|
-| Agent | Python 3.9, Flask |
+| Agent | Python 3.9, Flask, rumps |
 | Database | SQLite (WAL mode) |
 | Web | Vanilla JS, Chart.js, Inter font |
 | App Detection | `osascript` (AppleScript) |
