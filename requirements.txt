@@ -1,2 +1,4 @@
 flask>=2.0
 pillow>=9.0
+pyobjc>=10.0
+rumps>=0.4
