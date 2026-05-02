@@ -1,6 +1,8 @@
+import json
 import sqlite3
 import time
 import calendar
+import uuid
 from datetime import datetime, timedelta
 from contextlib import contextmanager
 from agent.config import (
@@ -109,6 +111,23 @@ def init_db():
                 value TEXT
             );
 
+            CREATE TABLE IF NOT EXISTS sync_queue (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                kind TEXT NOT NULL CHECK (kind IN ('app_usage', 'session', 'pickup')),
+                row_id INTEGER NOT NULL,
+                payload_json TEXT NOT NULL,
+                queued_at REAL NOT NULL,
+                UNIQUE (kind, row_id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_sync_queue_queued_at
+                ON sync_queue(queued_at);
+
+            CREATE TABLE IF NOT EXISTS sync_state (
+                key TEXT PRIMARY KEY,
+                value TEXT
+            );
+
             CREATE TABLE IF NOT EXISTS rewards_ledger (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 kind TEXT NOT NULL CHECK (kind IN ('spend', 'refund')),
@@ -148,6 +167,11 @@ def init_db():
             WHERE app_name GLOB '__category__*';
         """)
 
+        conn.execute(
+            "INSERT OR IGNORE INTO sync_state (key, value) VALUES ('device_id', ?)",
+            (str(uuid.uuid4()),),
+        )
+
         # Seed default categories
         for app_name, category in DEFAULT_CATEGORIES.items():
             conn.execute(
@@ -165,14 +189,29 @@ def init_db():
 
 # ── Usage recording ──────────────────────────────────────────────────────
 
+def _enqueue_sync(conn, kind, row_id, payload, queued_at):
+    conn.execute(
+        "INSERT OR IGNORE INTO sync_queue "
+        "(kind, row_id, payload_json, queued_at) VALUES (?, ?, ?, ?)",
+        (kind, row_id, json.dumps(payload), queued_at),
+    )
+
+
 def record_usage(app_name, timestamp=None):
     if timestamp is None:
         timestamp = time.time()
     date = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d")
     with get_db() as conn:
-        conn.execute(
+        cur = conn.execute(
             "INSERT INTO app_usage (app_name, timestamp, date) VALUES (?, ?, ?)",
             (app_name, timestamp, date),
+        )
+        _enqueue_sync(
+            conn,
+            "app_usage",
+            cur.lastrowid,
+            {"app_name": app_name, "timestamp": timestamp},
+            timestamp,
         )
 
 
@@ -182,9 +221,16 @@ def record_session(app_name, start_time, end_time):
         return
     date = datetime.fromtimestamp(start_time).strftime("%Y-%m-%d")
     with get_db() as conn:
-        conn.execute(
+        cur = conn.execute(
             "INSERT INTO sessions (app_name, start_time, end_time, duration_seconds, date) VALUES (?, ?, ?, ?, ?)",
             (app_name, start_time, end_time, duration, date),
+        )
+        _enqueue_sync(
+            conn,
+            "session",
+            cur.lastrowid,
+            {"app_name": app_name, "start_time": start_time, "end_time": end_time},
+            end_time,
         )
 
 
@@ -193,9 +239,16 @@ def record_pickup(timestamp=None):
         timestamp = time.time()
     date = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d")
     with get_db() as conn:
-        conn.execute(
+        cur = conn.execute(
             "INSERT INTO pickups (timestamp, date) VALUES (?, ?)",
             (timestamp, date),
+        )
+        _enqueue_sync(
+            conn,
+            "pickup",
+            cur.lastrowid,
+            {"timestamp": timestamp},
+            timestamp,
         )
 
 
