@@ -6,6 +6,12 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+!infra/build/
+!infra/build/**
+infra/build/.eggs/
+infra/build/__pycache__/
+infra/build/build/
+infra/build/dist/
 .env
 venv/
 CLAUDE.md
