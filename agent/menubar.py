@@ -47,6 +47,10 @@ class DetoxApp(rumps.App):
             callback=self.on_pause,
             key="p",
         )
+        self.launch_at_login_item = rumps.MenuItem(
+            "Launch at Login",
+            callback=self.on_toggle_launch_at_login,
+        )
         self.menu = [
             self.status_label,
             self.today_label,
@@ -55,10 +59,15 @@ class DetoxApp(rumps.App):
             rumps.MenuItem("Open Dashboard", callback=self.on_dashboard, key="d"),
             rumps.MenuItem("Open Logs", callback=self.on_logs),
             None,
+            self.launch_at_login_item,
             rumps.MenuItem("Check for Updates...", callback=self.on_check_updates),
             None,
             rumps.MenuItem("Quit Detox", callback=self.on_quit, key="q"),
         ]
+
+        from agent.launch_agent import is_installed
+
+        self.launch_at_login_item.state = 1 if is_installed() else 0
 
         self._write_pid()
         self._start_monitor()
@@ -120,6 +129,16 @@ class DetoxApp(rumps.App):
     def on_logs(self, _sender):
         open(LOG_PATH, "a").close()
         subprocess.run(["open", "-R", LOG_PATH], check=False)
+
+    def on_toggle_launch_at_login(self, sender):
+        from agent.launch_agent import install, is_installed, uninstall
+
+        if is_installed():
+            uninstall()
+            sender.state = 0
+        else:
+            install()
+            sender.state = 1
 
     def on_check_updates(self, _sender):
         rumps.notification(
