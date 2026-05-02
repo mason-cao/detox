@@ -8,6 +8,7 @@ import time
 import signal
 import subprocess
 import re
+import threading
 from datetime import datetime
 
 from agent.config import (
@@ -15,6 +16,7 @@ from agent.config import (
     MAX_IDLE_TIMEOUT_MINUTES,
     PID_FILE,
     POLL_INTERVAL,
+    STALL_THRESHOLD_SECONDS,
 )
 from agent import database as db
 from agent.blocker import kill_app
@@ -31,6 +33,8 @@ class Monitor:
         self.bedtime_notified = False
         self.last_date = None
         self.idle_timeout_minutes = DEFAULT_IDLE_TIMEOUT_MINUTES
+        self.last_poll_at = None
+        self.permission_denied = False
 
     def refresh_tracking_settings(self):
         """Refresh monitor settings that can change while the daemon runs."""
@@ -83,7 +87,10 @@ class Monitor:
                 timeout=5,
             )
             if result.returncode == 0 and result.stdout.strip():
+                self.permission_denied = False
                 return result.stdout.strip()
+            if "assistive access" in result.stderr.lower():
+                self.permission_denied = True
         except (subprocess.TimeoutExpired, Exception):
             pass
         return None
@@ -178,6 +185,18 @@ class Monitor:
         """Signal the polling loop to exit on its next iteration."""
         self.running = False
 
+    def is_alive(self):
+        """Return whether the monitor loop has polled recently."""
+        if not self.running or self.last_poll_at is None:
+            return False
+        return (time.time() - self.last_poll_at) < STALL_THRESHOLD_SECONDS
+
+    def start_in_thread(self):
+        """Start the monitor loop in a daemon thread."""
+        thread = threading.Thread(target=self.run, daemon=True, name="detox-monitor")
+        thread.start()
+        return thread
+
     def run(self):
         """Main monitoring loop. Returns when ``self.running`` is False."""
         goal_check_counter = 0
@@ -214,6 +233,7 @@ class Monitor:
                     self.check_goals(now)
                     goal_check_counter = 0
 
+                self.last_poll_at = now
                 time.sleep(POLL_INTERVAL)
         finally:
             if self.current_app and self.session_start:
