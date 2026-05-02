@@ -22,7 +22,15 @@ EOF
 
 echo "[1/6] py2app build"
 rm -rf build dist
-python3 setup.py py2app
+mkdir -p build
+if [ -f sparkle.pub ]; then
+  sed "s|__SPARKLE_PUB_KEY__|$(cat sparkle.pub)|g" \
+    Info.plist.tmpl > build/Info.plist
+else
+  echo "warning: sparkle.pub not found; leaving SUPublicEDKey placeholder" >&2
+  cp Info.plist.tmpl build/Info.plist
+fi
+DETOX_INFO_PLIST="build/Info.plist" python3 setup.py py2app
 
 APP="dist/Detox.app"
 DMG="dist/Detox-${VERSION}.dmg"

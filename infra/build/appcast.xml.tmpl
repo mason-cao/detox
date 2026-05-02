@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Detox</title>
+    <link>https://detox.app/appcast.xml</link>
+    <description>Detox app updates</description>
+    <item>
+      <title>Detox __VERSION__</title>
+      <pubDate>__PUB_DATE__</pubDate>
+      <sparkle:version>__BUILD__</sparkle:version>
+      <sparkle:shortVersionString>__VERSION__</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>12.0</sparkle:minimumSystemVersion>
+      <enclosure
+        url="__URL__"
+        length="__LENGTH__"
+        type="application/octet-stream"
+        sparkle:edSignature="__SIGNATURE__" />
+      <description><![CDATA[
+        <ul>
+          <li>Release notes go here.</li>
+        </ul>
+      ]]></description>
+    </item>
+  </channel>
+</rss>

@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+import sys
 import threading
 import time
 import webbrowser
@@ -24,6 +25,33 @@ def _format_minutes(total_minutes):
     if hours:
         return f"{hours}h {minutes}m"
     return f"{minutes}m"
+
+
+def _sparkle_framework_path(executable_path=None, source_file=None):
+    executable_path = executable_path or sys.executable
+    source_file = source_file or __file__
+    candidates = [
+        os.path.abspath(
+            os.path.join(
+                os.path.dirname(executable_path),
+                "..",
+                "Frameworks",
+                "Sparkle.framework",
+            )
+        ),
+        os.path.abspath(
+            os.path.join(
+                os.path.dirname(source_file),
+                "..",
+                "Frameworks",
+                "Sparkle.framework",
+            )
+        ),
+    ]
+    for candidate in candidates:
+        if os.path.exists(candidate):
+            return candidate
+    return candidates[0]
 
 
 class DetoxApp(rumps.App):
@@ -141,11 +169,23 @@ class DetoxApp(rumps.App):
             sender.state = 1
 
     def on_check_updates(self, _sender):
-        rumps.notification(
-            "Detox",
-            f"Version {APP_VERSION}",
-            "Sparkle updates arrive in a future build.",
-        )
+        try:
+            from Foundation import NSBundle
+
+            framework_path = _sparkle_framework_path()
+            if not os.path.exists(framework_path):
+                raise RuntimeError(f"Sparkle.framework not found at {framework_path}")
+
+            bundle = NSBundle.bundleWithPath_(framework_path)
+            if bundle is None or not bundle.load():
+                raise RuntimeError("Sparkle.framework not loaded")
+
+            SUUpdater = bundle.classNamed_("SUUpdater")
+            if SUUpdater is None:
+                raise RuntimeError("SUUpdater class not available")
+            SUUpdater.sharedUpdater().checkForUpdates_(None)
+        except Exception as exc:
+            rumps.notification("Detox", "Updates", f"Update check failed: {exc}")
 
     def on_quit(self, _sender):
         self._stop_monitor()
