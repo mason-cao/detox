@@ -5,12 +5,15 @@ signed release pipeline lands.
 """
 
 import pathlib
+import sys
 
 from setuptools import setup
 
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 BUILD_DIR = pathlib.Path(__file__).resolve().parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 APP = [str(ROOT / "agent" / "__main__.py")]
 
 DATA_FILES = [
