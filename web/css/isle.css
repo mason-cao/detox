@@ -1,165 +1,69 @@
-/* Isle dashboard — sky, ground, residents. */
+/* Isle dashboard — SVG world stage with HTML HUD overlays. */
 
 .isle {
     position: relative;
     display: grid;
     grid-template-rows: 1fr auto;
     gap: var(--sp-4);
-    min-height: calc(100vh - var(--hud-top-h) - var(--hud-rail-h) - var(--sp-6));
+    min-height: calc(100vh - var(--hud-top-h) - var(--sp-6));
     padding: 0;
 }
 
-/* ── Sky layer ──────────────────────────────────────────────────────── */
-.isle__sky {
+/* ── World stage — holds the SVG element ─────────────────────────────── */
+.isle__stage {
     position: relative;
-    border-radius: 0;
+    border: 0;
     box-shadow: 0 0 0 2px var(--dc-ink);
     background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
     overflow: hidden;
-    min-height: 420px;
+    min-height: 460px;
 }
 
-.isle__celestial {
-    position: absolute;
-    z-index: 1;
-    width: 48px;
-    height: 48px;
-    background: var(--dc-coin);
-    border-radius: 50%;
-    box-shadow: 0 0 0 2px var(--dc-ink), 0 0 32px 4px rgba(255, 208, 74, 0.4);
-    transition: left 4s linear, top 4s linear, background 4s linear;
+.isle__stage svg.world {
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
-.isle__celestial--moon {
-    background: #e8ddf0;
-    box-shadow: 0 0 0 2px var(--dc-ink), 0 0 24px 2px rgba(232, 221, 240, 0.35);
+.world__sky-rect {
+    fill: url(#sky-grad-fallback);
+    fill: transparent; /* The .isle__stage gradient shows through */
 }
 
-.isle__stars {
-    position: absolute;
-    z-index: 0;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 2s;
-    background-image:
-        radial-gradient(1px 1px at 10% 20%, #fff, transparent),
-        radial-gradient(1px 1px at 30% 40%, #fff, transparent),
-        radial-gradient(1px 1px at 55% 15%, #fff, transparent),
-        radial-gradient(1px 1px at 75% 35%, #fff, transparent),
-        radial-gradient(1px 1px at 85% 10%, #fff, transparent),
-        radial-gradient(1px 1px at 20% 60%, #fff, transparent);
+.world__star { fill: #fff4d6; opacity: 0.9; }
+
+#worldCelestial { fill: var(--dc-coin); filter: drop-shadow(0 0 6px rgba(255, 208, 74, 0.7)); }
+#worldCelestial.world__celestial--moon {
+    fill: #e8ddf0;
+    filter: drop-shadow(0 0 4px rgba(232, 221, 240, 0.6));
 }
 
-.isle__sky.is-night .isle__stars { opacity: 0.8; }
-
-.isle__sky.is-reduced-motion .isle__celestial,
-.isle__sky.is-reduced-motion .isle__stars {
-    transition: none;
+/* ── Ground tiles ────────────────────────────────────────────────────── */
+.world__tile {
+    stroke: rgba(42, 30, 42, 0.18);
+    stroke-width: 1;
 }
+.world__tile--a { fill: var(--dc-moss); }
+.world__tile--b { fill: #7aa84e; }
 
-.isle__sky.is-reduced-motion .isle__stars {
-    opacity: 0.45;
-}
-
-/* ── Weather and goal signboards ────────────────────────────────────── */
-.weather-layer {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
-    overflow: hidden;
-}
-
+/* ── Weather ─────────────────────────────────────────────────────────── */
+.weather-cloud ellipse { fill: #fff4d6; stroke: var(--dc-ink); stroke-width: 1.5; }
+.weather-layer--storm .weather-cloud ellipse { fill: #4b5878; }
 .weather-sunbeam {
-    position: absolute;
-    inset: -40%;
-    opacity: 0.22;
-    background: repeating-conic-gradient(
-        from 0deg,
-        rgba(255, 244, 214, 0.95) 0deg 10deg,
-        transparent 10deg 24deg
-    );
+    fill: rgba(255, 244, 214, 0.18);
+    transform-origin: 280px 80px;
     animation: sunbeam-spin 26s linear infinite;
 }
 
-.weather-cloud {
-    position: absolute;
-    top: 72px;
-    left: -160px;
-    width: 132px;
-    height: 36px;
-    background: #fff4d6;
-    box-shadow: 0 0 0 2px var(--dc-ink), 18px -18px 0 0 #fff4d6, 18px -18px 0 2px var(--dc-ink), 62px -10px 0 0 #fff4d6, 62px -10px 0 2px var(--dc-ink);
-    opacity: 0.9;
-    animation: cloud-drift 36s linear infinite;
-}
+@keyframes sunbeam-spin { to { transform: rotate(1turn); } }
 
-.weather-layer--cloudy .weather-cloud:nth-child(2) {
-    top: 156px;
-    animation-delay: -14s;
-    animation-duration: 42s;
-}
-
-.weather-layer--cloudy .weather-cloud:nth-child(3) {
-    top: 236px;
-    animation-delay: -26s;
-    animation-duration: 48s;
-    opacity: 0.72;
-}
-
-.weather-layer--storm {
-    background: linear-gradient(to bottom, rgba(42, 48, 80, 0.24), rgba(42, 48, 80, 0.46));
-}
-
-.weather-layer--storm .weather-cloud {
-    background: #4b5878;
-    box-shadow: 0 0 0 2px var(--dc-ink), 18px -18px 0 0 #4b5878, 18px -18px 0 2px var(--dc-ink), 62px -10px 0 0 #4b5878, 62px -10px 0 2px var(--dc-ink);
-}
-
-.weather-layer--storm .weather-cloud:nth-child(2) {
-    top: 142px;
-    animation-delay: -18s;
-    animation-duration: 40s;
-}
-
-.weather-lightning {
-    position: absolute;
-    top: 128px;
-    right: 18%;
-    width: 28px;
-    height: 72px;
-    background: #ffe38f;
-    clip-path: polygon(46% 0, 100% 0, 62% 38%, 92% 38%, 26% 100%, 42% 52%, 8% 52%);
-    filter: drop-shadow(0 0 0 var(--dc-ink));
-    animation: lightning-pulse 4.8s steps(1, end) infinite;
-}
-
-.weather-rain {
-    position: absolute;
-    inset: 0;
-}
-
-.weather-rain i {
-    position: absolute;
-    top: -24px;
-    left: calc((var(--i) * 6%) - 4%);
-    width: 3px;
-    height: 18px;
-    background: #7fc8df;
-    box-shadow: 0 0 0 1px rgba(42, 30, 42, 0.34);
-    transform: skewX(-16deg);
-    animation: rain-fall 1s linear infinite;
-    animation-delay: calc(var(--i) * -0.08s);
-}
-
+/* ── HUD overlays (HTML on top of SVG) ───────────────────────────────── */
 .isle__datebar,
 .isle__weather-badge,
 .isle__signboards {
     position: absolute;
     z-index: 4;
 }
-
 .isle__datebar {
     top: var(--sp-4);
     left: var(--sp-4);
@@ -167,7 +71,6 @@
     align-items: center;
     gap: var(--sp-2);
 }
-
 .isle__date-button {
     width: 36px;
     height: 36px;
@@ -179,16 +82,8 @@
     font-family: var(--font-display);
     font-size: 12px;
 }
-
-.isle__date-button:disabled {
-    cursor: default;
-    opacity: 0.45;
-}
-
-.isle__date-button:not(:disabled):hover {
-    background: var(--dc-noon);
-}
-
+.isle__date-button:disabled { cursor: default; opacity: 0.45; }
+.isle__date-button:not(:disabled):hover { background: var(--dc-noon); }
 .isle__date-label {
     min-width: 148px;
     padding: var(--sp-2) var(--sp-3);
@@ -196,7 +91,6 @@
     color: var(--dc-ink);
     box-shadow: 0 0 0 2px var(--dc-ink);
 }
-
 .isle__date-label span,
 .isle-signboard span {
     display: block;
@@ -204,7 +98,6 @@
     font-size: var(--fs-md);
     color: var(--dc-ink-soft);
 }
-
 .isle__date-label strong {
     display: block;
     margin-top: 2px;
@@ -227,19 +120,16 @@
     color: var(--dc-ink);
     box-shadow: 0 0 0 2px var(--dc-ink);
 }
-
 .isle__weather-badge span {
     grid-row: span 2;
     font-size: 24px;
     line-height: 1;
 }
-
 .isle__weather-badge strong {
     font-family: var(--font-display);
     font-size: 10px;
     line-height: 1.35;
 }
-
 .isle__weather-badge em {
     font-family: var(--font-game);
     font-size: var(--fs-md);
@@ -255,7 +145,6 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--sp-3);
 }
-
 .isle-signboard {
     min-height: 80px;
     display: flex;
@@ -267,11 +156,7 @@
     box-shadow: 0 0 0 2px var(--dc-ink), inset 0 -8px 0 rgba(42, 30, 42, 0.16);
     text-align: center;
 }
-
-.isle-signboard span {
-    color: #ffe38f;
-}
-
+.isle-signboard span { color: #ffe38f; }
 .isle-signboard strong {
     margin-top: var(--sp-1);
     font-family: var(--font-display);
@@ -280,150 +165,19 @@
     overflow-wrap: anywhere;
 }
 
-@keyframes sunbeam-spin {
-    to { transform: rotate(1turn); }
-}
-
-@keyframes cloud-drift {
-    to { transform: translateX(calc(100vw + 260px)); }
-}
-
-@keyframes rain-fall {
-    to { transform: translateY(460px) skewX(-16deg); }
-}
-
-@keyframes lightning-pulse {
-    0%, 14%, 100% { opacity: 0; }
-    15%, 17%, 20% { opacity: 1; }
-    18%, 19% { opacity: 0; }
-}
-
-.isle__sky.is-reduced-motion .weather-sunbeam,
-.isle__sky.is-reduced-motion .weather-cloud,
-.isle__sky.is-reduced-motion .weather-rain i,
-.isle__sky.is-reduced-motion .weather-lightning {
-    animation: none;
-}
-
-.isle__sky.is-reduced-motion .weather-sunbeam {
-    opacity: 0.12;
-}
-
-/* ── Ground (isometric grid) ─────────────────────────────────────────── */
-.isle__ground {
-    position: relative;
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: var(--sp-2);
-    padding: var(--sp-4);
-    background: var(--ground-tint);
-    box-shadow: 0 0 0 2px var(--dc-ink);
-    min-height: 180px;
-}
-
-/* ── Plot: one resident ──────────────────────────────────────────────── */
-.plot {
-    aspect-ratio: 1 / 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    padding: var(--sp-2);
-    position: relative;
-    background: var(--dc-parchment);
-    box-shadow: 0 0 0 2px var(--dc-ink);
-    cursor: pointer;
-    font-family: var(--font-game);
-    font-size: var(--fs-md);
-    color: var(--dc-ink);
-    text-align: center;
-}
-
-.plot:hover { background: var(--dc-noon); }
-
-.plot__icon {
-    font-size: 32px;
-    line-height: 1;
-    margin-bottom: var(--sp-1);
-}
-
-.plot__name {
-    font-family: var(--font-game);
-    font-size: var(--fs-md);
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.plot__time {
-    font-family: var(--font-display);
-    font-size: 9px;
-    color: var(--dc-ink-soft);
-    margin-top: var(--sp-1);
-}
-
-/* Plot size tiers — driven by rank */
-.plot--tier-1 { grid-column: span 2; grid-row: span 2; }
-.plot--tier-2 { grid-column: span 2; }
-/* tier-3 and below use default 1x1 */
-
-/* ── Empty state ─────────────────────────────────────────────────────── */
-.isle__empty {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: var(--sp-6);
-    background: rgba(255, 244, 214, 0.92);
-    box-shadow: 0 0 0 2px var(--dc-ink);
-    font-family: var(--font-game);
-    font-size: var(--fs-lg);
-    color: var(--dc-ink);
-}
-
 @media (prefers-reduced-motion: reduce) {
-    .isle__celestial,
-    .isle__stars,
-    .weather-sunbeam,
-    .weather-cloud,
-    .weather-rain i,
-    .weather-lightning {
-        transition: none;
-        animation: none;
-    }
+    .weather-sunbeam { animation: none; opacity: 0.12; }
 }
 
 @media (max-width: 760px) {
-    .isle__sky {
-        min-height: 520px;
-    }
-
-    .isle__datebar {
-        right: var(--sp-4);
-    }
-
-    .isle__date-label {
-        flex: 1;
-        min-width: 0;
-    }
-
+    .isle__stage { min-height: 540px; }
+    .isle__datebar { right: var(--sp-4); }
+    .isle__date-label { flex: 1; min-width: 0; }
     .isle__weather-badge {
         top: 76px;
         left: var(--sp-4);
         right: var(--sp-4);
         min-width: 0;
     }
-
-    .isle__signboards {
-        grid-template-columns: 1fr;
-    }
-
-    .isle__ground {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .plot--tier-1,
-    .plot--tier-2 {
-        grid-column: span 1;
-        grid-row: span 1;
-    }
+    .isle__signboards { grid-template-columns: 1fr; }
 }
