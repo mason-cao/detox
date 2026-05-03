@@ -181,3 +181,42 @@
     }
     .isle__signboards { grid-template-columns: 1fr; }
 }
+
+/* ── Buildings ───────────────────────────────────────────────────────── */
+.world__building { cursor: pointer; outline: none; }
+.world__building-shape { transition: transform 120ms ease-out; }
+.world__building:hover .world__building-shape,
+.world__building:focus .world__building-shape { transform: translateY(-2px); }
+
+.world__building-label {
+    font-family: var(--font-display);
+    font-size: 7px;
+    fill: var(--dc-ink);
+    paint-order: stroke;
+    stroke: var(--dc-parchment);
+    stroke-width: 2;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 120ms ease-out;
+}
+.world__building:hover .world__building-label,
+.world__building:focus .world__building-label { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+    .world__building-shape,
+    .world__building-label { transition: none; }
+    .world__building:hover .world__building-shape,
+    .world__building:focus .world__building-shape { transform: none; }
+}
+
+/* ── Residents (1e: SVG text glyphs; 1f swaps to <image> sprites) ────── */
+.world__resident { cursor: pointer; }
+.world__resident-glyph { font-size: 22px; }
+.world__resident-name {
+    font-family: var(--font-game);
+    font-size: 9px;
+    fill: var(--dc-ink);
+    paint-order: stroke;
+    stroke: var(--dc-parchment);
+    stroke-width: 2;
+}
