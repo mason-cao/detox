@@ -26,6 +26,7 @@ const World = {
             </g>
             <g id="worldWeather"></g>
             <g id="worldGround">${this.groundTiles()}</g>
+            <rect id="worldNightDim" x="0" y="0" width="${w}" height="${h}" pointer-events="none"></rect>
             <g id="worldBuildings"></g>
             <g id="worldResidents"></g>
             <g id="worldEffects"></g>
@@ -120,6 +121,13 @@ const World = {
         const skyGroup = document.getElementById('worldSky');
         if (skyGroup) skyGroup.classList.toggle('is-night', phase.isNight);
 
+        const svg = document.querySelector('.isle__stage svg.world');
+        if (svg) {
+            const isDusk = !phase.isNight && hours >= 17 && hours < 19;
+            svg.classList.toggle('is-night', phase.isNight);
+            svg.classList.toggle('is-dusk', isDusk);
+        }
+
         const stars = document.getElementById('worldStars');
         if (stars) stars.innerHTML = phase.isNight ? this.starField() : '';
 
@@ -182,6 +190,23 @@ const World = {
                     go();
                 }
             });
+        });
+    },
+
+    // Add a single soft lantern circle above each building. The is-night /
+    // is-dusk class on the SVG root fades them in via CSS.
+    mountLanterns() {
+        const layer = document.getElementById('worldBuildings');
+        if (!layer) return;
+        Buildings.catalog.forEach(b => {
+            const { x, y } = Buildings.anchor(b.tx, b.ty, b.size);
+            const lanternY = y - (b.size === 'major' ? 76 : 56);
+            const lantern = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            lantern.setAttribute('class', 'world__lantern');
+            lantern.setAttribute('cx', x.toFixed(1));
+            lantern.setAttribute('cy', String(lanternY));
+            lantern.setAttribute('r', '6');
+            layer.appendChild(lantern);
         });
     },
 
