@@ -102,8 +102,14 @@ const Stats = {
 
             <div class="chronicle-chart">
                 <h3>DAILY BREAKDOWN</h3>
-                <div class="chart-wrapper">
+                <div class="chart-wrapper" style="position: relative;">
                     <canvas id="weeklyStatsChart"></canvas>
+                    <span class="effect-quill" data-role="quill" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#2a1e2a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 20l8-8 5-1 4-7-7 4-1 5-8 8z"/>
+                            <path d="M14 10l1 1"/>
+                        </svg>
+                    </span>
                 </div>
             </div>
         `;
@@ -112,6 +118,13 @@ const Stats = {
     renderWeeklyChart(weekly) {
         const ctx = document.getElementById('weeklyStatsChart');
         if (!ctx || !chartsAvailable()) return;
+        // Re-arm the quill keyframe so it sweeps every time a new chart renders.
+        const quill = document.querySelector('[data-role="quill"]');
+        if (quill && !App.prefersReducedMotion()) {
+            quill.style.animation = 'none';
+            void quill.offsetWidth;
+            quill.style.animation = '';
+        }
         new Chart(ctx, {
             type: 'bar',
             data: {
