@@ -295,6 +295,21 @@ const App = {
         return this.escapeAttr(JSON.stringify(String(value ?? '')));
     },
 
+    // Diegetic exit from any sub-tab. Sub-tabs render this in their header
+    // and Esc activates the same route via the keydown handler.
+    backToIsleButton() {
+        return `
+            <button class="back-to-isle" type="button" onclick="App.showTab('dashboard')" aria-label="Back to the Isle">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+                    <rect x="3" y="3" width="10" height="11"/>
+                    <path d="M3 3l5-2 5 2"/>
+                    <circle cx="11" cy="9" r="0.7" fill="currentColor"/>
+                </svg>
+                ISLE
+            </button>
+        `;
+    },
+
     /* ── Colors ─────────────────────────────────────────────────────── */
 
     appColor(name) {
@@ -510,6 +525,9 @@ const App = {
             if (e.metaKey || e.ctrlKey || e.altKey) return;
 
             switch (e.key) {
+                case 'Escape':
+                    if (this.currentTab !== 'dashboard') this.showTab('dashboard');
+                    break;
                 case 'ArrowLeft': e.preventDefault(); this.prevDate(); break;
                 case 'ArrowRight': e.preventDefault(); this.nextDate(); break;
                 case 'd': this.toggleDarkMode(); break;
