@@ -14,7 +14,7 @@ const Isle = {
         if (stage) {
             World.mount(stage, weather);
             World.mountBuildings();
-            World.placeResidents(apps);
+            Residents.mount(apps);
         }
     },
 

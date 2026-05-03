@@ -49,6 +49,65 @@ const Residents = {
             isFrontmost: false,
         }));
     },
+
+    // Internal cache of the mounted residents, keyed by app_name.
+    _state: new Map(),
+
+    // Slots reused from 1e — open ground row at ty=4 plus two corners.
+    _initialSlots: [
+        { tx: 0, ty: 4 }, { tx: 2, ty: 4 }, { tx: 4, ty: 4 },
+        { tx: 6, ty: 4 }, { tx: 8, ty: 4 }, { tx: 10, ty: 4 },
+        { tx: 1, ty: 7 }, { tx: 11, ty: 7 },
+    ],
+
+    // Mount sprite residents into the world's #worldResidents <g>.
+    // Replaces any existing children. Idempotent across re-renders.
+    mount(apps) {
+        const layer = document.getElementById('worldResidents');
+        if (!layer) return;
+
+        const built = this.build(apps).map((r, i) => ({
+            ...r,
+            tile: this._initialSlots[i] || { tx: 5, ty: 4 },
+        }));
+
+        this._state.clear();
+        layer.innerHTML = built.map(r => this._render(r)).join('');
+        built.forEach(r => this._state.set(r.appName, r));
+
+        layer.querySelectorAll('.world__resident').forEach(node => {
+            node.addEventListener('click', () => App.showTab('apps'));
+        });
+    },
+
+    // Render one resident as an SVG <g>. The <image>'s x attribute is
+    // -frame*32 so the same atlas serves all four walk frames.
+    _render(r) {
+        const { x, y } = Iso.tileToScreen(r.tile.tx, r.tile.ty);
+        const cy = y + Iso.TILE_H / 2 + 80; // sky headroom + tile-center
+        const ix = -r.frame * 32;
+        const clipId = `resClip-${this._slug(r.appName)}`;
+        return `
+            <g class="world__resident" transform="translate(${x.toFixed(1)} ${cy.toFixed(1)})"
+               data-app="${App.escapeAttr(r.appName)}"
+               data-archetype="${r.archetype}"
+               data-active="false"
+               style="--tint: ${r.tint};">
+                <defs>
+                    <clipPath id="${clipId}"><rect x="-16" y="-32" width="32" height="32"/></clipPath>
+                </defs>
+                <circle class="effect-halo" cx="0" cy="-16" r="22" style="display: none;"></circle>
+                <image class="world__resident-sprite"
+                       href="/assets/sprites/residents/${r.archetype}.png"
+                       x="${ix - 16}" y="-32" width="128" height="32"
+                       clip-path="url(#${clipId})"
+                       style="filter: hue-rotate(${r.tint}deg);"></image>
+                <text class="world__resident-name" text-anchor="middle" y="14">${App.escapeHtml(r.appName)}</text>
+            </g>
+        `;
+    },
+
+    _slug(s) { return s.replace(/[^a-z0-9]/gi, '_'); },
 };
 
 window.Residents = Residents;

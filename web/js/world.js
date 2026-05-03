@@ -185,55 +185,6 @@ const World = {
         });
     },
 
-    // Place residents (1e: SVG <text> emoji) at iso tile coords.
-    // Plan 1f swaps these for <image> sprite atlases inside the same layer.
-    placeResidents(apps) {
-        const layer = document.getElementById('worldResidents');
-        if (!layer) return;
-
-        if (!apps || !apps.length) {
-            layer.innerHTML = '';
-            return;
-        }
-
-        // Tiles 0..11, 0..7 — pick a subset away from buildings.
-        // Layout: residents wander the open ground row at ty=4.
-        const slots = [
-            { tx: 0, ty: 4 }, { tx: 2, ty: 4 }, { tx: 4, ty: 4 },
-            { tx: 6, ty: 4 }, { tx: 8, ty: 4 }, { tx: 10, ty: 4 },
-            { tx: 1, ty: 7 }, { tx: 11, ty: 7 },
-        ];
-
-        const top = apps.slice(0, slots.length);
-        layer.innerHTML = top.map((app, i) => {
-            const slot = slots[i];
-            const { x, y } = Iso.tileToScreen(slot.tx, slot.ty);
-            const cy = y + Iso.TILE_H / 2 + 80; // shift for sky headroom + center on tile
-            return `
-                <g class="world__resident" transform="translate(${x.toFixed(1)} ${cy.toFixed(1)})"
-                   data-app="${App.escapeAttr(app.app_name)}">
-                    <text class="world__resident-glyph" text-anchor="middle" y="-2">${this.glyphFor(app.app_name)}</text>
-                    <text class="world__resident-name" text-anchor="middle" y="14">${App.escapeHtml(app.app_name)}</text>
-                </g>
-            `;
-        }).join('');
-
-        layer.querySelectorAll('.world__resident').forEach(node => {
-            node.addEventListener('click', () => App.showTab('apps'));
-        });
-    },
-
-    glyphFor(name) {
-        const map = {
-            'Safari': '🌐', 'Google Chrome': '🌐', 'Firefox': '🦊',
-            'Mail': '✉', 'Messages': '💬', 'Slack': '💬', 'Discord': '💬',
-            'Instagram': '📷', 'Twitter': '🐦', 'TikTok': '🎵', 'Reddit': '💭',
-            'YouTube': '▶', 'Netflix': '🎬', 'Spotify': '♪', 'Music': '♪',
-            'Terminal': '⌨', 'iTerm2': '⌨', 'Visual Studio Code': '⌨', 'Code': '⌨',
-            'Xcode': '🔨', 'Finder': '📁', 'Calendar': '📅', 'Notes': '📝',
-        };
-        return map[name] || '🏠';
-    },
 };
 
 window.World = World;

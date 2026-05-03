@@ -209,14 +209,5 @@
     .world__building:focus .world__building-shape { transform: none; }
 }
 
-/* ── Residents (1e: SVG text glyphs; 1f swaps to <image> sprites) ────── */
+/* ── Residents — sprite layer styles live in residents.css ───────────── */
 .world__resident { cursor: pointer; }
-.world__resident-glyph { font-size: 22px; }
-.world__resident-name {
-    font-family: var(--font-game);
-    font-size: 9px;
-    fill: var(--dc-ink);
-    paint-order: stroke;
-    stroke: var(--dc-parchment);
-    stroke-width: 2;
-}
