@@ -39,6 +39,7 @@ A sunset-lit island viewed from an isometric camera. The user is the mayor. Ever
 - **Residents** visibly change behavior based on use: productive apps become farmers/builders/scribes; over-limit apps become idle tourists; blocked apps are banished to a rowboat offshore.
 - **Weather** is an honest read of today's adherence: sunny under goal, overcast when approaching, storm when past.
 - **Day/night** cycles with the actual system clock; at the user's configured bedtime, a town bell rings and residents walk home.
+- The frontmost application's resident glows in real time and shows a working tool overlay at their building. Background residents walk slow paths or bob in place. (Live binding lands in Phase 1f; resident-as-sprite rendering substrate lands in Phase 1e.)
 - Missing a goal brings clouds but does not wipe progress. No punitive mechanics, no FOMO, no streak-loss rage bait.
 
 ### 3.2 Restrictions as law
@@ -85,7 +86,8 @@ Beyond the market:
 Eight sections. The existing left sidebar is retired. Navigation happens two ways:
 
 1. **Clickable buildings** on the isle deep-link to each section (click the Registry tower → Apps page).
-2. **Bottom ribbon** — a persistent pixel-art bulletin board with 8 tiles. Keyboard `1`–`8`.
+2. **Compass HUD** — a small pinned card at top-right listing the 8 destinations, highlighting the current room. Collapses to a 🧭 toggle on viewports <760 px.
+3. **Keyboard `1`–`8`** — power-user shortcuts.
 
 | Today | Becomes | What lives there |
 |---|---|---|
@@ -109,6 +111,7 @@ Every screen has a top HUD strip:
 - Streak count with sunbeam glyph
 - Monitor/lighthouse status (beam = healthy; dim/red = stopped)
 - **`?` help button** (see §4.2)
+- Compass HUD (right side, under the `?` button)
 
 ### 4.2 Help button
 
