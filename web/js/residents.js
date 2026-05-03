@@ -78,6 +78,8 @@ const Residents = {
         layer.querySelectorAll('.world__resident').forEach(node => {
             node.addEventListener('click', () => App.showTab('apps'));
         });
+
+        this.startTicker();
     },
 
     // Render one resident as an SVG <g>. The <image>'s x attribute is
@@ -108,6 +110,76 @@ const Residents = {
     },
 
     _slug(s) { return s.replace(/[^a-z0-9]/gi, '_'); },
+
+    // Three-waypoint loops, in tile coords. Walks are slow — 4 s per leg.
+    // Tuned to keep residents on open ground (ty=3..6, tx=0..11) and away
+    // from the major-building 2x2 footprints.
+    paths: {
+        scribe:    [{ tx: 1, ty: 4 }, { tx: 4, ty: 4 }, { tx: 4, ty: 5 }],
+        builder:   [{ tx: 6, ty: 4 }, { tx: 8, ty: 4 }, { tx: 6, ty: 6 }],
+        jester:    [{ tx: 0, ty: 4 }, { tx: 3, ty: 5 }, { tx: 0, ty: 6 }],
+        farmer:    [{ tx: 10, ty: 4 }, { tx: 11, ty: 5 }, { tx: 10, ty: 6 }],
+        musician:  [{ tx: 2, ty: 6 }, { tx: 4, ty: 6 }, { tx: 2, ty: 7 }],
+        wanderer:  [{ tx: 5, ty: 4 }, { tx: 7, ty: 5 }, { tx: 5, ty: 6 }],
+        sheriff:   [{ tx: 5, ty: 3 }, { tx: 7, ty: 3 }, { tx: 5, ty: 4 }],
+        // Banished sits offshore; never walks.
+        banished:  null,
+    },
+
+    _tickInterval: null,
+    _legDurationMs: 4000,
+
+    startTicker() {
+        this.stopTicker();
+        if (App.prefersReducedMotion()) return; // residents stand still
+        this._tickInterval = setInterval(() => this._tick(), 1000 / 6); // 6 fps
+    },
+
+    stopTicker() {
+        if (this._tickInterval) clearInterval(this._tickInterval);
+        this._tickInterval = null;
+    },
+
+    _tick() {
+        const layer = document.getElementById('worldResidents');
+        if (!layer) return this.stopTicker();
+        const now = performance.now();
+
+        this._state.forEach((r, appName) => {
+            // Frontmost residents stand at their home tile and don't walk.
+            if (r.isFrontmost) return;
+
+            const path = this.paths[r.archetype];
+            if (!path) return; // banished — no walk
+
+            // Use an app-name-keyed offset so the 8 residents don't march in lockstep.
+            const offset = this.tintFor(appName) * 13;
+            const cycleMs = path.length * this._legDurationMs;
+            const t = ((now + offset) % cycleMs) / cycleMs;
+            const legCount = path.length;
+            const leg = Math.floor(t * legCount);
+            const legProgress = (t * legCount) - leg;
+            const a = path[leg];
+            const b = path[(leg + 1) % legCount];
+            const tx = a.tx + (b.tx - a.tx) * legProgress;
+            const ty = a.ty + (b.ty - a.ty) * legProgress;
+
+            // Walk-frame advances by one every 167ms; mod 4.
+            const frame = Math.floor(now / 167) % 4;
+
+            this._reposition(appName, tx, ty, frame);
+        });
+    },
+
+    _reposition(appName, tx, ty, frame) {
+        const node = document.querySelector(`.world__resident[data-app="${App.escapeAttr(appName)}"]`);
+        if (!node) return;
+        const { x, y } = Iso.tileToScreen(tx, ty);
+        const cy = y + Iso.TILE_H / 2 + 80;
+        node.setAttribute('transform', `translate(${x.toFixed(1)} ${cy.toFixed(1)})`);
+        const img = node.querySelector('.world__resident-sprite');
+        if (img) img.setAttribute('x', String(-frame * 32 - 16));
+    },
 };
 
 window.Residents = Residents;
