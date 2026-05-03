@@ -380,6 +380,7 @@ const App = {
     async showTab(tab) {
         const token = ++this.renderToken;
         this.currentTab = tab;
+        document.dispatchEvent(new CustomEvent('detox:tab-changed', { detail: { tab } }));
 
         document.querySelectorAll('[data-tab]').forEach(el => {
             el.classList.toggle('is-active', el.dataset.tab === tab);
@@ -571,6 +572,7 @@ const App = {
         this.initKeyboardShortcuts();
         this.showTab('dashboard');
         if (window.HUD) HUD.init();
+        if (window.Compass) Compass.init();
         this.checkMonitor();
         this.refreshFocusMode();
         this.startAutoRefresh();

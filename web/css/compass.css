@@ -1,0 +1,76 @@
+/* Compass HUD — pinned top-right, mirrors the building catalog. */
+
+.compass {
+    position: fixed;
+    top: calc(var(--hud-top-h) + var(--sp-2));
+    right: var(--sp-3);
+    z-index: 60;
+    width: 92px;
+    background: var(--dc-parchment);
+    color: var(--dc-ink);
+    box-shadow: 0 0 0 2px var(--dc-ink), 0 4px 0 0 rgba(42, 30, 42, 0.18);
+    font-family: var(--font-game);
+    font-size: 13px;
+}
+
+.compass__title {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 8px;
+    color: var(--dc-ink-soft);
+    letter-spacing: 0.5px;
+    padding: var(--sp-2) var(--sp-2) var(--sp-1);
+    border-bottom: 1px solid rgba(42, 30, 42, 0.2);
+}
+
+.compass__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.compass__item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    color: var(--dc-ink-soft);
+    border: 0;
+    padding: 4px var(--sp-2);
+    font-family: var(--font-game);
+    font-size: 13px;
+    cursor: pointer;
+    line-height: 1.2;
+}
+.compass__item:hover { color: var(--dc-ink); background: rgba(42, 30, 42, 0.06); }
+.compass__item.is-current {
+    color: var(--dc-ink);
+    background: var(--dc-noon);
+    box-shadow: inset 2px 0 0 var(--dc-coin);
+}
+
+/* ── Mobile: collapse to icon ─────────────────────────────────────── */
+.compass-toggle {
+    display: none;
+    position: fixed;
+    top: calc(var(--hud-top-h) + var(--sp-2));
+    right: var(--sp-3);
+    z-index: 60;
+    width: 36px;
+    height: 36px;
+    background: var(--dc-parchment);
+    color: var(--dc-ink);
+    border: 0;
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    cursor: pointer;
+    font-size: 18px;
+}
+
+@media (max-width: 760px) {
+    .compass {
+        display: none;
+        top: calc(var(--hud-top-h) + var(--sp-2) + 40px);
+    }
+    .compass.is-open { display: block; }
+    .compass-toggle { display: inline-block; }
+}
