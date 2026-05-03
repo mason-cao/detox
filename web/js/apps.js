@@ -114,10 +114,19 @@ const Apps = {
     },
 
     async filterApps(query) {
+        const wasSearching = !!this.searchQuery;
+        const isSearching = !!query;
         this.searchQuery = query;
         const apps = await App.api('/api/apps');
         const list = document.getElementById('appsList');
-        if (list) list.innerHTML = this.renderAppList(apps);
+        if (!list) return;
+        // Page-turn only on entering or leaving search mode — not on every
+        // keystroke, which would flicker.
+        if (wasSearching !== isSearching) {
+            Effects.pageTurn(list, () => { list.innerHTML = this.renderAppList(apps); });
+        } else {
+            list.innerHTML = this.renderAppList(apps);
+        }
     },
 
     showDetail(appName) {
