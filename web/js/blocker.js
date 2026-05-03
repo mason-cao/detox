@@ -33,7 +33,7 @@ const Blocker = {
             const portraitStyle = allow ? '' : ` style="background: ${App.appColor(block.app_name)}"`;
 
             return `
-                <div class="rule-entry${allow ? ' rule-entry--allow' : ''}">
+                <div class="rule-entry${allow ? ' rule-entry--allow' : ''}" data-app-name="${App.escapeAttr(block.app_name)}">
                     <div class="rule-entry__portrait"${portraitStyle}>${firstLetter}</div>
                     <div>
                         <div class="rule-entry__name">${appName}</div>
@@ -193,7 +193,9 @@ const Blocker = {
         App.invalidateAppSuggestions();
         document.querySelector('.modal-overlay').remove();
         App.toast(`${appName} banished`, 'success');
-        this.render(document.getElementById('content'));
+        const content = document.getElementById('content');
+        await this.render(content);
+        this._celebrateAdd(content, appName);
     },
 
     async addWhitelist(prefillAppName = '') {
@@ -224,14 +226,45 @@ const Blocker = {
         App.invalidateAppSuggestions();
         document.querySelector('.modal-overlay').remove();
         App.toast(`${appName} added to whitelist`, 'success');
-        this.render(document.getElementById('content'));
+        const content = document.getElementById('content');
+        await this.render(content);
+        this._celebrateAdd(content, appName);
     },
 
     async removeBlock(appName) {
+        const content = document.getElementById('content');
+        const node = content?.querySelector(`.rule-entry[data-app-name="${CSS.escape(appName)}"]`);
+        await this._celebrateRemove(node);
         await App.api(`/api/blocks/${encodeURIComponent(appName)}`, { method: 'DELETE' });
         App.invalidateAppSuggestions();
         App.toast(`${appName} decree lifted`, 'info');
-        this.render(document.getElementById('content'));
+        this.render(content);
+    },
+
+    // Chalk-write the freshly added rule entry, dust at its leading edge.
+    _celebrateAdd(content, appName) {
+        const node = content?.querySelector(`.rule-entry[data-app-name="${CSS.escape(appName)}"]`);
+        if (!node) return;
+        node.classList.add('effect-chalk-write');
+        setTimeout(() => node.classList.remove('effect-chalk-write'), 380);
+
+        const host = content.querySelector('.fade-in') || content;
+        if (!host.style.position) host.style.position = 'relative';
+        const hostRect = host.getBoundingClientRect();
+        const nodeRect = node.getBoundingClientRect();
+        Effects.chalkDust(host, {
+            x: nodeRect.left - hostRect.left + 24,
+            y: nodeRect.top - hostRect.top + nodeRect.height / 2,
+        });
+    },
+
+    // Chalk-erase the entry, then resolve so the caller can fire the DELETE.
+    _celebrateRemove(node) {
+        return new Promise(resolve => {
+            if (!node || App.prefersReducedMotion()) return resolve();
+            node.classList.add('effect-chalk-erase');
+            setTimeout(() => { node.classList.remove('effect-chalk-erase'); resolve(); }, 320);
+        });
     },
 
     async toggleCategory(category, block) {
