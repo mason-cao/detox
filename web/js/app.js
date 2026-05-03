@@ -483,6 +483,30 @@ const App = {
         localStorage.setItem('detox-theme', newTheme);
         this.updateThemeIcon();
         this.toast(isDark ? 'Light mode enabled' : 'Dark mode enabled', 'info');
+        this._flickerCandle(newTheme);
+    },
+
+    _flickerCandle(newTheme) {
+        if (this.prefersReducedMotion()) return;
+        const candle = document.querySelector('[data-role="candle"]');
+        if (!candle) return;
+        const flame = candle.querySelector('[data-role="flame"]');
+        if (flame) {
+            flame.classList.remove('effect-candle-flame');
+            void flame.getBoundingClientRect();
+            flame.classList.add('effect-candle-flame');
+            setTimeout(() => flame.classList.remove('effect-candle-flame'), 620);
+        }
+        if (newTheme === 'dark') {
+            const rect = candle.getBoundingClientRect();
+            const puff = document.createElement('span');
+            puff.className = 'effect-candle-puff';
+            puff.style.position = 'fixed';
+            puff.style.left = `${rect.left + rect.width / 2 - 5}px`;
+            puff.style.top = `${rect.top + 4}px`;
+            document.body.appendChild(puff);
+            setTimeout(() => puff.remove(), 500);
+        }
     },
 
     updateThemeIcon() {

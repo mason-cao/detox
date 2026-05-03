@@ -41,6 +41,12 @@ const Settings = {
                                 <div class="study-row__label">CANDLELIGHT</div>
                                 <div class="study-row__detail">Switch between dawn and midnight palettes.</div>
                             </div>
+                            <span class="study-candle" data-role="candle" aria-hidden="true">
+                                <svg viewBox="0 0 16 24" width="16" height="24">
+                                    <rect x="6" y="10" width="4" height="12" fill="#c4a47a" stroke="#2a1e2a" stroke-width="1"/>
+                                    <path data-role="flame" d="M8 10c-2-2-2-5 0-7 2 2 2 5 0 7z" fill="#ffd04a" stroke="#b8860b" stroke-width="0.5"/>
+                                </svg>
+                            </span>
                             <label class="rule-board__toggle" aria-label="Toggle candlelight">
                                 <input type="checkbox" ${isDark ? 'checked' : ''} onchange="App.toggleDarkMode()">
                                 <span class="rule-board__knob" aria-hidden="true"></span>
