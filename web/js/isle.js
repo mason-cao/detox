@@ -4,13 +4,18 @@
 const Isle = {
     async render(container) {
         const data = await App.api(`/api/dashboard?date=${App.currentDate}`);
+        const apps = data.apps || [];
         const weather = App.describeGoalWeather(data);
 
         if (window.HUD) HUD.updateWeather(weather);
 
         container.innerHTML = this.scaffold(data, weather);
         const stage = container.querySelector('[data-role="world-stage"]');
-        if (stage) World.mount(stage, weather);
+        if (stage) {
+            World.mount(stage, weather);
+            World.mountBuildings();
+            World.placeResidents(apps);
+        }
     },
 
     scaffold(data, weather) {
