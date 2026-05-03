@@ -1,0 +1,116 @@
+<h2>Where do the sprites come from?</h2>
+<p class="subtitle">SVG world is the canvas — it still needs art. With ~50 tracked apps each becoming a resident, you can't draw a unique sprite per app. The system is: <strong>~8 archetypes</strong> (scribe / builder / jester / banished / farmer / musician / wanderer / sheriff) and apps inherit one based on category. Plus 8 unique buildings.</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#fff4d6;min-height:200px;display:flex;align-items:center;justify-content:center;padding:16px">
+      <svg viewBox="0 0 240 120" style="width:100%;image-rendering:pixelated">
+        <!-- 4 programmatic SVG residents, different archetypes -->
+        <g transform="translate(20,20)">
+          <rect x="6" y="0" width="12" height="6" fill="#3a2a4a"/>
+          <rect x="4" y="6" width="16" height="14" fill="#fce0a8"/>
+          <rect x="8" y="20" width="8" height="14" fill="#5a8b4a"/>
+          <rect x="2" y="34" width="6" height="8" fill="#3a2a4a"/>
+          <rect x="16" y="34" width="6" height="8" fill="#3a2a4a"/>
+          <text x="12" y="60" font-size="8" text-anchor="middle" font-family="monospace">scribe</text>
+        </g>
+        <g transform="translate(80,20)">
+          <rect x="6" y="0" width="12" height="6" fill="#c4453a"/>
+          <rect x="4" y="6" width="16" height="14" fill="#fce0a8"/>
+          <rect x="8" y="20" width="8" height="14" fill="#7a5c3a"/>
+          <rect x="2" y="34" width="6" height="8" fill="#3a2a4a"/>
+          <rect x="16" y="34" width="6" height="8" fill="#3a2a4a"/>
+          <text x="12" y="60" font-size="8" text-anchor="middle" font-family="monospace">builder</text>
+        </g>
+        <g transform="translate(140,20)">
+          <rect x="2" y="0" width="6" height="4" fill="#ffd04a"/>
+          <rect x="14" y="0" width="6" height="4" fill="#ffd04a"/>
+          <rect x="4" y="4" width="16" height="16" fill="#fce0a8"/>
+          <rect x="8" y="20" width="8" height="14" fill="#d16a8f"/>
+          <rect x="2" y="34" width="6" height="8" fill="#3a2a4a"/>
+          <rect x="16" y="34" width="6" height="8" fill="#3a2a4a"/>
+          <text x="12" y="60" font-size="8" text-anchor="middle" font-family="monospace">jester</text>
+        </g>
+        <g transform="translate(200,20)">
+          <rect x="6" y="0" width="12" height="8" fill="#1a1f3a"/>
+          <rect x="4" y="6" width="16" height="14" fill="#aa9588"/>
+          <rect x="8" y="20" width="8" height="14" fill="#1a1f3a"/>
+          <rect x="2" y="34" width="6" height="8" fill="#3a2a4a"/>
+          <rect x="16" y="34" width="6" height="8" fill="#3a2a4a"/>
+          <text x="12" y="60" font-size="8" text-anchor="middle" font-family="monospace">banished</text>
+        </g>
+      </svg>
+    </div>
+    <div class="card-body">
+      <div class="letter">A</div>
+      <h3>Programmatic SVG (DIY)</h3>
+      <p>Each sprite is ~30 lines of inline SVG <code>&lt;rect&gt;</code>s. Walk cycles via animating limb rects. Color variations per app via CSS variables.</p>
+      <strong style="font-size:12px">Effort:</strong> ~3 days for 8 archetypes + walk cycles + 8 buildings.<br>
+      <strong style="font-size:12px">Look:</strong> Unique to your project, geometric, slightly abstract. The rects above are the actual fidelity.<br>
+      <strong style="font-size:12px">Pros:</strong> No external assets, no licensing, ships in the repo, every pixel under your control.<br>
+      <strong style="font-size:12px">Cons:</strong> Won't look <em>quite</em> as polished as hand-drawn. The "indie pixel art on a budget" aesthetic.
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#fff4d6;min-height:200px;display:flex;align-items:center;justify-content:center;padding:16px;flex-direction:column">
+      <div style="font-family:'Courier New',monospace;font-size:14px;color:#2a1e2a;margin-bottom:12px;text-align:center">
+        Real pixel art at native fidelity<br>
+        <span style="font-size:10px;color:#5a4a5a">(can't mock here — would need actual PNG sprites)</span>
+      </div>
+      <div style="display:flex;gap:24px">
+        <div style="text-align:center;font-size:32px">👤<br><span style="font-size:8px;font-family:monospace">→ kenney.nl</span></div>
+        <div style="text-align:center;font-size:32px">🧑‍🌾<br><span style="font-size:8px;font-family:monospace">→ OGA</span></div>
+        <div style="text-align:center;font-size:32px">🚶<br><span style="font-size:8px;font-family:monospace">→ itch CC0</span></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="letter">B</div>
+      <h3>Free CC0 sprite pack <span style="background:#ffd04a;padding:1px 6px;font-size:10px">recommended</span></h3>
+      <p>Drop in a curated pack — kenney.nl "Tiny Town", OpenGameArt isometric sets, or itch.io CC0 packs. Real hand-drawn pixel art with walk cycles already done.</p>
+      <strong style="font-size:12px">Effort:</strong> ~1 day to integrate (pick pack, slice atlas, map to archetypes).<br>
+      <strong style="font-size:12px">Look:</strong> Genuine Stardew-tier polish.<br>
+      <strong style="font-size:12px">Pros:</strong> Best quality-per-effort. CC0 means no attribution needed (we can credit anyway). Walk cycles done.<br>
+      <strong style="font-size:12px">Cons:</strong> Slight "I've seen this in another game" feel if the pack is popular. Mitigated by mixing two packs + custom palette tinting.
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#fff4d6;min-height:200px;display:flex;align-items:center;justify-content:center;padding:16px">
+      <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;justify-content:center">
+        <div style="font-size:48px;filter:contrast(1.4) saturate(1.3) drop-shadow(2px 2px 0 #2a1e2a);image-rendering:pixelated">💬</div>
+        <div style="font-size:48px;filter:contrast(1.4) saturate(1.3) drop-shadow(2px 2px 0 #2a1e2a);image-rendering:pixelated">⌨</div>
+        <div style="font-size:48px;filter:contrast(1.4) saturate(1.3) drop-shadow(2px 2px 0 #2a1e2a);image-rendering:pixelated">🐦</div>
+        <div style="font-size:48px;filter:contrast(1.4) saturate(1.3) drop-shadow(2px 2px 0 #2a1e2a);image-rendering:pixelated">🎵</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="letter">C</div>
+      <h3>Emoji with heavy CSS treatment</h3>
+      <p>Keep current emoji approach but apply <code>filter: contrast saturate drop-shadow</code>, outline, walk-bob animation. The samples above are the actual treatment.</p>
+      <strong style="font-size:12px">Effort:</strong> ~half day.<br>
+      <strong style="font-size:12px">Look:</strong> Always recognizable as emoji-with-makeup. Apple/Google emoji art conflicts with pixel aesthetic.<br>
+      <strong style="font-size:12px">Honest take:</strong> Cheap, fast, ceiling is low. Listed for completeness.
+    </div>
+  </div>
+
+  <div class="card" data-choice="d" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#241a3d;color:#fff4d6;min-height:200px;display:flex;align-items:center;justify-content:center;padding:16px;text-align:center;font-family:'Courier New',monospace;font-size:13px;line-height:1.5">
+      Commission a pixel artist<br>
+      <span style="font-size:11px;opacity:0.7">Fiverr / Twitter / itch.io</span><br><br>
+      <span style="font-size:32px">💰</span><br>
+      <span style="font-size:11px">~$80–200 for the set</span>
+    </div>
+    <div class="card-body">
+      <div class="letter">D</div>
+      <h3>Commission custom sprites</h3>
+      <p>Hire a pixel artist to draw 8 archetypes + 8 buildings + walk cycles to your spec.</p>
+      <strong style="font-size:12px">Effort:</strong> 1–3 weeks turnaround, async with the artist.<br>
+      <strong style="font-size:12px">Look:</strong> Top tier. Yours alone.<br>
+      <strong style="font-size:12px">Cost:</strong> Real money + scheduling. Best path eventually, premature now.<br>
+      <strong style="font-size:12px">Honest take:</strong> If you ship the redesign with B and people like it, upgrade to D for v2.
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:24px"><strong>Recommended hybrid:</strong> <strong>B</strong> for residents (walk cycles are the hard part — buy them) and <strong>A</strong> for buildings (geometric, easy to author programmatically, gives the project its own architectural identity). Pick a single letter, or say "B+A hybrid" / "all B" / etc.</p>
