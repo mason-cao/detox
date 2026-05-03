@@ -11,78 +11,66 @@ Detox is a macOS screen time tracker that monitors your app usage in real time, 
 
 ## Features
 
-### Interactive Dashboard
-- Total daily screen time with hourly breakdown chart
-- Category-based doughnut chart (Productivity, Social, Entertainment, etc.)
-- Weekly trend bar chart with highlighted current day
-- Top apps ranked by usage with visual bars
-- Daily goal progress ring with smooth animation
+### Detox Isle
+- A real isometric SVG world replaces the dashboard grid. Every tracked app is a resident, every restriction is a law, every building is a destination.
+- The frontmost application's resident glows in real time (3 s frontend poll, 2 s server cache; ~5 s worst-case staleness).
+- Residents walk slow 3-waypoint loops between buildings on a 6 fps walk-cycle ticker; banished apps sit offshore.
+- Day / night light pass driven by the system clock, with a soft dim and lantern glow above each building at dusk and night.
+- Navigation is the world: click a building to enter its tab. A small compass HUD top-right lists the eight destinations and highlights the current room.
+- Sub-tabs gain a diegetic "ISLE" door icon and `Esc` returns to the Isle from anywhere.
 
-### Per-App Tracking
-- See every app you've used and how long
-- **Search and filter** apps by name
-- Set limits, block apps, and categorize apps directly from the app list
-- Autocomplete app names from tracked apps and installed macOS apps
-- Click any app for a detailed view with hourly and daily charts
-- Navigate between days to compare usage patterns
+### Tab signature animations
+- **Charter** — wax seal stamps onto the scroll on goal save.
+- **Rule Board** — chalk write left-to-right when a rule is added (with a dust burst), chalk wipe right-to-left when one is lifted.
+- **Postcards** — preview slides in with overshoot, wax seal stamps the corner.
+- **Market** — coin floats from the bought stall card up to the HUD currency badge.
+- **Registry** — parchment page-turn between filter views (entering / leaving search).
+- **Chronicle** — quill sweeps across the bar chart in sync with Chart.js bar growth.
+- **Mayor's Study** — candle flame flickers on dark-mode toggle, smoke puff when going dark.
+- Every animation has a no-motion equivalent, gated on `prefers-reduced-motion: reduce`.
 
-### Detailed Statistics
-**Daily stats:**
-- Pickups count (e.g., 80 times today)
-- Checking frequency (every 8 minutes)
-- Longest detox (2h 25m away from screen)
-- Continuous use (longest uninterrupted session)
-- First and last pickup times
-- Most used app
+### Residents Registry
+- Every tracked app you've used and how long, by day.
+- Search and filter; quick controls to limit, block, or categorize an app inline.
+- Autocomplete from tracked apps and installed macOS apps.
+- Click any resident for a detailed view with hourly and daily charts.
 
-**Weekly stats:**
-- Daily average and weekly total
-- Shortest and longest usage days
-- Daily breakdown chart with average line
+### Chronicle (Statistics)
+**Daily:** pickups count, checking frequency, longest detox, longest continuous use, first / last pickup, most used app.
+**Weekly:** daily average, weekly total, shortest / longest day, daily breakdown chart with average line.
 
-### App Blocker
-- **Block individual apps** — always, or after a daily time limit
-- **Block by category** — block all Social or Entertainment apps at once
-- **Focus Mode** — block everything except whitelisted apps (e.g., only allow Notes and Calendar)
-- Full Lockdown exit banner stays visible while Focus Mode is active
-- Blocked apps are force-quit with a notification explaining why
-- **Toast notifications** confirm every action
+### Rule Board (App Blocker)
+- Block individual apps always or after a daily time limit.
+- Block by category (Social, Entertainment, etc.).
+- Focus Mode — block everything except whitelisted apps. A Full Lockdown banner stays visible while Focus Mode is active.
+- Blocked apps are force-quit (`pkill -x`) with a macOS notification explaining why.
 
-### Goals & Limits
-- Set a daily screen time goal and get notified when you hit it
-- Set per-app time limits (e.g., max 30 minutes of Instagram per day)
-- Bedtime reminder notifications
+### Charter (Goals)
+- Daily screen-time decree with notification when you hit it.
+- Per-resident decrees (e.g. max 30 min of Instagram / day).
+- Bedtime bell with reminder notification.
 
-### Shareable Progress Cards
-- Generate a personalized PNG card with your screen time stats
-- Instagram story format (1080x1920)
-- Shows total time, top apps, pickups, and detox streaks
-- Download and share with friends to encourage change
+### Market (Rewards Ledger)
+- Closed-economy reward loop. Detoxed minutes earn ☀ Sunlight; streaks and milestones earn ✦ Starshards.
+- Stalls let you spend what you've earned. 100% refund within 24 h, 50% after.
+- Hall of Honor records milestones by month.
 
-### Dark Mode
-- Toggle between light and dark themes from the sidebar or Settings
-- Respects system preference on first load
-- Persists across sessions via localStorage
-- Glassmorphism sidebar with backdrop blur in both modes
+### Postcards
+- Generate a personalized PNG postcard with the day's stats.
+- Instagram-story format (1080×1920). Download to share.
 
-### Idle Detection
-- Stop counting screen time after a configurable period with no keyboard or pointer activity
-- Default idle timeout is 5 minutes
-- Configure or disable idle detection from Settings
-
-### Data Export
-- Export screen time data as **CSV** or **JSON**
-- Select custom date ranges
-- Download directly from Settings
+### Mayor's Study (Settings)
+- Toggle theme (with the candle flicker), tracking idle timeout, data export (CSV / JSON), categories, keyboard shortcuts, about.
 
 ### Keyboard Shortcuts
 | Key | Action |
 |-----|--------|
+| `1`–`8` | Jump to tab (Isle, Residents, Chronicle, Charter, Rule Board, Market, Postcards, Study) |
 | `← →` | Navigate dates |
-| `D` | Toggle dark mode |
-| `/` | Search apps |
-| `1`-`7` | Switch tabs |
-| `Esc` | Close modals |
+| `D` | Toggle theme |
+| `/` | Search residents |
+| `?` | Open help / tour |
+| `Esc` | Back to the Isle (or close the open overlay) |
 
 ---
 
@@ -190,8 +178,8 @@ Press `Ctrl+C` in the terminal, or run:
 
 - **Monitor** — A background Python process polls the frontmost app every 2 seconds using `osascript`. It records usage, tracks sessions, detects pickups (screen unlock → app use), ignores idle periods when configured, enforces blocks, and checks goals.
 - **Database** — SQLite with WAL mode for safe concurrent reads/writes. Stores raw usage observations, aggregated sessions, pickups, goals, blocks, and settings.
-- **Server** — Flask serves the REST API and the static `web/` bundle. All API routes include error handling with date validation.
-- **Web** — Vanilla HTML/CSS/JS with Chart.js for interactive graphs. Inter font via Google Fonts. Dark mode support with system preference detection. No build step, no Node.js required. If Chart.js is unavailable, the app still renders and skips chart drawing.
+- **Server** — Flask serves the REST API and the static `web/` bundle. All API routes are wrapped by `@api_route` for 500-on-exception + 400-on-invalid-date. `GET /api/dashboard/now` returns the latest frontmost app, cached 2 s in module memory and polled every 3 s by the Isle.
+- **Web** — Vanilla HTML / CSS / JS, no build step, no Node. Inline SVG runs the iso world (sky, weather, ground, buildings, residents, effects). Chart.js 4.4.1 from CDN powers Chronicle. Press Start 2P / VT323 / Inter from Google Fonts. Resident sprites are 32×32 CC0 Kenney 1-Bit Pack atlases at `web/assets/sprites/residents/` (≤ 64 KB total).
 
 ---
 
@@ -211,17 +199,36 @@ detox/
 │   ├── cards.py          # Shareable card PNG generation
 │   └── config.py         # Paths, defaults, categories
 ├── web/                  # Static dashboard (vanilla HTML/CSS/JS, no build)
-│   ├── index.html        # SPA shell with sidebar, toast container
-│   ├── css/style.css     # Light + dark theme, glassmorphism, animations
+│   ├── index.html        # SPA shell with HUD, help overlay, toast container
+│   ├── assets/sprites/   # CC0 resident atlases (32×32 walk strips)
+│   ├── css/
+│   │   ├── tokens.css    # Dawn Cove palette + spacing scale
+│   │   ├── pixel-ui.css  # Pixel buttons, panels, modals
+│   │   ├── style.css     # Base + legacy view styles
+│   │   ├── hud.css       # Top HUD bar (currencies, theme, help)
+│   │   ├── isle.css      # Iso world stage, day/night dim, lanterns
+│   │   ├── compass.css   # Compass HUD (top-right room list)
+│   │   ├── residents.css # Sprite layer + glow halo
+│   │   ├── effects.css   # Tab signature keyframes (seal, chalk, coin, page-turn, postcard, quill, candle)
+│   │   └── views.css     # Per-tab page styles
 │   └── js/
-│       ├── app.js        # Router, API client, dark mode, toasts, keyboard shortcuts
-│       ├── dashboard.js  # Daily/weekly overview with loading skeletons
-│       ├── apps.js       # App list with search/filter + detail views
-│       ├── stats.js      # Daily + weekly statistics
-│       ├── goals.js      # Goal management UI with toast feedback
-│       ├── blocker.js    # Block/whitelist UI with toast feedback
-│       ├── cards.js      # Share card UI
-│       └── settings.js   # Dark mode, data export, categories, keyboard shortcuts
+│       ├── app.js        # Router, API client, theme, toasts, keyboard shortcuts, back-to-Isle helper
+│       ├── hud.js        # Top HUD logic + help / tour overlay
+│       ├── iso.js        # Tile projection (tileToScreen / screenToTile, world bounds)
+│       ├── world.js      # SVG scaffold, sky, weather, ground tiles, day/night, lanterns
+│       ├── buildings.js  # Programmatic SVG generators for the 8 buildings
+│       ├── compass.js    # Compass HUD (8 destinations, current-room highlight)
+│       ├── effects.js    # Reusable primitives — glowHalo, waxSeal, chalkDust, currencyFloat, pageTurn, slamIn
+│       ├── residents.js  # Sprite atlases, archetype mapping, walk ticker, frontmost-glow poll
+│       ├── isle.js       # Isle dashboard orchestration (mounts world + residents)
+│       ├── dashboard.js  # Daily / weekly summary tiles
+│       ├── apps.js       # Residents Registry — search, filter, detail view, page-turn
+│       ├── stats.js      # Chronicle — daily + weekly stats, Chart.js + quill sweep
+│       ├── goals.js      # Charter — goal management + wax-seal save
+│       ├── blocker.js    # Rule Board — block / whitelist + chalk write/erase
+│       ├── market.js     # Market — stalls, inventory, refunds, coin float
+│       ├── cards.js      # Postcards — slide-in preview + stamp
+│       └── settings.js   # Mayor's Study — theme, tracking, export, categories, shortcuts
 ├── api/                  # Reserved for hosted FastAPI tier (Phase 2+)
 ├── infra/                # docker-compose.dev.yml + future deploy configs
 ├── docs/
@@ -239,13 +246,16 @@ detox/
 
 | Component | Technology |
 |-----------|-----------|
-| Agent | Python 3.9, Flask, rumps |
+| Agent | Python 3.9+, Flask, rumps |
 | Database | SQLite (WAL mode) |
-| Web | Vanilla JS, Chart.js, Inter font |
+| Web | Vanilla HTML / CSS / JS — no bundler, no Node |
+| Charts | Chart.js 4.4.1 (CDN) |
+| Fonts | Press Start 2P, VT323, Inter (Google Fonts) |
+| Sprites | CC0 Kenney 1-Bit Pack atlases (≤ 64 KB) |
 | App Detection | `osascript` (AppleScript) |
 | Notifications | macOS Notification Center |
 | Card Generation | Pillow (PIL) |
-| App Blocking | `pkill` |
+| App Blocking | `pkill -x` |
 
 **Local data.** The tracker, database, API, and blocking logic run locally, and your screen-time data never leaves your machine. The dashboard currently loads Chart.js and Inter font assets from public CDNs unless you vendor those files locally.
 
