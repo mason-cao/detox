@@ -79,7 +79,7 @@ const Market = {
                 : `Buy ${item.name}`;
 
         return `
-            <div class="stall-row pixel-panel">
+            <div class="stall-row pixel-panel" data-item-key="${App.escapeAttr(item.key)}" data-currency="${App.escapeAttr(item.currency)}">
                 <div class="stall-row__category">${App.escapeHtml(item.category)}</div>
                 <div class="stall-row__body">
                     <div class="stall-row__name">${App.escapeHtml(item.name)}</div>
@@ -150,11 +150,16 @@ const Market = {
     },
 
     async buy(itemKey) {
+        const card = document.querySelector(`.stall-row[data-item-key="${CSS.escape(itemKey)}"]`);
         try {
             await App.api('/api/market/buy', {
                 method: 'POST',
                 body: { item_key: itemKey },
             });
+            const currency = card?.dataset.currency || 'sunlight';
+            const hudId = currency === 'starshard' ? 'hudShards' : 'hudSunlight';
+            const hud = document.getElementById(hudId);
+            if (card && hud) Effects.currencyFloat(card, hud);
             App.toast('Market purchase added to inventory', 'success');
             await this.refresh();
         } catch (e) {
