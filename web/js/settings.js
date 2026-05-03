@@ -26,7 +26,10 @@ const Settings = {
 
         container.innerHTML = `
             <div class="fade-in">
-                <h1 class="page-heading">The Mayor's Study</h1>
+                <div class="page-bar">
+                    ${App.backToIsleButton()}
+                    <h1 class="page-heading">The Mayor's Study</h1>
+                </div>
 
                 <div class="study-section">
                     <div class="study-section__header">

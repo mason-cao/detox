@@ -155,6 +155,10 @@
 .back-to-isle:focus { transform: translateX(-1px); outline: none; }
 .back-to-isle svg { width: 16px; height: 16px; }
 
+/* When the door leads a .page-bar, group it left with the heading and let
+   any trailing controls stay pinned right via the existing space-between. */
+.page-bar > .back-to-isle:first-child + .page-heading { margin-right: auto; }
+
 /* ── Reduced-motion overrides — every signature collapses to instant ── */
 @media (prefers-reduced-motion: reduce) {
     .effect-seal,

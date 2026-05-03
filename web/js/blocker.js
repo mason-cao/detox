@@ -48,7 +48,10 @@ const Blocker = {
 
         container.innerHTML = `
             <div class="fade-in">
-                <h1 class="page-heading">The Rule Board</h1>
+                <div class="page-bar">
+                    ${App.backToIsleButton()}
+                    <h1 class="page-heading">The Rule Board</h1>
+                </div>
 
                 ${whitelistMode ? `
                     <div class="lockdown-banner">

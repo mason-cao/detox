@@ -43,7 +43,10 @@ const Apps = {
 
         container.innerHTML = `
             <div class="fade-in">
-                <h1 class="page-heading">The Residents' Registry</h1>
+                <div class="page-bar">
+                    ${App.backToIsleButton()}
+                    <h1 class="page-heading">The Residents' Registry</h1>
+                </div>
                 ${apps.length === 0 ? `
                     <div class="registry-empty">
                         No one lives on the isle yet.<br>
