@@ -180,6 +180,65 @@ const Residents = {
         const img = node.querySelector('.world__resident-sprite');
         if (img) img.setAttribute('x', String(-frame * 32 - 16));
     },
+
+    _pollInterval: null,
+    _pollMs: 3000,
+    _frontmostAppName: null,
+
+    startPoll() {
+        this.stopPoll();
+        this._poll();
+        this._pollInterval = setInterval(() => this._poll(), this._pollMs);
+    },
+
+    stopPoll() {
+        if (this._pollInterval) clearInterval(this._pollInterval);
+        this._pollInterval = null;
+    },
+
+    async _poll() {
+        try {
+            const res = await App.api('/api/dashboard/now');
+            this.applyFrontmost(res && res.app_name ? res.app_name : null);
+        } catch (e) {
+            // Network blip; leave glow state untouched.
+        }
+    },
+
+    applyFrontmost(appName) {
+        if (this._frontmostAppName === appName) return;
+        const prev = this._frontmostAppName;
+        this._frontmostAppName = appName;
+
+        if (prev) this._setGlow(prev, false);
+        if (appName) this._setGlow(appName, true);
+    },
+
+    _setGlow(appName, on) {
+        const r = this._state.get(appName);
+        if (!r) return;
+        r.isFrontmost = on;
+
+        const node = document.querySelector(`.world__resident[data-app="${App.escapeAttr(appName)}"]`);
+        if (!node) return;
+
+        node.setAttribute('data-active', on ? 'true' : 'false');
+
+        const halo = node.querySelector('.effect-halo');
+        if (halo) {
+            halo.style.display = on ? '' : 'none';
+            halo.classList.toggle('is-active', on);
+        }
+
+        // When turning on, snap the resident to home tile (their archetype's
+        // first waypoint) so the glow appears at a stable, readable spot.
+        if (on) {
+            const path = this.paths[r.archetype];
+            if (path && path.length) {
+                this._reposition(appName, path[0].tx, path[0].ty, 0);
+            }
+        }
+    },
 };
 
 window.Residents = Residents;

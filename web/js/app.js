@@ -383,8 +383,13 @@ const App = {
         document.dispatchEvent(new CustomEvent('detox:tab-changed', { detail: { tab } }));
 
         if (window.Residents) {
-            if (tab === 'dashboard') Residents.startTicker();
-            else Residents.stopTicker();
+            if (tab === 'dashboard') {
+                Residents.startTicker();
+                Residents.startPoll();
+            } else {
+                Residents.stopTicker();
+                Residents.stopPoll();
+            }
         }
 
         document.querySelectorAll('[data-tab]').forEach(el => {
