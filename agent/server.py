@@ -4,6 +4,7 @@ import os
 import re
 import io
 import csv
+import time
 import subprocess
 from functools import wraps
 from datetime import datetime, timedelta
@@ -220,6 +221,24 @@ def api_dashboard_weekly():
         week_start = validate_date(week_start, "week_start")
     data = db.get_weekly_data(week_start)
     return jsonify(data)
+
+
+_NOW_CACHE = {"value": None, "fetched_at": 0.0}
+_NOW_CACHE_TTL_SECONDS = 2.0
+
+
+@app.route("/api/dashboard/now")
+@api_route
+def api_dashboard_now():
+    now = time.time()
+    if now - _NOW_CACHE["fetched_at"] > _NOW_CACHE_TTL_SECONDS:
+        row = db.latest_usage_row()
+        _NOW_CACHE["value"] = {
+            "app_name": row["app_name"] if row else None,
+            "since_unix": int(row["timestamp"]) if row else None,
+        }
+        _NOW_CACHE["fetched_at"] = now
+    return jsonify(_NOW_CACHE["value"])
 
 
 # ── Help API ────────────────────────────────────────────────────────────

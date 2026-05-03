@@ -254,6 +254,19 @@ def record_pickup(timestamp=None):
 
 # ── Dashboard queries ────────────────────────────────────────────────────
 
+
+def latest_usage_row():
+    """Return the most recent app_usage row as {app_name, timestamp} or None."""
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT app_name, timestamp FROM app_usage ORDER BY timestamp DESC LIMIT 1"
+        ).fetchone()
+    if row is None:
+        return None
+    return {"app_name": row["app_name"], "timestamp": float(row["timestamp"])}
+
+
+
 def get_daily_usage(date):
     """Get total usage per app for a given date in minutes."""
     with get_db() as conn:
