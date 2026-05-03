@@ -72,5 +72,12 @@ const Cards = {
                 </div>
             </div>
         `;
+        const card = preview.querySelector('.postcard-preview');
+        if (!card) return;
+        if (!card.style.position) card.style.position = 'relative';
+        Effects.slamIn(card);
+        setTimeout(() => {
+            Effects.waxSeal(card, { x: card.clientWidth - 56, y: 56, text: 'D' });
+        }, 320);
     },
 };
