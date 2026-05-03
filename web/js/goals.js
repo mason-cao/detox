@@ -106,7 +106,9 @@ const Goals = {
         });
         document.querySelector('.modal-overlay').remove();
         App.toast(`Daily goal set to ${App.formatTime(total)}`, 'success');
-        this.render(document.getElementById('content'));
+        const content = document.getElementById('content');
+        await this.render(content);
+        this._celebrateSave(content);
     },
 
     async addAppLimit(prefillAppName = '') {
@@ -152,7 +154,9 @@ const Goals = {
         document.querySelector('.modal-overlay').remove();
         App.toast(`Limit set: ${appName} — ${App.formatTime(total)}/day`, 'success');
         if (App.currentTab === 'goals') {
-            this.render(document.getElementById('content'));
+            const content = document.getElementById('content');
+            await this.render(content);
+            this._celebrateSave(content);
         } else {
             App.refresh();
         }
@@ -193,12 +197,23 @@ const Goals = {
         const ampm = hour >= 12 ? 'PM' : 'AM';
         const h12 = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
         App.toast(`Bedtime reminder set for ${h12}:${minute.toString().padStart(2,'0')} ${ampm}`, 'success');
-        this.render(document.getElementById('content'));
+        const content = document.getElementById('content');
+        await this.render(content);
+        this._celebrateSave(content);
     },
 
     async removeGoal(id) {
         await App.api(`/api/goals/${id}`, { method: 'DELETE' });
         App.toast('Goal removed', 'info');
         this.render(document.getElementById('content'));
+    },
+
+    // Stamp a wax seal at the top of the Charter view. Caller passes the
+    // freshly re-rendered content element so the seal lands on the new DOM.
+    _celebrateSave(content) {
+        const host = content?.querySelector('.fade-in');
+        if (!host) return;
+        if (!host.style.position) host.style.position = 'relative';
+        Effects.waxSeal(host, { x: host.clientWidth / 2, y: 80, text: '✓' });
     },
 };
