@@ -1,0 +1,64 @@
+<h2>How should you get around without the bottom ribbon?</h2>
+<p class="subtitle">Two diegetic-nav patterns. Both keep keyboard 1–8 as a power-user shortcut.</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:linear-gradient(180deg,#ffb27a 0%,#ffd98a 60%,#e8c896 100%);min-height:240px;position:relative;font-family:'Courier New',monospace;color:#2a1e2a;padding:0;">
+      <div style="position:absolute;top:8px;left:8px;background:#fff4d6;border:2px solid #2a1e2a;padding:3px 8px;font-size:10px">Mon Apr 17 · ☀ sunny · 142 ☀</div>
+      <div style="position:absolute;top:8px;right:8px;width:24px;height:24px;border:2px solid #2a1e2a;background:#fff4d6;border-radius:50%;text-align:center;line-height:20px;font-size:14px;font-weight:bold">?</div>
+      <!-- Buildings as nav -->
+      <div style="position:absolute;top:62px;left:24%;width:64px;height:48px;background:#c4a47a;border:2px solid #2a1e2a;font-size:9px;text-align:center;padding-top:6px;cursor:pointer">🏛<br>Hall</div>
+      <div style="position:absolute;top:62px;left:48%;width:64px;height:48px;background:#a87a4a;border:2px solid #2a1e2a;font-size:9px;text-align:center;padding-top:6px">📚<br>Registry</div>
+      <div style="position:absolute;top:62px;left:72%;width:60px;height:48px;background:#8b5e3c;border:2px solid #2a1e2a;font-size:9px;text-align:center;padding-top:6px">🛒<br>Market</div>
+      <div style="position:absolute;top:128px;left:18%;width:60px;height:42px;background:#6b8e4e;border:2px solid #2a1e2a;font-size:9px;text-align:center;padding-top:4px">📜<br>Charter</div>
+      <div style="position:absolute;top:128px;left:42%;width:60px;height:42px;background:#5a4a5a;border:2px solid #2a1e2a;font-size:9px;text-align:center;padding-top:4px;color:#fff4d6">🚪<br>Rules</div>
+      <div style="position:absolute;top:128px;left:65%;width:60px;height:42px;background:#9b7a4a;border:2px solid #2a1e2a;font-size:9px;text-align:center;padding-top:4px">📊<br>Chronicle</div>
+      <div style="position:absolute;top:188px;left:30%;width:54px;height:36px;background:#7a5c3a;border:2px solid #2a1e2a;font-size:9px;text-align:center;padding-top:3px;color:#fff4d6">✉<br>Postcards</div>
+      <div style="position:absolute;top:188px;left:55%;width:54px;height:36px;background:#3a2a4a;border:2px solid #2a1e2a;font-size:9px;text-align:center;padding-top:3px;color:#fff4d6">🕯<br>Study</div>
+      <div style="position:absolute;bottom:0;left:0;right:0;height:0;border-top:2px dashed #c4453a"></div>
+      <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;color:#c4453a;font-weight:bold">no bar — buildings are nav</div>
+    </div>
+    <div class="card-body">
+      <div class="letter">A</div>
+      <h3>Pure diegetic — buildings only</h3>
+      <p>Click any building on the Isle to walk inside. From a sub-tab you return via a "back to Isle" door at top-left. Hover any building → name label + currency cost (if locked).</p>
+      <strong style="font-size:12px">Pros:</strong> Maximum immersion. The Isle <em>is</em> the menu.<br>
+      <strong style="font-size:12px">Cons:</strong> Sub-tabs feel "stranded" — you don't see what other rooms exist until you go back.
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:linear-gradient(180deg,#ffb27a 0%,#ffd98a 60%,#e8c896 100%);min-height:240px;position:relative;font-family:'Courier New',monospace;color:#2a1e2a;padding:0;">
+      <div style="position:absolute;top:8px;left:8px;background:#fff4d6;border:2px solid #2a1e2a;padding:3px 8px;font-size:10px">Mon Apr 17 · ☀ sunny · 142 ☀</div>
+      <div style="position:absolute;top:8px;right:8px;width:24px;height:24px;border:2px solid #2a1e2a;background:#fff4d6;border-radius:50%;text-align:center;line-height:20px;font-size:14px;font-weight:bold">?</div>
+      <!-- Compass minimap top-right under help -->
+      <div style="position:absolute;top:38px;right:8px;width:84px;background:#fff4d6;border:2px solid #2a1e2a;padding:4px;font-size:8px;line-height:1.5">
+        <div style="font-weight:bold;margin-bottom:2px">🧭 ISLE</div>
+        <div style="background:#ffd98a;padding:1px 3px">▸ Hall</div>
+        <div style="padding:1px 3px">Registry</div>
+        <div style="padding:1px 3px">Market</div>
+        <div style="padding:1px 3px">Charter</div>
+        <div style="padding:1px 3px">Rules</div>
+        <div style="padding:1px 3px">+3 more</div>
+      </div>
+      <!-- Buildings -->
+      <div style="position:absolute;top:62px;left:18%;width:64px;height:48px;background:#c4a47a;border:2px solid #2a1e2a;font-size:9px;text-align:center;padding-top:6px">🏛<br>Hall</div>
+      <div style="position:absolute;top:62px;left:38%;width:64px;height:48px;background:#a87a4a;border:2px solid #2a1e2a;font-size:9px;text-align:center;padding-top:6px">📚<br>Registry</div>
+      <div style="position:absolute;top:62px;left:58%;width:60px;height:48px;background:#8b5e3c;border:2px solid #2a1e2a;font-size:9px;text-align:center;padding-top:6px">🛒<br>Market</div>
+      <div style="position:absolute;top:128px;left:14%;width:60px;height:42px;background:#6b8e4e;border:2px solid #2a1e2a;font-size:9px;text-align:center;padding-top:4px">📜<br>Charter</div>
+      <div style="position:absolute;top:128px;left:34%;width:60px;height:42px;background:#5a4a5a;border:2px solid #2a1e2a;font-size:9px;text-align:center;padding-top:4px;color:#fff4d6">🚪<br>Rules</div>
+      <div style="position:absolute;top:128px;left:54%;width:60px;height:42px;background:#9b7a4a;border:2px solid #2a1e2a;font-size:9px;text-align:center;padding-top:4px">📊<br>Chronicle</div>
+      <div style="position:absolute;top:188px;left:26%;width:54px;height:36px;background:#7a5c3a;border:2px solid #2a1e2a;font-size:9px;text-align:center;padding-top:3px;color:#fff4d6">✉<br>Postcards</div>
+      <div style="position:absolute;top:188px;left:48%;width:54px;height:36px;background:#3a2a4a;border:2px solid #2a1e2a;font-size:9px;text-align:center;padding-top:3px;color:#fff4d6">🕯<br>Study</div>
+    </div>
+    <div class="card-body">
+      <div class="letter">B</div>
+      <h3>Buildings + persistent compass</h3>
+      <p>Same diegetic nav, but a small compass card pins to top-right showing the 8 destinations. Highlights current room. From any sub-tab, you can jump directly to a sibling without bouncing through the Isle.</p>
+      <strong style="font-size:12px">Pros:</strong> Game feel + you never feel lost. Mobile-friendly (compass collapses to a single icon).<br>
+      <strong style="font-size:12px">Cons:</strong> One more chrome element — but it's small and earns its keep.
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:24px">Click A or B, or tell me in the terminal. Either way, I'll amend spec §4 in the new design doc.</p>
