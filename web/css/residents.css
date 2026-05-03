@@ -1,0 +1,35 @@
+/* Resident sprite layer — atlas-based walk + halo glow. */
+
+.world__resident-sprite {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+.world__resident[data-archetype="banished"] .world__resident-sprite {
+    filter: grayscale(1) brightness(0.7);
+}
+
+.world__resident-name {
+    font-family: var(--font-game);
+    font-size: 9px;
+    fill: var(--dc-ink);
+    paint-order: stroke;
+    stroke: var(--dc-parchment);
+    stroke-width: 2;
+}
+
+.effect-halo {
+    fill: var(--dc-coin);
+    filter: blur(4px);
+    opacity: 0.30;
+    pointer-events: none;
+}
+.effect-halo.is-active { animation: halo-pulse 1.4s ease-in-out infinite; }
+@keyframes halo-pulse {
+    0%, 100% { opacity: 0.15; }
+    50%      { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .effect-halo.is-active { animation: none; opacity: 0.30; }
+}
