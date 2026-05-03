@@ -115,13 +115,17 @@ const Residents = {
     // Tuned to keep residents on open ground (ty=3..6, tx=0..11) and away
     // from the major-building 2x2 footprints.
     paths: {
-        scribe:    [{ tx: 1, ty: 4 }, { tx: 4, ty: 4 }, { tx: 4, ty: 5 }],
-        builder:   [{ tx: 6, ty: 4 }, { tx: 8, ty: 4 }, { tx: 6, ty: 6 }],
-        jester:    [{ tx: 0, ty: 4 }, { tx: 3, ty: 5 }, { tx: 0, ty: 6 }],
-        farmer:    [{ tx: 10, ty: 4 }, { tx: 11, ty: 5 }, { tx: 10, ty: 6 }],
-        musician:  [{ tx: 2, ty: 6 }, { tx: 4, ty: 6 }, { tx: 2, ty: 7 }],
-        wanderer:  [{ tx: 5, ty: 4 }, { tx: 7, ty: 5 }, { tx: 5, ty: 6 }],
-        sheriff:   [{ tx: 5, ty: 3 }, { tx: 7, ty: 3 }, { tx: 5, ty: 4 }],
+        // All waypoints clear of major footprints — Town Hall (5-6, 1-2),
+        // Registry (1-2, 2-3), Market (9-10, 2-3), Chronicle (5-6, 5-6) —
+        // and minor footprints Charter (3,0), Rule Board (8,5), Postcards (2,6),
+        // Mayor Study (10,0). Open ground is ty=4 and ty=7.
+        scribe:    [{ tx: 0, ty: 4 }, { tx: 3, ty: 4 }, { tx: 3, ty: 7 }],
+        builder:   [{ tx: 6, ty: 4 }, { tx: 8, ty: 4 }, { tx: 7, ty: 7 }],
+        jester:    [{ tx: 4, ty: 4 }, { tx: 4, ty: 7 }, { tx: 1, ty: 7 }],
+        farmer:    [{ tx: 11, ty: 4 }, { tx: 11, ty: 7 }, { tx: 9, ty: 7 }],
+        musician:  [{ tx: 5, ty: 4 }, { tx: 5, ty: 7 }, { tx: 6, ty: 7 }],
+        wanderer:  [{ tx: 7, ty: 4 }, { tx: 0, ty: 7 }, { tx: 11, ty: 7 }],
+        sheriff:   [{ tx: 4, ty: 4 }, { tx: 7, ty: 4 }, { tx: 9, ty: 4 }],
         // Banished sits offshore; never walks.
         banished:  null,
     },
