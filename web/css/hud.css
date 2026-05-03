@@ -1,9 +1,9 @@
-/* Top bar + bottom tab rail. Sits above all tab content. */
+/* Top bar; sits above all tab content. */
 
 /* ── App layout: HUD-wrapped content ─────────────────────────────────── */
 #app {
     display: grid;
-    grid-template-rows: var(--hud-top-h) 1fr var(--hud-rail-h);
+    grid-template-rows: var(--hud-top-h) 1fr;
     min-height: 100vh;
     background: var(--dc-sand);
 }
@@ -86,41 +86,6 @@
 }
 
 .hud-icon-button:hover { background: var(--dc-noon); }
-
-/* ── Bottom tab rail ─────────────────────────────────────────────────── */
-#tab-rail {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    background: var(--dc-parchment);
-    box-shadow: 0 -2px 0 0 var(--dc-ink);
-    position: sticky;
-    bottom: 0;
-    z-index: 50;
-}
-
-.tab-rail__item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--sp-1);
-    padding: var(--sp-2) var(--sp-1);
-    font-family: var(--font-game);
-    font-size: 13px;
-    letter-spacing: 0.5px;
-    color: var(--dc-ink-soft);
-    text-decoration: none;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    line-height: 1;
-    min-width: 0;
-}
-
-.tab-rail__item:hover { color: var(--dc-ink); background: rgba(0, 0, 0, 0.04); }
-.tab-rail__item.is-active { color: var(--dc-ink); background: var(--dc-noon); box-shadow: inset 0 2px 0 0 var(--dc-ink); }
-
-.tab-rail__glyph { font-size: 22px; line-height: 1; }
 
 /* ── Monitor status dot ──────────────────────────────────────────────── */
 .hud-status {
