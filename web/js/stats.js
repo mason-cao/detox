@@ -15,7 +15,10 @@ const Stats = {
 
         container.innerHTML = `
             <div class="fade-in">
-                <h1 class="page-heading">The Chronicle</h1>
+                <div class="page-bar">
+                    ${App.backToIsleButton()}
+                    <h1 class="page-heading">The Chronicle</h1>
+                </div>
                 <div class="page-bar">
                     <div class="chronicle-toggle">
                         <button class="${this.view === 'daily' ? 'is-active' : ''}" onclick="Stats.view='daily'; Stats.render(document.getElementById('content'))">DAILY</button>

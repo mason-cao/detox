@@ -10,6 +10,7 @@ const Cards = {
         container.innerHTML = `
             <div class="fade-in">
                 <div class="page-bar">
+                    ${App.backToIsleButton()}
                     <h1 class="page-heading">Postcards</h1>
                     <div class="postcard-date-nav">
                         <button class="pixel-button" onclick="App.prevDate()">&#8249;</button>

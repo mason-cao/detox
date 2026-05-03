@@ -14,7 +14,10 @@ const Market = {
 
         container.innerHTML = `
             <div class="fade-in">
-                <h1 class="page-heading">The Market</h1>
+                <div class="page-bar">
+                    ${App.backToIsleButton()}
+                    <h1 class="page-heading">The Market</h1>
+                </div>
                 ${this.renderBalance(balance)}
                 <div class="market-section">
                     <div class="charter-section__header">
