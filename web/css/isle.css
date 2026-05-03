@@ -211,3 +211,28 @@
 
 /* ── Residents — sprite layer styles live in residents.css ───────────── */
 .world__resident { cursor: pointer; }
+
+/* ── Day / night light pass ──────────────────────────────────────────── */
+#worldNightDim {
+    fill: #1a1330;
+    opacity: 0;
+    transition: opacity 1200ms ease-out;
+    pointer-events: none;
+}
+.is-night #worldNightDim { opacity: 0.35; }
+.is-dusk  #worldNightDim { opacity: 0.18; }
+
+.world__lantern {
+    fill: var(--dc-coin);
+    filter: blur(4px);
+    opacity: 0;
+    transition: opacity 1200ms ease-out;
+    pointer-events: none;
+}
+.is-night .world__lantern { opacity: 0.65; }
+.is-dusk  .world__lantern { opacity: 0.35; }
+
+@media (prefers-reduced-motion: reduce) {
+    #worldNightDim,
+    .world__lantern { transition: none; }
+}
