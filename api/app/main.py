@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .config import Settings
+from .db import dispose_engine, install_engine
 from .errors import ApiError, api_error_handler
 from .routers.apps import router as apps_router
 from .routers.blocks import router as blocks_router
@@ -14,6 +17,15 @@ from .routers.dashboard import router as dashboard_router
 from .routers.goals import router as goals_router
 from .routers.health import router as health_router
 from .routers.settings import router as settings_router
+
+
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    install_engine(app)
+    try:
+        yield
+    finally:
+        dispose_engine(app)
 
 
 async def unexpected_error_handler(_request, exc: Exception) -> JSONResponse:
@@ -30,6 +42,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         openapi_url="/openapi.json",
         docs_url="/docs",
         redoc_url="/redoc",
+        lifespan=_lifespan,
     )
     app.state.settings = settings
     app.add_exception_handler(ApiError, api_error_handler)
