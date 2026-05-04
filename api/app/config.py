@@ -30,6 +30,9 @@ class Settings:
     supabase_url: str | None = None
     supabase_jwt_jwks_url: str | None = None
     supabase_jwt_audience: str = "authenticated"
+    database_url: str | None = None
+    db_pool_size: int = 5
+    db_max_overflow: int = 5
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -51,5 +54,10 @@ class Settings:
             supabase_jwt_jwks_url=_env_or_none("SUPABASE_JWKS_URL"),
             supabase_jwt_audience=os.getenv(
                 "SUPABASE_JWT_AUD", cls.supabase_jwt_audience
+            ),
+            database_url=_env_or_none("DETOX_DATABASE_URL"),
+            db_pool_size=int(os.getenv("DETOX_DB_POOL_SIZE", cls.db_pool_size)),
+            db_max_overflow=int(
+                os.getenv("DETOX_DB_MAX_OVERFLOW", cls.db_max_overflow)
             ),
         )
