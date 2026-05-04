@@ -14,8 +14,10 @@ from .errors import ApiError, api_error_handler
 from .routers.apps import router as apps_router
 from .routers.blocks import router as blocks_router
 from .routers.dashboard import router as dashboard_router
+from .routers.devices import router as devices_router
 from .routers.goals import router as goals_router
 from .routers.health import router as health_router
+from .routers.ingest import router as ingest_router
 from .routers.settings import router as settings_router
 
 
@@ -62,6 +64,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(goals_router)
     app.include_router(blocks_router)
     app.include_router(settings_router)
+    app.include_router(devices_router)
+    app.include_router(ingest_router)
     return app
 
 

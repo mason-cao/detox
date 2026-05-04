@@ -33,6 +33,10 @@ class Settings:
     database_url: str | None = None
     db_pool_size: int = 5
     db_max_overflow: int = 5
+    device_jwt_secret: str | None = None
+    device_jwt_audience: str = "detox-device"
+    pairing_code_ttl_seconds: int = 300
+    ingest_max_batch_rows: int = 1000
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -59,5 +63,21 @@ class Settings:
             db_pool_size=int(os.getenv("DETOX_DB_POOL_SIZE", cls.db_pool_size)),
             db_max_overflow=int(
                 os.getenv("DETOX_DB_MAX_OVERFLOW", cls.db_max_overflow)
+            ),
+            device_jwt_secret=_env_or_none("DETOX_DEVICE_JWT_SECRET"),
+            device_jwt_audience=os.getenv(
+                "DETOX_DEVICE_JWT_AUD", cls.device_jwt_audience
+            ),
+            pairing_code_ttl_seconds=int(
+                os.getenv(
+                    "DETOX_PAIRING_CODE_TTL_SECONDS",
+                    cls.pairing_code_ttl_seconds,
+                )
+            ),
+            ingest_max_batch_rows=int(
+                os.getenv(
+                    "DETOX_INGEST_MAX_BATCH_ROWS",
+                    cls.ingest_max_batch_rows,
+                )
             ),
         )
