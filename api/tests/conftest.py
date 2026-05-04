@@ -98,3 +98,54 @@ def fastapi_client(reset_db):
     from api.app.main import create_app
 
     return TestClient(create_app(), raise_server_exceptions=False)
+
+
+@pytest.fixture
+def pg_client(monkeypatch):
+    """FastAPI client wired against a real Postgres for integration tests.
+
+    Skipped when ``DETOX_TEST_DATABASE_URL`` is unset. Each test gets a clean
+    slate — tenant rows for the test user are wiped before the fixture
+    yields. Auth uses the existing dev-token shim so we don't have to mock
+    Supabase JWKS for the cloud path tests.
+    """
+    import uuid
+
+    pg_url = os.environ.get("DETOX_TEST_DATABASE_URL")
+    if not pg_url:
+        pytest.skip("DETOX_TEST_DATABASE_URL not set")
+
+    user_id = str(uuid.uuid4())
+    monkeypatch.setenv("DETOX_DATABASE_URL", pg_url)
+    monkeypatch.setenv("DETOX_AUTH_MODE", "local")
+    monkeypatch.setenv("DETOX_DEV_TOKEN", "pg-test-token")
+    monkeypatch.setenv("DETOX_DEV_USER_ID", user_id)
+    monkeypatch.setenv("DETOX_DEVICE_JWT_SECRET", "pg-test-secret-32-bytes-long!!")
+
+    from sqlalchemy import create_engine, text
+    from fastapi.testclient import TestClient
+
+    engine = create_engine(pg_url, future=True)
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO users (id, email, auth_provider) "
+                "VALUES (:id, :email, 'test') "
+                "ON CONFLICT (id) DO NOTHING"
+            ),
+            {"id": user_id, "email": f"{user_id}@example.com"},
+        )
+
+    from api.app.main import create_app
+
+    app = create_app()
+    with TestClient(app, raise_server_exceptions=False) as client:
+        client.user_id = user_id  # convenient handle for tests
+        client.bearer = "pg-test-token"
+        yield client
+
+    # Best-effort tenant cleanup. Dropping the user cascades through every
+    # FK, including device_pairings and devices.
+    with engine.begin() as conn:
+        conn.execute(text("DELETE FROM users WHERE id = :id"), {"id": user_id})
+    engine.dispose()
