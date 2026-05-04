@@ -15,6 +15,9 @@ def _env_or_none(key: str) -> str | None:
     return value.strip() if value and value.strip() else None
 
 
+_VALID_AUTH_MODES = ("local", "supabase")
+
+
 @dataclass(frozen=True)
 class Settings:
     service_name: str = "Detox API"
@@ -23,10 +26,19 @@ class Settings:
     cors_origins: tuple[str, ...] = ("http://localhost:5050", "http://127.0.0.1:5050")
     dev_token: str | None = None
     dev_user_id: str | None = None
+    auth_mode: str = "local"
+    supabase_url: str | None = None
+    supabase_jwt_jwks_url: str | None = None
+    supabase_jwt_audience: str = "authenticated"
 
     @classmethod
     def from_env(cls) -> "Settings":
         origins = os.getenv("API_CORS_ORIGINS")
+        auth_mode = os.getenv("DETOX_AUTH_MODE", cls.auth_mode).strip().lower()
+        if auth_mode not in _VALID_AUTH_MODES:
+            raise ValueError(
+                f"DETOX_AUTH_MODE must be one of {_VALID_AUTH_MODES}, got {auth_mode!r}"
+            )
         return cls(
             service_name=os.getenv("API_SERVICE_NAME", cls.service_name),
             environment=os.getenv("API_ENV", cls.environment),
@@ -34,4 +46,10 @@ class Settings:
             cors_origins=tuple(_split_csv(origins)) if origins else cls.cors_origins,
             dev_token=_env_or_none("DETOX_DEV_TOKEN"),
             dev_user_id=_env_or_none("DETOX_DEV_USER_ID"),
+            auth_mode=auth_mode,
+            supabase_url=_env_or_none("SUPABASE_URL"),
+            supabase_jwt_jwks_url=_env_or_none("SUPABASE_JWKS_URL"),
+            supabase_jwt_audience=os.getenv(
+                "SUPABASE_JWT_AUD", cls.supabase_jwt_audience
+            ),
         )
