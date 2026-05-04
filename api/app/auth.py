@@ -53,3 +53,17 @@ def resolve_dev_user_id(request: Request) -> str | None:
         raise ApiError("invalid bearer token", status_code=401)
 
     return settings.dev_user_id
+
+
+def resolve_user_id(request: Request) -> str | None:
+    """Dispatch to the configured auth mode.
+
+    ``local`` (default) keeps the optional dev-token shim used by the agent's
+    pre-cloud dashboard. ``supabase`` requires a verified Supabase Auth JWT.
+    """
+    settings = _settings(request)
+    if settings.auth_mode == "supabase":
+        from .supabase_auth import resolve_supabase_user_id
+
+        return resolve_supabase_user_id(request)
+    return resolve_dev_user_id(request)

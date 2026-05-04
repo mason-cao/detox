@@ -12,7 +12,7 @@ from fastapi import Request
 
 from agent import database as db
 
-from .auth import resolve_dev_user_id
+from .auth import resolve_user_id
 from .validation import validate_date
 
 
@@ -20,7 +20,7 @@ _DATE_QUERY_FIELDS = ("date", "week_start", "start", "end")
 
 
 async def api_request_setup(request: Request) -> None:
-    request.state.user_id = resolve_dev_user_id(request)
+    request.state.user_id = resolve_user_id(request)
     for field_name in _DATE_QUERY_FIELDS:
         value = request.query_params.get(field_name)
         if value is not None:
