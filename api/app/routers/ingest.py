@@ -10,6 +10,7 @@ from ..db import db_session
 from ..device_auth import DeviceIdentity
 from ..errors import ApiError
 from ..services import ingest as ingest_service
+from ..services import rewards as rewards_service
 
 router = APIRouter(prefix="/v1", tags=["ingest"])
 
@@ -62,4 +63,12 @@ async def ingest(
         app_usage=app_usage,
         pickups=pickups,
     )
+
+    # New rows can change today's earned ☀ and finalize past days for the
+    # streak rollup. Both are cheap and idempotent — recompute eagerly so
+    # the agent's HUD reflects the new ingest before the next puller tick.
+    if counts.sessions or counts.app_usage or counts.pickups:
+        rewards_service.run_milestone_rollup(session, user_id=identity.user_id)
+        rewards_service.recompute_balances(session, user_id=identity.user_id)
+
     return {"accepted": counts.as_dict()}

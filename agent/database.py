@@ -26,6 +26,24 @@ class RewardError(Exception):
         self.code = code
 
 
+def _cloud_authoritative():
+    """True once the agent is paired and the cloud owns the rewards ledger.
+
+    Phase 4: the cloud is the system of record for Sunlight, Starshards,
+    inventory, and milestones once a device is paired. While unpaired this
+    helper returns False so the existing local-only market keeps working
+    unchanged. Task 6 wires this up against the Keychain-stored JWT.
+    """
+    try:
+        from agent import cloud as agent_cloud  # type: ignore
+    except ImportError:
+        return False
+    try:
+        return bool(agent_cloud.is_paired())
+    except Exception:
+        return False
+
+
 def get_connection():
     conn = sqlite3.connect(DB_PATH, timeout=10)
     conn.row_factory = sqlite3.Row
@@ -612,6 +630,8 @@ def _is_streak_day(date, daily_goal, daily_usage):
 
 
 def _insert_award(conn, kind, detail, amount, awarded_for_date):
+    if _cloud_authoritative():
+        return
     conn.execute(
         """INSERT OR IGNORE INTO rewards_awards
            (kind, detail, currency, amount, awarded_for_date, awarded_at)
@@ -776,6 +796,9 @@ def _unrefunded_spend_for_item(conn, item_key):
 
 
 def buy_market_item(item_key):
+    if _cloud_authoritative():
+        raise RewardError("cloud_managed")
+
     catalog = _catalog_by_key()
     item = catalog.get(item_key)
     if not item:
@@ -837,6 +860,9 @@ def get_market_inventory():
 
 
 def refund_market_item(spend_id):
+    if _cloud_authoritative():
+        raise RewardError("cloud_managed")
+
     with get_db() as conn:
         spend = conn.execute(
             """SELECT id, item_key, currency, amount, created_at
