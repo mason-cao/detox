@@ -6,10 +6,11 @@ import sys
 import threading
 import time
 import webbrowser
+from datetime import datetime
 
 import rumps
 
-from agent import database as db
+from agent import cloud, database as db, keychain, rules, sync
 from agent.config import APP_VERSION, LOG_PATH, PID_FILE, SERVER_PORT
 from agent.monitor import Monitor
 
@@ -67,9 +68,25 @@ class DetoxApp(rumps.App):
         self._monitor_thread = None
         self._flask_thread = None
         self._paused = False
+        self._rules_puller = None
+        self._sync_pusher = None
 
         self.status_label = rumps.MenuItem("Detox - starting...")
         self.today_label = rumps.MenuItem("Today: -")
+        self.pairing_label = rumps.MenuItem("Cloud: not paired")
+        self.last_sync_label = rumps.MenuItem("Last sync: never")
+        self.pair_item = rumps.MenuItem(
+            "Pair this device…",
+            callback=self.on_pair,
+        )
+        self.sync_now_item = rumps.MenuItem(
+            "Sync now",
+            callback=self.on_sync_now,
+        )
+        self.sign_out_item = rumps.MenuItem(
+            "Sign out",
+            callback=self.on_sign_out,
+        )
         self.pause_item = rumps.MenuItem(
             "Pause tracking",
             callback=self.on_pause,
@@ -82,6 +99,12 @@ class DetoxApp(rumps.App):
         self.menu = [
             self.status_label,
             self.today_label,
+            None,
+            self.pairing_label,
+            self.last_sync_label,
+            self.pair_item,
+            self.sync_now_item,
+            self.sign_out_item,
             None,
             self.pause_item,
             rumps.MenuItem("Open Dashboard", callback=self.on_dashboard, key="d"),
@@ -100,6 +123,7 @@ class DetoxApp(rumps.App):
         self._write_pid()
         self._start_monitor()
         self._start_flask()
+        self._start_cloud_pullers()
 
         self.status_timer = rumps.Timer(self.tick, 5)
         self.status_timer.start()
@@ -139,6 +163,55 @@ class DetoxApp(rumps.App):
             name="detox-flask",
         )
         self._flask_thread.start()
+
+    def _start_cloud_pullers(self):
+        """Start the rules puller + sync pusher unconditionally.
+
+        Each thread short-circuits to ``unpaired`` when no JWT is present,
+        so we don't have to restart anything when the user pairs/unpairs —
+        the next tick simply sees a different ``cloud.is_paired()`` state.
+        """
+        if self._rules_puller is None:
+            self._rules_puller = rules.RulesPuller()
+            self._rules_puller.start()
+        if self._sync_pusher is None:
+            self._sync_pusher = sync.SyncPusher()
+            self._sync_pusher.start()
+
+    def on_pair(self, _sender):
+        script = (
+            "tell application \"Terminal\" to do script "
+            "\"cd " + os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + " && "
+            "python3 -m agent.cli.pair\""
+        )
+        subprocess.run(["osascript", "-e", script], check=False)
+
+    def on_sync_now(self, _sender):
+        if not cloud.is_paired():
+            rumps.notification("Detox", "Sync", "Pair this device first.")
+            return
+        result = sync.flush()
+        status = result.get("status", "?")
+        posted = result.get("posted", 0)
+        pending = result.get("pending", 0)
+        rumps.notification(
+            "Detox",
+            "Sync",
+            f"{status}: {posted} posted, {pending} pending",
+        )
+        self.tick(None)
+
+    def on_sign_out(self, _sender):
+        if not cloud.is_paired():
+            return
+        keychain.clear_jwt()
+        db.clear_rules_mirror()
+        rumps.notification(
+            "Detox",
+            "Cloud",
+            "Signed out. Re-pair to sync again.",
+        )
+        self.tick(None)
 
     def on_pause(self, _sender):
         if self._paused:
@@ -189,6 +262,10 @@ class DetoxApp(rumps.App):
 
     def on_quit(self, _sender):
         self._stop_monitor()
+        if self._rules_puller:
+            self._rules_puller.stop()
+        if self._sync_pusher:
+            self._sync_pusher.stop()
         if os.path.exists(PID_FILE):
             try:
                 os.remove(PID_FILE)
@@ -196,7 +273,43 @@ class DetoxApp(rumps.App):
                 pass
         rumps.quit_application()
 
+    def _refresh_cloud_labels(self):
+        paired = cloud.is_paired()
+        if paired:
+            self.pairing_label.title = "Cloud: paired"
+            self.pair_item.set_callback(None)
+            self.pair_item.title = "Pair this device… (paired)"
+            self.sync_now_item.set_callback(self.on_sync_now)
+            self.sign_out_item.set_callback(self.on_sign_out)
+        else:
+            self.pairing_label.title = "Cloud: not paired"
+            self.pair_item.set_callback(self.on_pair)
+            self.pair_item.title = "Pair this device…"
+            self.sync_now_item.set_callback(None)
+            self.sign_out_item.set_callback(None)
+
+        try:
+            status = sync.last_push_status()
+        except Exception:
+            status = {}
+        last_at = status.get("last_success_at") if status else None
+        try:
+            ts = float(last_at) if last_at else None
+        except (TypeError, ValueError):
+            ts = None
+        if ts:
+            stamp = datetime.fromtimestamp(ts).strftime("%H:%M")
+            pending = status.get("pending", 0) if status else 0
+            extra = f" ({pending} pending)" if pending else ""
+            self.last_sync_label.title = f"Last sync: {stamp}{extra}"
+        elif paired:
+            self.last_sync_label.title = "Last sync: pending…"
+        else:
+            self.last_sync_label.title = "Last sync: never"
+
     def tick(self, _sender):
+        self._refresh_cloud_labels()
+
         today = time.strftime("%Y-%m-%d")
         try:
             minutes = db.get_daily_total(today) or 0

@@ -29,7 +29,7 @@ OPTIONS = {
     "argv_emulation": False,
     "iconfile": str(BUILD_DIR / "icon.icns"),
     "plist": str(INFO_PLIST),
-    "packages": ["agent", "flask", "rumps"],
+    "packages": ["agent", "flask", "rumps", "keyring", "requests"],
     "includes": ["pkg_resources"],
     "frameworks": [str(SPARKLE_FRAMEWORK)] if (SPARKLE_FRAMEWORK / "Sparkle").exists() else [],
     "resources": [],

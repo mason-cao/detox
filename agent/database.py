@@ -172,6 +172,32 @@ def init_db():
             );
 
             CREATE INDEX IF NOT EXISTS idx_rewards_awards_date ON rewards_awards(awarded_for_date);
+
+            CREATE TABLE IF NOT EXISTS cloud_app_blocks (
+                app_name TEXT PRIMARY KEY,
+                block_type TEXT NOT NULL DEFAULT 'blocked',
+                daily_limit_minutes INTEGER
+            );
+
+            CREATE TABLE IF NOT EXISTS cloud_category_blocks (
+                category_name TEXT PRIMARY KEY,
+                active INTEGER NOT NULL DEFAULT 1
+            );
+
+            CREATE TABLE IF NOT EXISTS cloud_goals (
+                id INTEGER PRIMARY KEY,
+                type TEXT NOT NULL,
+                target_minutes INTEGER,
+                app_name TEXT,
+                bedtime_hour INTEGER,
+                bedtime_minute INTEGER,
+                active INTEGER DEFAULT 1
+            );
+
+            CREATE TABLE IF NOT EXISTS cloud_settings (
+                key TEXT PRIMARY KEY,
+                value TEXT
+            );
         """)
 
         conn.executescript("""
@@ -1050,8 +1076,164 @@ def remove_category_block(category_name):
         )
 
 
+def replace_rules_mirror(payload):
+    """Replace cloud_* mirror tables with the contents of a /v1/rules payload.
+
+    Called by the rules puller whenever the api returns a fresh body. The
+    mirror is the single source of truth the blocker reads when the device
+    is paired, so the four tables are wiped and rewritten in one
+    transaction to keep the blocker from seeing a half-applied snapshot.
+    """
+    blocks = payload.get("blocks") or []
+    category_blocks = payload.get("category_blocks") or []
+    goals = payload.get("goals") or []
+    settings_dict = payload.get("settings") or {}
+
+    with get_db() as conn:
+        conn.execute("DELETE FROM cloud_app_blocks")
+        conn.execute("DELETE FROM cloud_category_blocks")
+        conn.execute("DELETE FROM cloud_goals")
+        conn.execute("DELETE FROM cloud_settings")
+
+        for row in blocks:
+            conn.execute(
+                "INSERT OR REPLACE INTO cloud_app_blocks "
+                "(app_name, block_type, daily_limit_minutes) VALUES (?, ?, ?)",
+                (
+                    row.get("app_name"),
+                    row.get("block_type") or "blocked",
+                    row.get("daily_limit_minutes"),
+                ),
+            )
+
+        for row in category_blocks:
+            active = row.get("active")
+            if active is None:
+                active = True
+            conn.execute(
+                "INSERT OR REPLACE INTO cloud_category_blocks "
+                "(category_name, active) VALUES (?, ?)",
+                (row.get("category_name"), 1 if active else 0),
+            )
+
+        for row in goals:
+            active = row.get("active")
+            if active is None:
+                active = True
+            conn.execute(
+                "INSERT OR REPLACE INTO cloud_goals "
+                "(id, type, target_minutes, app_name, bedtime_hour, bedtime_minute, active) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (
+                    row.get("id"),
+                    row.get("type"),
+                    row.get("target_minutes"),
+                    row.get("app_name"),
+                    row.get("bedtime_hour"),
+                    row.get("bedtime_minute"),
+                    1 if active else 0,
+                ),
+            )
+
+        for key, value in settings_dict.items():
+            conn.execute(
+                "INSERT OR REPLACE INTO cloud_settings (key, value) VALUES (?, ?)",
+                (key, str(value) if value is not None else None),
+            )
+
+
+def clear_rules_mirror():
+    """Wipe the cloud_* mirrors and the puller's etag. Used on sign-out."""
+    with get_db() as conn:
+        conn.execute("DELETE FROM cloud_app_blocks")
+        conn.execute("DELETE FROM cloud_category_blocks")
+        conn.execute("DELETE FROM cloud_goals")
+        conn.execute("DELETE FROM cloud_settings")
+        conn.execute(
+            "DELETE FROM sync_state WHERE key IN ('rules_etag', 'rules_pulled_at')"
+        )
+
+
+def _is_app_blocked_from_mirror(app_name):
+    with get_db() as conn:
+        today_usage_value = None
+
+        def today_usage():
+            nonlocal today_usage_value
+            if today_usage_value is None:
+                today = datetime.now().strftime("%Y-%m-%d")
+                row = conn.execute(
+                    f"SELECT {USAGE_MINUTES_SQL} as minutes FROM app_usage WHERE app_name = ? AND date = ?",
+                    (app_name, today),
+                ).fetchone()
+                today_usage_value = round(row["minutes"], 1) if row else 0
+            return today_usage_value
+
+        def over_goal_limit():
+            goal_limit = conn.execute(
+                """SELECT target_minutes FROM cloud_goals
+                   WHERE active = 1
+                     AND type = 'app_limit'
+                     AND app_name = ?
+                     AND target_minutes IS NOT NULL
+                   ORDER BY target_minutes ASC
+                   LIMIT 1""",
+                (app_name,),
+            ).fetchone()
+            return bool(
+                goal_limit
+                and today_usage() >= goal_limit["target_minutes"]
+            )
+
+        whitelist_mode = conn.execute(
+            "SELECT value FROM cloud_settings WHERE key = 'whitelist_mode'"
+        ).fetchone()
+        if whitelist_mode and whitelist_mode["value"] == "1":
+            if app_name in FOCUS_MODE_RECOVERY_APPS:
+                return False
+            whitelisted = conn.execute(
+                "SELECT 1 FROM cloud_app_blocks WHERE app_name = ? AND block_type = 'whitelisted'",
+                (app_name,),
+            ).fetchone()
+            return whitelisted is None
+
+        block = conn.execute(
+            "SELECT * FROM cloud_app_blocks WHERE app_name = ?", (app_name,)
+        ).fetchone()
+        if block:
+            if block["block_type"] == "whitelisted":
+                return False
+            if block["daily_limit_minutes"] is not None:
+                return today_usage() >= block["daily_limit_minutes"] or over_goal_limit()
+            return True
+
+        if over_goal_limit():
+            return True
+
+        cat = conn.execute(
+            "SELECT category FROM app_categories WHERE app_name = ?", (app_name,)
+        ).fetchone()
+        if cat:
+            cat_block = conn.execute(
+                "SELECT 1 FROM cloud_category_blocks WHERE category_name = ? AND active = 1",
+                (cat["category"],),
+            ).fetchone()
+            if cat_block:
+                return True
+
+        return False
+
+
 def is_app_blocked(app_name):
-    """Check if an app should be blocked right now."""
+    """Check if an app should be blocked right now.
+
+    Routes to the cloud_* mirror tables once the device is paired so the
+    blocker enforces whatever the rules puller most recently fetched. While
+    unpaired, falls through to the local user-facing tables as before.
+    """
+    if _cloud_authoritative():
+        return _is_app_blocked_from_mirror(app_name)
+
     with get_db() as conn:
         today_usage_value = None
 
