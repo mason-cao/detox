@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pair this Mac · Detox</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css?v=20260504a">
+    <link rel="stylesheet" href="/css/tokens.css?v=20260504a">
+    <link rel="stylesheet" href="/css/pixel-ui.css?v=20260504a">
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                linear-gradient(180deg, var(--dc-dawn) 0%, var(--dc-noon) 55%, var(--dc-sand) 100%);
+            font-family: var(--font-ui);
+            color: var(--dc-ink);
+        }
+        .pair-card {
+            width: min(440px, 92vw);
+            padding: var(--sp-6);
+            display: grid;
+            gap: var(--sp-4);
+            text-align: center;
+        }
+        .pair-card h1 {
+            font-family: var(--font-display);
+            font-size: var(--fs-display);
+            margin: 0;
+            color: var(--dc-night);
+            line-height: 1.4;
+        }
+        .pair-card p {
+            margin: 0;
+            color: var(--dc-ink-soft);
+            line-height: 1.5;
+        }
+        .pair-code {
+            font-family: var(--font-display);
+            font-size: 28px;
+            letter-spacing: 0.18em;
+            padding: var(--sp-5) var(--sp-3);
+            background: var(--dc-parchment);
+            border: 3px solid var(--dc-ink);
+            color: var(--dc-night);
+        }
+        .pair-code[data-state="loading"],
+        .pair-code[data-state="empty"] {
+            color: var(--dc-ink-soft);
+            font-size: var(--fs-md);
+            letter-spacing: normal;
+            font-family: var(--font-ui);
+        }
+        .pair-meta {
+            font-size: var(--fs-xs);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--dc-ink-soft);
+        }
+        .pair-status {
+            font-size: var(--fs-sm);
+            min-height: 1.4em;
+        }
+        .pair-status[data-tone="ok"]    { color: var(--dc-ok); }
+        .pair-status[data-tone="error"] { color: var(--dc-danger); }
+        .pair-cli {
+            font-family: var(--font-game);
+            background: var(--dc-night);
+            color: var(--dc-noon);
+            padding: var(--sp-3);
+            font-size: var(--fs-md);
+        }
+        .pair-actions {
+            display: flex;
+            justify-content: center;
+            gap: var(--sp-3);
+        }
+    </style>
+</head>
+<body>
+    <main class="pixel-panel pair-card" role="main">
+        <h1>PAIR THIS MAC</h1>
+        <p>Run the agent CLI on the Mac you want to track. It'll ask for the code below.</p>
+
+        <div class="pair-code" id="pairCode" data-state="loading">Generating code…</div>
+        <div class="pair-meta" id="pairExpires">&nbsp;</div>
+
+        <pre class="pair-cli"><code>python3 -m agent.cli.pair</code></pre>
+
+        <div class="pair-status" id="pairStatus" aria-live="polite">Waiting for the Mac to claim the code.</div>
+
+        <div class="pair-actions">
+            <button class="pixel-button" type="button" id="pairRefresh">New code</button>
+            <a class="pixel-button pixel-button--primary" href="/">Back to Isle</a>
+        </div>
+    </main>
+
+    <script src="/js/auth.js?v=20260504a"></script>
+    <script src="/js/cloud.js?v=20260504a"></script>
+    <script src="/js/pair.js?v=20260504a"></script>
+</body>
+</html>
