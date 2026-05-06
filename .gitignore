@@ -17,7 +17,10 @@ infra/build/Sparkle.framework/*
 infra/build/bin/*
 !infra/build/bin/README.md
 .env
+.env*
 venv/
 CLAUDE.md
 .claude/
 .codex/
+infra/cloudflare/.wrangler/
+web/config.js

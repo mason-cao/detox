@@ -193,6 +193,30 @@ def api_config():
     })
 
 
+@app.route("/config.js")
+def config_js():
+    """Same shape as /api/config but as a <script>-friendly JS file.
+
+    Production parity: Cloudflare Pages writes web/config.js at deploy
+    time via infra/cloudflare/build.sh. In dev there's no static file —
+    Flask renders one from the same env vars so the HTML can include a
+    plain ``<script src="/config.js"></script>`` tag in both worlds.
+    """
+    body = (
+        "/* Local dev — values from env. */\n"
+        f'window.DETOX_SUPABASE_URL = {_js_string("DETOX_SUPABASE_URL")};\n'
+        f'window.DETOX_SUPABASE_ANON_KEY = {_js_string("DETOX_SUPABASE_ANON_KEY")};\n'
+        f'window.DETOX_API_BASE = {_js_string("DETOX_API_BASE")};\n'
+    )
+    return body, 200, {"Content-Type": "application/javascript; charset=utf-8"}
+
+
+def _js_string(env_key):
+    raw = os.environ.get(env_key, "") or ""
+    safe = raw.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "")
+    return f'"{safe}"'
+
+
 @app.route("/css/<path:filename>")
 def serve_css(filename):
     return send_from_directory(os.path.join(WEB_DIR, "css"), filename)

@@ -1,0 +1,18 @@
+# Cloudflare Pages config for app.detox.app.
+#
+# This file is the wrangler-compatible record of how the static web/ tree
+# is published. The Pages dashboard is the source of truth for the project
+# itself (custom domain, env vars, GitHub link); wrangler reads this for
+# `wrangler pages deploy` and similar local commands.
+
+name = "detox-app"
+compatibility_date = "2026-05-01"
+pages_build_output_dir = "../../web"
+
+[vars]
+# These get overridden by Pages env vars at runtime — leave empty here so
+# nothing leaks into the repo. ``infra/cloudflare/build.sh`` reads the
+# real values from env and writes ``web/config.js`` before publish.
+DETOX_SUPABASE_URL = ""
+DETOX_SUPABASE_ANON_KEY = ""
+DETOX_API_BASE = ""
