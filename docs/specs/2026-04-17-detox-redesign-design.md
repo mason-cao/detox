@@ -217,8 +217,8 @@ App detection and blocking are only possible from a process running on the user'
 | Backend | FastAPI (from Flask) | Async, OpenAPI, Pydantic. Route parity with current Flask API is straightforward. |
 | DB | Postgres 16 (from SQLite) | Multi-tenant, RLS, concurrency. |
 | Cache | Redis | Rate-limiting ingest, session cache. |
-| Auth | Clerk (or Supabase Auth) | Magic link + Google + Apple. Not NIH-ing auth. |
-| Hosting | Fly.io single-region | Docker, managed Postgres, cheap at our tier. |
+| Auth | Supabase Auth | Magic link + Google + Apple. JWKS-verified JWTs on the api. |
+| Hosting | Railway (api + managed Postgres + managed Redis) | One project, three services; $5 Hobby plan covers v1. |
 | Static web | Cloudflare Pages | Free, DDoS absorption. |
 | Frontend | Vanilla JS + HTML/CSS (retained) | No build step. Responsive breakpoints added. |
 | Observability | Sentry + Plausible | Errors + privacy-respecting analytics. |
@@ -266,7 +266,7 @@ Each phase is a shippable milestone.
 | **1** Redesign (local) | Full isle/market UI against existing Flask + SQLite. Local-only v2. | 2–3 wk |
 | **2** Backend extract | Port Flask → FastAPI, SQLite → Postgres, user scaffolding (dev token). Runs via docker-compose. | 1.5 wk |
 | **3** Agent packaging | `py2app` bundle, menu bar, Sparkle updater, install script. Agent targets local API. | 1 wk |
-| **4** Auth + cloud | Clerk, RLS, cloud ingest, rules puller, rewards ledger. Deploy to Fly + Cloudflare. | 2 wk |
+| **4** Auth + cloud | Supabase, RLS, cloud ingest, rules puller, rewards ledger. Deploy to Railway + Cloudflare. | 2 wk |
 | **5** Private beta | 10–20 invite users, telemetry, iteration. | 2 wk |
 | **6** Public launch | Landing, Homebrew cask, signed DMG, announcement. | 1 wk |
 
@@ -314,12 +314,12 @@ Every commit below is one atomic change. Ordering matches phase sequence. Messag
 - `feat(agent): local SQLite buffer + offline queue`
 
 ### Phase 4 — Auth + cloud
-- `feat(auth): Clerk integration on web and api`
+- `feat(auth): supabase JWT verification with JWKS cache`
 - `feat(agent): device pairing flow + JWT storage in Keychain`
 - `feat(sync): POST /v1/ingest with idempotency + batching`
 - `feat(sync): rules puller every 30s with ETag caching`
 - `feat(rewards): move ledger authority to server, push to agent for HUD`
-- `feat(infra): Fly.io deploy config + Postgres + Redis`
+- `feat(infra): Railway api deploy with managed Postgres and Redis`
 - `feat(infra): Cloudflare Pages web deploy + API routing`
 
 ### Phases 5–6
@@ -332,7 +332,7 @@ Every commit below is one atomic change. Ordering matches phase sequence. Messag
 ## 13. Open questions
 
 - Agent signing certificate — Apple Developer account needed before Phase 3 packaging.
-- Auth vendor choice (Clerk vs. Supabase Auth) — revisit before Phase 4 start; pricing and Apple-Sign-In compliance are the deciders.
+- ~~Auth vendor choice (Clerk vs. Supabase Auth)~~ — **resolved Phase 4**: Supabase Auth (magic-link + Google) with JWKS verification on the api. Apple Sign-In via Supabase's web provider is good enough for v1.
 - Pixel sprite production — commission an illustrator or build in Aseprite internally. Impacts Phase 1 timeline.
 - Sound pack licensing — chiptune sources must be CC-BY or original compositions.
 

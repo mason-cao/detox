@@ -61,14 +61,17 @@ def issue_device_token(
 
 
 def resolve_device_identity(request: Request) -> DeviceIdentity:
-    settings = _settings(request)
-    if not settings.device_jwt_secret:
-        raise ApiError("device auth not configured", status_code=500)
-
+    # Order matters: a missing token is a client-side problem (401), not a
+    # server misconfiguration (500). We only need the device secret to
+    # actually verify a token that is present.
     header = (request.headers.get("authorization") or "").strip()
     if not header.lower().startswith("bearer "):
         raise ApiError("missing bearer token", status_code=401)
     token = header.split(" ", 1)[1].strip()
+
+    settings = _settings(request)
+    if not settings.device_jwt_secret:
+        raise ApiError("device auth not configured", status_code=500)
 
     try:
         claims = jwt.decode(
