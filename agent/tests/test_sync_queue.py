@@ -83,12 +83,14 @@ def test_enqueue_sync_ignores_duplicate_kind_row_id(tmp_path, monkeypatch):
     assert len(_sync_rows(database)) == 1
 
 
-def test_sync_helpers_report_device_pending_and_offline_flush(tmp_path, monkeypatch):
+def test_sync_helpers_report_device_pending_and_unpaired_flush(tmp_path, monkeypatch):
     database = _use_temp_db(tmp_path, monkeypatch)
     database.init_db()
     database.record_pickup(1_714_493_000.0)
 
-    from agent import sync
+    from agent import sync, cloud
+
+    monkeypatch.setattr(cloud, "is_paired", lambda: False)
 
     with database.get_db() as conn:
         expected_device_id = conn.execute(
@@ -97,4 +99,4 @@ def test_sync_helpers_report_device_pending_and_offline_flush(tmp_path, monkeypa
 
     assert sync.device_id() == expected_device_id
     assert sync.pending_count() == 1
-    assert sync.flush() == {"posted": 0, "pending": 1, "status": "offline"}
+    assert sync.flush() == {"posted": 0, "pending": 1, "status": "unpaired"}
