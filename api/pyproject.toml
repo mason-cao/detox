@@ -11,6 +11,7 @@ dependencies = [
     "psycopg[binary]>=3.2,<4.0",
     "pyjwt[crypto]>=2.8,<3.0",
     "httpx>=0.27,<1.0",
+    "redis>=5.0,<6.0",
 ]
 
 [project.optional-dependencies]
@@ -29,4 +30,7 @@ include = ["app*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = [".."]
+markers = [
+    "requires_redis: skipped unless DETOX_TEST_REDIS_URL points at a reachable Redis",
+]
 

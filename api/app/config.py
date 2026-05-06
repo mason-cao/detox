@@ -37,6 +37,9 @@ class Settings:
     device_jwt_audience: str = "detox-device"
     pairing_code_ttl_seconds: int = 300
     ingest_max_batch_rows: int = 1000
+    redis_url: str | None = None
+    ingest_rate_limit_per_minute: int = 60
+    rules_etag_cache_ttl_seconds: int = 30
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -78,6 +81,19 @@ class Settings:
                 os.getenv(
                     "DETOX_INGEST_MAX_BATCH_ROWS",
                     cls.ingest_max_batch_rows,
+                )
+            ),
+            redis_url=_env_or_none("DETOX_REDIS_URL"),
+            ingest_rate_limit_per_minute=int(
+                os.getenv(
+                    "DETOX_INGEST_RATE_LIMIT_PER_MINUTE",
+                    cls.ingest_rate_limit_per_minute,
+                )
+            ),
+            rules_etag_cache_ttl_seconds=int(
+                os.getenv(
+                    "DETOX_RULES_ETAG_CACHE_TTL_SECONDS",
+                    cls.rules_etag_cache_ttl_seconds,
                 )
             ),
         )

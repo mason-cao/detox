@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Request
 from ..dependencies import api_request_setup
 from ..errors import ApiError
 from ..services import goals as goals_service
+from ..services import rules as rules_service
 from ..validation import (
     optional_positive_int,
     require_json_object,
@@ -64,10 +65,12 @@ async def create_goal(request: Request) -> dict[str, int]:
         bedtime_hour=bedtime_hour,
         bedtime_minute=bedtime_minute,
     )
+    rules_service.bust_for_request(request)
     return {"id": goal_id}
 
 
 @router.delete("/goals/{goal_id}", summary="Delete a goal")
-async def delete_goal(goal_id: int) -> dict[str, bool]:
+async def delete_goal(goal_id: int, request: Request) -> dict[str, bool]:
     goals_service.delete_goal(goal_id)
+    rules_service.bust_for_request(request)
     return {"ok": True}
