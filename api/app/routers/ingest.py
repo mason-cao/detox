@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import time
+
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
@@ -9,10 +11,29 @@ from ..auth import require_device_jwt
 from ..db import db_session
 from ..device_auth import DeviceIdentity
 from ..errors import ApiError
+from ..redis_client import get_redis, incr_with_expiry
 from ..services import ingest as ingest_service
 from ..services import rewards as rewards_service
 
 router = APIRouter(prefix="/v1", tags=["ingest"])
+
+
+def _enforce_rate_limit(request: Request, device_id: str) -> None:
+    settings = request.app.state.settings
+    limit = int(settings.ingest_rate_limit_per_minute or 0)
+    if limit <= 0:
+        return
+    client = get_redis(request.app)
+    if client is None:
+        return  # Redis unavailable — fail open rather than dropping ingest.
+    bucket = int(time.time()) // 60
+    key = f"rl:ingest:{device_id}:{bucket}"
+    count = incr_with_expiry(client, key, expiry_seconds=70)
+    if count is not None and count > limit:
+        raise ApiError(
+            f"rate limit exceeded ({limit} req/min)",
+            status_code=429,
+        )
 
 
 def _list_or_empty(value, name: str) -> list:
@@ -44,6 +65,8 @@ async def ingest(
             "device_id in body does not match token",
             status_code=403,
         )
+
+    _enforce_rate_limit(request, identity.device_id)
 
     sessions = _list_or_empty(payload.get("sessions"), "sessions")
     app_usage = _list_or_empty(payload.get("app_usage"), "app_usage")

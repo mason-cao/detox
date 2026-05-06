@@ -6,9 +6,9 @@ the full payload. The etag is a SHA-256 of the canonical JSON of the
 payload, truncated to 16 hex chars — content-addressable, so we don't need
 ``updated_at`` columns on every table.
 
-Redis-backed caching lands in Task 8; today the etag is computed fresh on
-each request. ``invalidate_etag`` is a forward-compat stub that gets a real
-implementation once Redis is wired in.
+Task 8 added Redis-backed caching: the etag is stored under
+``rules:etag:<user_id>`` for 30 s so a 304 short-circuits before we touch
+the database. ``invalidate_etag`` busts that key on every rule write.
 """
 
 from __future__ import annotations
@@ -19,6 +19,12 @@ from typing import Any
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+
+from .. import redis_client
+
+
+def etag_cache_key(user_id: str) -> str:
+    return f"rules:etag:{user_id}"
 
 
 def get_rules_payload(session: Session, *, user_id: str) -> dict[str, Any]:
@@ -92,12 +98,17 @@ def compute_etag(payload: dict[str, Any]) -> str:
     return f'W/"{digest[:16]}"'
 
 
-def invalidate_etag(user_id: str) -> None:
-    """Forward-compat stub — Task 8 fills this in against Redis.
+def invalidate_etag(app, user_id: str | None) -> None:
+    """Bust the cached etag for ``user_id`` so the next pull recomputes."""
+    if not user_id:
+        return
+    client = redis_client.get_redis(app)
+    if client is None:
+        return
+    redis_client.cache_delete(client, etag_cache_key(user_id))
 
-    Called from rule-mutating services (``services.blocks`` etc.) so that
-    once the Redis cache exists, the next pull rebuilds the etag instead of
-    serving a stale value.
-    """
-    # No-op until Task 8 wires the Redis client.
-    return None
+
+def bust_for_request(request) -> None:
+    """Convenience: bust the etag for whoever made this request."""
+    user_id = getattr(request.state, "user_id", None)
+    invalidate_etag(request.app, user_id)

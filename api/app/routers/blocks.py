@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Request
 from ..dependencies import api_request_setup
 from ..errors import ApiError
 from ..services import blocks as blocks_service
+from ..services import rules as rules_service
 from ..validation import (
     optional_positive_int,
     require_json_object,
@@ -46,12 +47,14 @@ async def add_block(request: Request) -> dict[str, bool]:
         block_type=block_type,
         daily_limit_minutes=daily_limit_minutes,
     )
+    rules_service.bust_for_request(request)
     return {"ok": True}
 
 
 @router.delete("/blocks/{app_name}", summary="Remove an app block")
-async def remove_block(app_name: str) -> dict[str, bool]:
+async def remove_block(app_name: str, request: Request) -> dict[str, bool]:
     blocks_service.remove_block(app_name)
+    rules_service.bust_for_request(request)
     return {"ok": True}
 
 
@@ -69,6 +72,7 @@ async def add_category_block(request: Request) -> dict[str, bool]:
     body = require_json_object(payload)
     category_name = require_text(body, "category_name")
     blocks_service.add_category_block(category_name)
+    rules_service.bust_for_request(request)
     return {"ok": True}
 
 
@@ -76,6 +80,10 @@ async def add_category_block(request: Request) -> dict[str, bool]:
     "/category-blocks/{category_name}",
     summary="Remove a category block",
 )
-async def remove_category_block(category_name: str) -> dict[str, bool]:
+async def remove_category_block(
+    category_name: str,
+    request: Request,
+) -> dict[str, bool]:
     blocks_service.remove_category_block(category_name)
+    rules_service.bust_for_request(request)
     return {"ok": True}

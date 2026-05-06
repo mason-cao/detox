@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Request
 
 from ..dependencies import api_request_setup
+from ..services import rules as rules_service
 from ..services import settings as settings_service
 from ..validation import require_json_object
 
@@ -28,4 +29,5 @@ async def set_settings(request: Request) -> dict[str, bool]:
         payload = None
     body = require_json_object(payload)
     settings_service.set_settings(body)
+    rules_service.bust_for_request(request)
     return {"ok": True}

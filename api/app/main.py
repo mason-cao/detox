@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from .config import Settings
 from .db import dispose_engine, install_engine
 from .errors import ApiError, api_error_handler
+from .redis_client import dispose_redis, install_redis
 from .routers.apps import router as apps_router
 from .routers.blocks import router as blocks_router
 from .routers.dashboard import router as dashboard_router
@@ -26,9 +27,11 @@ from .routers.settings import router as settings_router
 @asynccontextmanager
 async def _lifespan(app: FastAPI):
     install_engine(app)
+    install_redis(app)
     try:
         yield
     finally:
+        dispose_redis(app)
         dispose_engine(app)
 
 
