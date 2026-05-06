@@ -166,6 +166,33 @@ def index():
     return send_from_directory(WEB_DIR, "index.html")
 
 
+@app.route("/sign-in.html")
+def sign_in_page():
+    return send_from_directory(WEB_DIR, "sign-in.html")
+
+
+@app.route("/pair.html")
+def pair_page():
+    return send_from_directory(WEB_DIR, "pair.html")
+
+
+@app.route("/api/config")
+@api_route
+def api_config():
+    """Bootstrap config for the web client.
+
+    Cloudflare Pages injects these via build-time env. Locally Flask is the
+    only origin, so the dashboard reads the same shape from here. Empty
+    strings mean "no cloud configured" — the web client falls back to the
+    same-origin Flask routes.
+    """
+    return jsonify({
+        "supabase_url": os.environ.get("DETOX_SUPABASE_URL", ""),
+        "supabase_anon_key": os.environ.get("DETOX_SUPABASE_ANON_KEY", ""),
+        "api_base": os.environ.get("DETOX_API_BASE", ""),
+    })
+
+
 @app.route("/css/<path:filename>")
 def serve_css(filename):
     return send_from_directory(os.path.join(WEB_DIR, "css"), filename)

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in · Detox</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css?v=20260504a">
+    <link rel="stylesheet" href="/css/tokens.css?v=20260504a">
+    <link rel="stylesheet" href="/css/pixel-ui.css?v=20260504a">
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                linear-gradient(180deg, var(--dc-dawn) 0%, var(--dc-noon) 60%, var(--dc-sand) 100%);
+            font-family: var(--font-ui);
+            color: var(--dc-ink);
+        }
+        .auth-card {
+            width: min(420px, 92vw);
+            padding: var(--sp-6);
+            display: grid;
+            gap: var(--sp-4);
+        }
+        .auth-card h1 {
+            font-family: var(--font-display);
+            font-size: var(--fs-display);
+            color: var(--dc-night);
+            margin: 0;
+            line-height: 1.4;
+        }
+        .auth-card p { margin: 0; color: var(--dc-ink-soft); line-height: 1.5; }
+        .auth-form { display: grid; gap: var(--sp-3); }
+        .auth-form label {
+            font-size: var(--fs-xs);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--dc-ink-soft);
+        }
+        .auth-form input[type="email"] {
+            font-family: var(--font-ui);
+            font-size: var(--fs-md);
+            padding: var(--sp-3);
+            border: 2px solid var(--dc-ink);
+            background: var(--dc-parchment);
+            color: var(--dc-ink);
+            border-radius: 0;
+        }
+        .auth-status {
+            font-size: var(--fs-sm);
+            min-height: 1.4em;
+            color: var(--dc-ink-soft);
+        }
+        .auth-status[data-tone="error"] { color: var(--dc-danger); }
+        .auth-status[data-tone="ok"]    { color: var(--dc-ok); }
+        .auth-footer {
+            font-size: var(--fs-xs);
+            color: var(--dc-ink-soft);
+            text-align: center;
+        }
+        .auth-footer a { color: var(--dc-night); }
+    </style>
+</head>
+<body>
+    <main class="pixel-panel auth-card" role="main">
+        <h1>WELCOME BACK</h1>
+        <p>Detox sends you a magic link. No passwords, no cloud surprises.</p>
+        <form class="auth-form" id="signInForm" novalidate>
+            <label for="email">Email</label>
+            <input id="email" type="email" autocomplete="email" required placeholder="you@example.com">
+            <button class="pixel-button pixel-button--primary" type="submit" id="signInButton">Send magic link</button>
+        </form>
+        <div class="auth-status" id="signInStatus" aria-live="polite"></div>
+        <div class="auth-footer">
+            Already paired your Mac? Open the menu-bar app — it'll start syncing once you're signed in.
+        </div>
+    </main>
+
+    <script src="/js/auth.js?v=20260504a"></script>
+    <script>
+        (function () {
+            const form = document.getElementById('signInForm');
+            const status = document.getElementById('signInStatus');
+            const button = document.getElementById('signInButton');
+
+            function setStatus(message, tone) {
+                status.textContent = message || '';
+                if (tone) {
+                    status.dataset.tone = tone;
+                } else {
+                    delete status.dataset.tone;
+                }
+            }
+
+            // If already signed in, drop straight to the dashboard.
+            Auth.bootstrap().then(async () => {
+                if (!Auth.configured()) {
+                    setStatus('Cloud auth is not configured for this build. Use the local dashboard at /', 'error');
+                    return;
+                }
+                const session = await Auth.session();
+                if (session) location.href = '/';
+            });
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value.trim();
+                if (!email) return;
+                setStatus('Sending…');
+                button.disabled = true;
+                try {
+                    const { error } = await Auth.signInWithMagicLink(email);
+                    if (error) throw error;
+                    setStatus('Check your email for the sign-in link.', 'ok');
+                } catch (err) {
+                    setStatus(err.message || 'Could not send link.', 'error');
+                } finally {
+                    button.disabled = false;
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

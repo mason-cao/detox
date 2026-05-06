@@ -129,11 +129,18 @@ const App = {
     /* ── API Client ─────────────────────────────────────────────────── */
 
     async api(path, options = {}) {
-        const res = await fetch(path, {
+        const init = {
             headers: { 'Content-Type': 'application/json' },
             ...options,
             body: options.body ? JSON.stringify(options.body) : undefined,
-        });
+        };
+        // Cloud.fetch routes through window.DETOX_API_BASE + Supabase JWT
+        // when configured. In local dev it falls through to same-origin
+        // Flask, so the existing behavior is unchanged.
+        const fetcher = (window.Cloud && window.Cloud.fetch)
+            ? window.Cloud.fetch.bind(window.Cloud)
+            : (p, i) => fetch(p, i);
+        const res = await fetcher(path, init);
         const contentType = res.headers.get('Content-Type') || '';
         const data = contentType.includes('application/json') ? await res.json() : await res.text();
         if (!res.ok) {
