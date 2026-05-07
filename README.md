@@ -59,6 +59,8 @@ Detox is a macOS screen-time tracker that polls your frontmost app every 2 secon
 
 ## Two ways to run it
 
+> 🧪 **Phase 5 beta tester?** Read [`docs/beta-onboarding.md`](docs/beta-onboarding.md) — it's the install + permissions + what-to-test + how-to-file-feedback walkthrough specifically for the invite cohort.
+
 ### A. Local-only (default)
 
 The agent + Flask dashboard run entirely on your Mac. Data lives in `data/screentime.db` and never leaves the machine. This is the privacy-first default and is enough on its own.
@@ -277,10 +279,10 @@ detox/
 | 0 | Monorepo reorg (`agent/`, `api/`, `web/`, `infra/`) | ✅ shipped |
 | 1 | Detox Isle redesign (HUD, residents, world, tab animations) | ✅ shipped |
 | 2 | FastAPI port + Postgres scaffolding | ✅ shipped |
+| 3 | py2app signed `.app` + DMG + Homebrew cask + Sparkle auto-update | 🚧 queued |
 | 4 | Auth + cloud — Supabase, RLS, ingest, rules puller, server-authoritative rewards, Railway deploy | ✅ shipped |
 | 5 | Privacy — Ghost Mode (hashed app names), full archive export, one-click delete, in-repo privacy/TOS docs | ✅ shipped |
-| 5+ | Private-beta runtime — invite gating, telemetry, iteration | 🚧 next |
-| 3 | py2app `.app` + signed DMG + Homebrew cask + Sparkle auto-update — deferred until public launch ([ADR-0002](docs/adr/0002-defer-signed-packaging-for-beta.md)) | 🚧 queued |
+| 5+ | Private-beta runtime — invite gating, telemetry, iteration | 🚧 queued |
 | 6 | Public launch — landing page, Homebrew cask, signed DMG, announcement | 🚧 queued |
 
 **Until Phase 3 lands**, install is developer-only — clone the repo, install Python deps, `./start.sh`. Non-developer install (DMG / Homebrew cask) is the next priority.
