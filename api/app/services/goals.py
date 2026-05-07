@@ -1,30 +1,83 @@
-"""Goals service — thin wrapper over the local SQLite layer."""
+"""Goals service — Postgres-backed."""
 
 from __future__ import annotations
 
-from agent import database as db
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 
-def list_goals() -> list[dict]:
-    return db.get_goals()
+def list_goals(session: Session) -> list[dict]:
+    rows = session.execute(
+        text(
+            "SELECT id, type, target_minutes, app_name, bedtime_hour, bedtime_minute, active "
+            "FROM goals WHERE active = 1"
+        )
+    ).all()
+    return [
+        {
+            "id": r.id,
+            "type": r.type,
+            "target_minutes": r.target_minutes,
+            "app_name": r.app_name,
+            "bedtime_hour": r.bedtime_hour,
+            "bedtime_minute": r.bedtime_minute,
+            "active": int(r.active or 0),
+        }
+        for r in rows
+    ]
 
 
 def create_goal(
+    session: Session,
     *,
+    user_id: str,
     goal_type: str,
     target_minutes: int | None,
     app_name: str | None,
     bedtime_hour: int | None,
     bedtime_minute: int | None,
 ) -> int:
-    return db.create_goal(
-        goal_type=goal_type,
-        target_minutes=target_minutes,
-        app_name=app_name,
-        bedtime_hour=bedtime_hour,
-        bedtime_minute=bedtime_minute,
+    if goal_type == "daily_total":
+        session.execute(
+            text("UPDATE goals SET active = 0 WHERE active = 1 AND type = 'daily_total'")
+        )
+    elif goal_type == "app_limit" and app_name:
+        session.execute(
+            text(
+                "UPDATE goals SET active = 0 "
+                "WHERE active = 1 AND type = 'app_limit' AND app_name = :app"
+            ),
+            {"app": app_name},
+        )
+    elif goal_type == "bedtime":
+        session.execute(
+            text("UPDATE goals SET active = 0 WHERE active = 1 AND type = 'bedtime'")
+        )
+
+    row = session.execute(
+        text(
+            """
+            INSERT INTO goals
+                (user_id, type, target_minutes, app_name, bedtime_hour, bedtime_minute, active)
+            VALUES
+                (:user_id, :type, :target_minutes, :app_name, :bh, :bm, 1)
+            RETURNING id
+            """
+        ),
+        {
+            "user_id": user_id,
+            "type": goal_type,
+            "target_minutes": target_minutes,
+            "app_name": app_name,
+            "bh": bedtime_hour,
+            "bm": bedtime_minute,
+        },
+    ).one()
+    return int(row[0])
+
+
+def delete_goal(session: Session, *, goal_id: int) -> None:
+    session.execute(
+        text("UPDATE goals SET active = 0 WHERE id = :id"),
+        {"id": goal_id},
     )
-
-
-def delete_goal(goal_id: int) -> None:
-    db.delete_goal(goal_id)
