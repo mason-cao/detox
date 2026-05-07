@@ -1,9 +1,12 @@
 """Verify Supabase Auth JWTs against the project's JWKS.
 
 The api never speaks to Supabase per request — at most every hour the JWKS
-document is fetched once, cached in-memory, and used to verify RS256
-signatures locally. The signed ``sub`` claim is the user's UUID, which the
-rest of the request lifecycle uses to scope row-level security.
+document is fetched once, cached in-memory, and used to verify the user's
+JWT locally. We accept whichever asymmetric algorithm the Supabase project
+publishes (ES256, EdDSA, or RS256) by reading ``alg`` from the matching
+JWK rather than hardcoding one. The signed ``sub`` claim is the user's
+UUID, which the rest of the request lifecycle uses to scope row-level
+security.
 """
 
 from __future__ import annotations
@@ -20,7 +23,7 @@ from .config import Settings
 from .errors import ApiError
 
 _JWKS_TTL_SECONDS: Final = 3600
-_ALG: Final = "RS256"
+_ALLOWED_ALGS: Final = ("RS256", "RS384", "RS512", "ES256", "ES384", "ES512", "EdDSA")
 
 _cache_lock = threading.Lock()
 _cached_jwks: dict | None = None
@@ -52,12 +55,23 @@ def _reset_cache_for_tests() -> None:
         _cached_at = 0.0
 
 
-def _signing_key(token: str, jwks: dict):
+def _signing_key_and_alg(token: str, jwks: dict):
+    """Find the JWK whose ``kid`` matches the token header. Returns (PyJWK, alg).
+
+    PyJWT's ``PyJWK`` wrapper handles RSA / EC / OKP key materials uniformly,
+    so we don't have to branch on ``kty`` here. We do read ``alg`` from the
+    JWK so ``jwt.decode`` is told the right algorithm; if the JWK omits it,
+    we fall back to the token header's ``alg`` (still constrained to the
+    asymmetric whitelist below).
+    """
     header = jwt.get_unverified_header(token)
     kid = header.get("kid")
-    for key in jwks.get("keys", []):
-        if key.get("kid") == kid:
-            return jwt.algorithms.RSAAlgorithm.from_jwk(key)
+    for jwk in jwks.get("keys", []):
+        if jwk.get("kid") == kid:
+            alg = jwk.get("alg") or header.get("alg")
+            if alg not in _ALLOWED_ALGS:
+                raise ApiError(f"unsupported alg: {alg}", status_code=401)
+            return jwt.PyJWK(jwk).key, alg
     raise ApiError("unknown signing key", status_code=401)
 
 
@@ -72,12 +86,12 @@ def resolve_supabase_user_id(request: Request) -> str:
     token = header.split(" ", 1)[1].strip()
 
     jwks = _get_jwks(settings.supabase_jwt_jwks_url)
-    key = _signing_key(token, jwks)
+    key, alg = _signing_key_and_alg(token, jwks)
     try:
         claims = jwt.decode(
             token,
             key=key,
-            algorithms=[_ALG],
+            algorithms=[alg],
             audience=settings.supabase_jwt_audience,
         )
     except jwt.PyJWTError as exc:
