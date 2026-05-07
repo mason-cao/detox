@@ -62,11 +62,30 @@ async def changelog() -> list[dict]:
     return [dict(entry) for entry in CHANGELOG_ENTRIES]
 
 
-@router.get("/status", summary="Cloud agent status (always running)")
-async def status() -> dict[str, object]:
+_MONITOR_FRESH_SECONDS = 15 * 60  # one /v1/ingest cycle is 5 min, allow 3×
+
+
+@router.get("/status", summary="Aggregate monitor status across the user's devices")
+async def status(session: Session = Depends(db_session)) -> dict[str, object]:
+    """Returns ``monitor_running`` based on whether any paired device has
+    posted to ``/v1/ingest`` recently. The agent flushes every 5 min, so
+    a 15-min freshness window covers a missed cycle without false alarms.
+    """
+    row = session.execute(
+        text(
+            "SELECT MAX(last_sync_at) AS last_sync FROM devices"
+        )
+    ).one_or_none()
+
+    last_sync = row.last_sync if row and row.last_sync else None
+    is_fresh = False
+    if last_sync is not None:
+        delta = datetime.now(tz=last_sync.tzinfo).timestamp() - last_sync.timestamp()
+        is_fresh = delta < _MONITOR_FRESH_SECONDS
+
     return {
-        "running": True,
-        "paused": False,
+        "monitor_running": is_fresh,
+        "last_sync_at": last_sync.isoformat() if last_sync else None,
         "last_poll_at": int(time.time()),
         "permission_denied": False,
     }
