@@ -1,68 +1,51 @@
-# Detox — Screen Time Tracker for macOS
+# Detox — local screen-time tracker, optional cloud dashboard
 
-Detox is a macOS screen time tracker that monitors your app usage in real time, visualizes your habits with interactive charts, and helps you stay focused by blocking distracting apps. With the average person spending over 7 hours daily on screens and losing an estimated 2.5 hours of productivity to digital distraction, protecting focus is a critical challenge. This widespread issue persists because desktop work environments lack native screen time tools. Attention is easily hijacked by constant context switching and mindless browsing, with no immediate feedback loop or active friction to help users maintain their focus.
+Detox is a macOS screen-time tracker that polls your frontmost app every 2 seconds, stores sessions locally, visualizes your habits as a pixel-art isle, and enforces blocks on-device with `pkill -x` + macOS notifications. It runs **entirely on your Mac** by default. Pair it to the optional hosted dashboard and you can also view your data from any browser, anywhere.
 
 ![Python](https://img.shields.io/badge/Python-3.9+-3776ab?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi)
 ![Flask](https://img.shields.io/badge/Flask-2.0+-000000?logo=flask)
-![macOS](https://img.shields.io/badge/macOS-compatible-999999?logo=apple)
+![macOS](https://img.shields.io/badge/macOS-only-999999?logo=apple)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 ---
 
-## Features
+## What you get
 
-### Detox Isle
+### The Isle dashboard
+
 - A real isometric SVG world replaces the dashboard grid. Every tracked app is a resident, every restriction is a law, every building is a destination.
-- The frontmost application's resident glows in real time (3 s frontend poll, 2 s server cache; ~5 s worst-case staleness).
-- Residents walk slow 3-waypoint loops between buildings on a 6 fps walk-cycle ticker; banished apps sit offshore.
-- Day / night light pass driven by the system clock, with a soft dim and lantern glow above each building at dusk and night.
-- Navigation is the world: click a building to enter its tab. A small compass HUD top-right lists the eight destinations and highlights the current room.
-- Sub-tabs gain a diegetic "ISLE" door icon and `Esc` returns to the Isle from anywhere.
+- **Drag-to-pan** — click anywhere on the ground or sky and drag the camera. Touch works on mobile/iPad. Double-click re-centers.
+- **Sophisticated terrain** — four green tile variants distributed by deterministic tile hash (no checkerboard), south-east shadow wedge per tile for fake elevation, scattered meadow decor (daisies, pebbles, grass tufts, bushes) on a hash-seeded distribution that skips building footprints.
+- **Detailed buildings** — every building has iso depth (right-side wall panel + roof side slope), a base-shadow ellipse that fades when you hover, mullioned windows that light up at night, and ornaments that read its purpose: a clock + weather vane on Town Hall, ledger sign on Registry, striped awning + produce baskets on Market, smoking chimney on Chronicle, scroll inset on Charter, chalk piece on the Rule Board, postcard + mailbox flag on Postcards, arched stained glass on Mayor's Study.
+- **Day/night light pass** driven by the system clock. Soft dim and warm lantern glow above each building at dusk.
+- **Live frontmost glow** on the resident representing your current app (3 s frontend poll, 2 s server cache).
+- **Walking residents** wander 3-waypoint loops between buildings on a 6 fps walk-cycle ticker. Banished apps sit offshore.
+- **Draggable compass** in the corner — the room list is a movable HUD. Drag its title bar anywhere on screen, double-click the title to reset. Position persists in `localStorage`.
 
 ### Tab signature animations
+
 - **Charter** — wax seal stamps onto the scroll on goal save.
 - **Rule Board** — chalk write left-to-right when a rule is added (with a dust burst), chalk wipe right-to-left when one is lifted.
 - **Postcards** — preview slides in with overshoot, wax seal stamps the corner.
 - **Market** — coin floats from the bought stall card up to the HUD currency badge.
-- **Registry** — parchment page-turn between filter views (entering / leaving search).
+- **Registry** — parchment page-turn between filter views.
 - **Chronicle** — quill sweeps across the bar chart in sync with Chart.js bar growth.
 - **Mayor's Study** — candle flame flickers on dark-mode toggle, smoke puff when going dark.
-- Every animation has a no-motion equivalent, gated on `prefers-reduced-motion: reduce`.
+- Every animation has a no-motion equivalent gated on `prefers-reduced-motion: reduce`.
 
-### Residents Registry
-- Every tracked app you've used and how long, by day.
-- Search and filter; quick controls to limit, block, or categorize an app inline.
-- Autocomplete from tracked apps and installed macOS apps.
-- Click any resident for a detailed view with hourly and daily charts.
+### Tracking + intervention
 
-### Chronicle (Statistics)
-**Daily:** pickups count, checking frequency, longest detox, longest continuous use, first / last pickup, most used app.
-**Weekly:** daily average, weekly total, shortest / longest day, daily breakdown chart with average line.
+- **Residents Registry** (Apps tab) — every tracked app you've used and how long, by day. Search, filter, inline limit/block/categorize. Autocomplete pulls from tracked apps + installed `/Applications`.
+- **Chronicle** (Statistics) — pickups count, checking frequency, longest detox, longest continuous use, first/last pickup, most-used app. Daily + weekly views with Chart.js.
+- **Rule Board** (App Blocker) — block individual apps always or after a daily time limit, block by category, or run **Focus Mode** (whitelist-only). Blocked apps are force-quit (`pkill -x`) with a macOS notification.
+- **Charter** (Goals) — daily total decree, per-app limits, bedtime bell.
+- **Market** — closed-economy reward loop. Detoxed minutes earn ☀ Sunlight; streaks earn ✦ Starshards. Spend on visual upgrades to the Isle. 100% refund within 24 h, 50% after. Hall of Honor records milestones.
+- **Postcards** — generate a 1080×1920 PNG of the day's stats to share. (Local agent only — cloud renders the rest of the dashboard but card generation needs Pillow on the device.)
+- **Mayor's Study** (Settings) — theme toggle, idle timeout, CSV/JSON export, categories, keyboard shortcuts.
 
-### Rule Board (App Blocker)
-- Block individual apps always or after a daily time limit.
-- Block by category (Social, Entertainment, etc.).
-- Focus Mode — block everything except whitelisted apps. A Full Lockdown banner stays visible while Focus Mode is active.
-- Blocked apps are force-quit (`pkill -x`) with a macOS notification explaining why.
+### Keyboard shortcuts
 
-### Charter (Goals)
-- Daily screen-time decree with notification when you hit it.
-- Per-resident decrees (e.g. max 30 min of Instagram / day).
-- Bedtime bell with reminder notification.
-
-### Market (Rewards Ledger)
-- Closed-economy reward loop. Detoxed minutes earn ☀ Sunlight; streaks and milestones earn ✦ Starshards.
-- Stalls let you spend what you've earned. 100% refund within 24 h, 50% after.
-- Hall of Honor records milestones by month.
-
-### Postcards
-- Generate a personalized PNG postcard with the day's stats.
-- Instagram-story format (1080×1920). Download to share.
-
-### Mayor's Study (Settings)
-- Toggle theme (with the candle flicker), tracking idle timeout, data export (CSV / JSON), categories, keyboard shortcuts, about.
-
-### Keyboard Shortcuts
 | Key | Action |
 |-----|--------|
 | `1`–`8` | Jump to tab (Isle, Residents, Chronicle, Charter, Rule Board, Market, Postcards, Study) |
@@ -74,190 +57,286 @@ Detox is a macOS screen time tracker that monitors your app usage in real time, 
 
 ---
 
-## Install (DMG)
+## Two ways to run it
 
-Download the latest macOS build:
+### A. Local-only (default)
 
-[Download Detox 1.0.0](https://detox.app/releases/Detox-1.0.0.dmg)
-
-Open the DMG, then drag `Detox.app` into `/Applications`.
-
-On first launch, macOS needs Accessibility permission so Detox can read the frontmost app:
-
-**System Settings -> Privacy & Security -> Accessibility -> enable Detox**
-
-After launch:
-
-1. Click the Detox lantern in the menu bar.
-2. Toggle **Launch at Login** if you want Detox to start automatically.
-3. Choose **Open Dashboard** to view [http://localhost:5050](http://localhost:5050).
-
-Sparkle keeps the app patched in place, so manual update downloads are not needed after installation.
-
-### Install (Homebrew)
-
-```bash
-brew tap mason-cao/detox
-brew install --cask detox
-```
-
-The cask formula is a follow-up to the DMG release path. Until it lands, use the DMG or the source install below.
-
----
-
-## Dev (from source)
-
-### Requirements
-- macOS (Apple Silicon or Intel)
-- Python 3.9+
-
-Install dependencies once from the repo root:
+The agent + Flask dashboard run entirely on your Mac. Data lives in `data/screentime.db` and never leaves the machine. This is the privacy-first default and is enough on its own.
 
 ```bash
 python3 -m pip install -r requirements.txt
+./start.sh
 ```
 
-### Menu-Bar App
+`start.sh` initializes the database, spawns the monitor in the background, starts the Flask server, and opens `http://localhost:5050` in your browser. Use `./stop.sh` to shut everything down.
+
+You can also run the menu-bar app instead of the headless launcher:
 
 ```bash
 python3 -m agent
 ```
 
-This starts the Detox menu-bar app, monitor, and local dashboard server.
+This adds the Detox lantern (🔆) to your menu bar with **Pause tracking**, **Open Dashboard**, **Open Logs**, **Launch at Login**, **Pair this device**, **Sync now**, and **Sign out** items.
 
-### Headless Run
+### B. Local agent + hosted dashboard (optional)
 
-```bash
-./start.sh
-```
+You can also pair the local agent to a hosted FastAPI service so any browser signed into your Supabase account sees the same data. The Mac still does all collection — the cloud is the storage + dashboard layer for **your** devices, not a multi-user product.
 
-That's it. The script handles everything:
-1. Installs dependencies from `requirements.txt`
-2. Initializes the database
-3. Starts the background monitor
-4. Launches the dashboard at [http://localhost:5050](http://localhost:5050)
-5. Opens your browser automatically
+After pairing, every browser window signed into your account at `https://<your-railway-app>.up.railway.app` shows the live Isle, mirroring whatever your Mac is tracking. You still get Focus Mode and `pkill`-based enforcement on the Mac; the cloud is read-mostly (rule edits flow cloud → agent within 30 s via the rules puller).
 
-### First Run — Accessibility Permission
+To stand up your own cloud instance, see [`infra/railway/README.md`](infra/railway/README.md) and [`infra/phase-4-smoke.md`](infra/phase-4-smoke.md). The short version:
 
-The monitor needs to detect which app is in the foreground. macOS will prompt you to grant Accessibility access:
+1. Create a Supabase project. Run the alembic migrations against its Postgres.
+2. Create a Railway project, add a Redis add-on, set the Supabase + device-JWT env vars, `railway up`.
+3. From the deployed web app, hit `/pair.html` to mint a 6-character code.
+4. On your Mac, run `./scripts/pair-cloud.sh` and paste the code. The agent stores a long-lived JWT in the macOS Keychain and starts pushing to `/v1/ingest` every 5 min.
 
-**System Settings -> Privacy & Security -> Accessibility -> Toggle on Terminal** (or whichever terminal app you use)
+The agent's pairing CLI tells you the pair page URL based on the `DETOX_CLOUD_API_BASE` env var. The launcher script defaults to the bundled URL — edit it for your own deployment.
 
-### Stop
+### First-run permissions (both modes)
 
-Press `Ctrl+C` in the terminal, or run:
+The monitor reads the frontmost app via `osascript`. macOS prompts on first run:
 
-```bash
-./stop.sh
-```
+**System Settings → Privacy & Security → Accessibility → enable Terminal** (or whichever terminal app spawns the agent).
+
+Without this, the agent runs but records nothing, and the menu-bar icon flips to 🚫.
 
 ---
 
-## How It Works
+## How it works
+
+### Local stack
 
 ```
-┌─────────────┐     osascript      ┌──────────────┐
-│   macOS      │ ◄──(every 2s)───  │   Monitor    │
-│  (frontmost  │                   │  (daemon)    │
-│    app)      │                   └──────┬───────┘
-└─────────────┘                          │
-                                         │ writes
-                                         ▼
-                                  ┌──────────────┐
-                                  │   SQLite DB  │
-                                  │  (WAL mode)  │
-                                  └──────┬───────┘
-                                         │ reads
-                                         ▼
-┌─────────────┐    REST API       ┌──────────────┐
-│  Browser     │ ◄──────────────  │  Flask       │
-│  Dashboard   │                  │  Server      │
-└─────────────┘                   └──────────────┘
+┌──────────────┐    osascript       ┌────────────────┐
+│ macOS         │ ◄──(every 2s)──── │ Monitor daemon │
+│ frontmost app │                   │ (agent/)       │
+└──────────────┘                    └────────┬───────┘
+                                             │ writes
+                                             ▼
+                                    ┌────────────────┐
+                                    │ SQLite (WAL)   │
+                                    │ data/          │
+                                    └────────┬───────┘
+                                             │ reads
+                                             ▼
+┌──────────────┐    same-origin     ┌────────────────┐
+│ Browser      │ ◄──/api/* + web──  │ Flask          │
+│ localhost    │                    │ (agent/server) │
+└──────────────┘                    └────────────────┘
 ```
 
-- **Monitor** — A background Python process polls the frontmost app every 2 seconds using `osascript`. It records usage, tracks sessions, detects pickups (screen unlock → app use), ignores idle periods when configured, enforces blocks, and checks goals.
-- **Database** — SQLite with WAL mode for safe concurrent reads/writes. Stores raw usage observations, aggregated sessions, pickups, goals, blocks, and settings.
-- **Server** — Flask serves the REST API and the static `web/` bundle. All API routes are wrapped by `@api_route` for 500-on-exception + 400-on-invalid-date. `GET /api/dashboard/now` returns the latest frontmost app, cached 2 s in module memory and polled every 3 s by the Isle.
-- **Web** — Vanilla HTML / CSS / JS, no build step, no Node. Inline SVG runs the iso world (sky, weather, ground, buildings, residents, effects). Chart.js 4.4.1 from CDN powers Chronicle. Press Start 2P / VT323 / Inter from Google Fonts. Resident sprites are 32×32 CC0 Kenney 1-Bit Pack atlases at `web/assets/sprites/residents/` (≤ 64 KB total).
+- **Monitor** polls `osascript` every 2 s, records usage, detects pickups (screen unlock → app use), enforces blocks, checks goals.
+- **SQLite** in WAL mode — raw usage observations, sessions, pickups, goals, blocks, settings, sync queue, rewards ledger.
+- **Flask** serves the REST API and the static `web/` bundle on `127.0.0.1:5050`. Every route is wrapped by `@api_route` (500-on-exception, 400-on-invalid-date).
+
+### Hybrid + cloud (when paired)
+
+```
+USER'S MAC                              RAILWAY                 SUPABASE
+┌───────────────────────────┐    ┌─────────────────────┐    ┌────────────┐
+│ Monitor (2s poll)         │    │ FastAPI             │    │ Postgres   │
+│ ├─ SQLite (sessions, q)   │    │ ├─ Supabase JWT vfy │    │ + Auth     │
+│ ├─ sync.flush /5min       │ JWT├─ /v1/ingest         │ DB ├─ users    │
+│ └─ rules.pull /30s        │◄──►│ ├─ /v1/rules (etag) │◄──►│ ├─ devices │
+│                           │    │ ├─ /v1/rewards/*    │    │ ├─ usage   │
+│ Local Flask still serves  │    │ ├─ /api/* (Postgres)│    │ ├─ rewards │
+│ the same dashboard at     │    │ └─ web/ static      │    │ └─ ...     │
+│ localhost:5050.           │    │                     │    └────────────┘
+│                           │    │ Redis (rate limit + │
+│                           │    │ rules etag cache)   │
+└───────────────────────────┘    └─────────────────────┘
+                                          ▲
+                                          │  Supabase JWT
+                                 ┌────────┴────────┐
+                                 │ Browser at      │
+                                 │ <railway-app>   │
+                                 └─────────────────┘
+```
+
+- **Agent → cloud:** `agent.sync.SyncPusher` flushes `sync_queue` to `POST /v1/ingest` every 5 min. `agent.rules.RulesPuller` pulls `/v1/rules` every 30 s with `If-None-Match` (Redis-cached etag, busted on rule writes). The blocker reads from `cloud_*_mirror` SQLite tables seeded by the puller, so cloud rules become local restrictions.
+- **JWT auth:** Supabase signs user JWTs (ES256). The api fetches the JWKS once per hour, caches it, and verifies locally. Device JWTs are HS256 with a server secret, issued by `POST /v1/devices/pair-claim` and stored in the macOS Keychain via `keyring`.
+- **RLS:** every Postgres query runs inside a transaction that has executed `SET LOCAL app.current_user_id = '<uuid>'`. Tenants cannot read each other's rows even with a hand-crafted query.
+- **Rate limit:** per-device 60 ingest req/min via `INCR rl:ingest:{device}:{minute}` on Redis with a 70 s expiry.
 
 ---
 
-## Project Structure
+## Project layout
 
 ```
 detox/
-├── start.sh              # One-command launcher
-├── stop.sh               # Clean shutdown
-├── requirements.txt      # Flask, Pillow, rumps, PyObjC
-├── agent/                # On-device macOS daemon (osascript, pkill)
-│   ├── server.py         # Flask API + static file serving + error handling
-│   ├── monitor.py        # Background app tracking daemon
-│   ├── database.py       # SQLite schema + query helpers + data export
-│   ├── blocker.py        # Force-quit blocked apps
-│   ├── notifier.py       # macOS notification wrapper
-│   ├── cards.py          # Shareable card PNG generation
-│   └── config.py         # Paths, defaults, categories
-├── web/                  # Static dashboard (vanilla HTML/CSS/JS, no build)
-│   ├── index.html        # SPA shell with HUD, help overlay, toast container
-│   ├── assets/sprites/   # CC0 resident atlases (32×32 walk strips)
+├── start.sh / stop.sh           # local-mode launchers (Flask + monitor + browser)
+├── requirements.txt             # Flask, Pillow, rumps, PyObjC, keyring, requests
+├── railway.toml                 # Railway service config (build from api/Dockerfile)
+├── scripts/
+│   └── pair-cloud.sh            # one-shot: run agent.cli.pair against Railway URL
+├── agent/                       # On-device macOS daemon
+│   ├── monitor.py               # 2s frontmost-app poll + pickups + bedtime + blocks
+│   ├── server.py                # Flask: /api/* (SQLite) + serves web/ + /config.js
+│   ├── database.py              # SQLite schema, queries, sync_queue, rewards rollup
+│   ├── blocker.py               # `pkill -x` + notification on block
+│   ├── notifier.py              # macOS Notification Center via osascript
+│   ├── cards.py                 # Pillow PNG postcard generator (1080×1920)
+│   ├── menubar.py               # rumps menu-bar app, pair/sync/sign-out
+│   ├── launch_agent.py          # Launch-at-Login plist install/uninstall
+│   ├── keychain.py              # macOS Keychain JWT storage (com.detox.agent)
+│   ├── cloud.py                 # requests.Session w/ retry + bearer injection
+│   ├── sync.py                  # SyncPusher: drains sync_queue → /v1/ingest
+│   ├── rules.py                 # RulesPuller: /v1/rules with If-None-Match → mirror tables
+│   ├── config.py                # paths, defaults, categories, market catalog
+│   ├── cli/pair.py              # python3 -m agent.cli.pair
+│   └── tests/                   # pytest sweep over the agent
+├── api/                         # Hosted FastAPI service (Railway target)
+│   ├── Dockerfile               # Two-stage Python 3.11-slim image
+│   ├── alembic.ini + migrations/  # Postgres schema (4 migrations)
+│   ├── pyproject.toml           # fastapi, uvicorn, sqlalchemy, alembic, psycopg, pyjwt, redis
+│   ├── app/
+│   │   ├── main.py              # FastAPI factory, mounts web/ at /, /config.js
+│   │   ├── config.py            # Settings dataclass (env-driven)
+│   │   ├── auth.py              # supabase + device JWT dispatch
+│   │   ├── supabase_auth.py     # JWKS-cached verifier (ES256/RS256/EdDSA)
+│   │   ├── device_auth.py       # HS256 issuer/verifier for paired devices
+│   │   ├── db.py                # SQLAlchemy engine + per-request RLS GUC
+│   │   ├── redis_client.py      # pool + rate-limit + etag cache helpers
+│   │   ├── routers/             # /v1/* and Postgres-backed /api/*
+│   │   │   ├── ingest.py        # /v1/ingest with idempotent inserts + rate limit
+│   │   │   ├── rules.py         # /v1/rules with etag cache + 304
+│   │   │   ├── devices.py       # /v1/devices/{pair-init, pair-claim, heartbeat}
+│   │   │   ├── rewards.py       # /v1/rewards/* and /v1/milestones
+│   │   │   ├── dashboard.py + apps.py + blocks.py + goals.py + settings.py
+│   │   │   └── compat.py        # /api/dashboard/now, /api/changelog, /api/stats/*, /api/status, /api/market/*
+│   │   └── services/            # business logic, all Postgres
+│   └── tests/                   # pytest contract + auth + ingest + rules + rewards
+├── web/                         # Vanilla HTML/CSS/JS — served by both Flask + FastAPI
+│   ├── index.html               # SPA shell, loads /config.js + auth.js + cloud.js
+│   ├── sign-in.html             # Supabase magic-link entry
+│   ├── pair.html                # Generates pairing code, polls for claim
 │   ├── css/
-│   │   ├── tokens.css    # Dawn Cove palette + spacing scale
-│   │   ├── pixel-ui.css  # Pixel buttons, panels, modals
-│   │   ├── style.css     # Base + legacy view styles
-│   │   ├── hud.css       # Top HUD bar (currencies, theme, help)
-│   │   ├── isle.css      # Iso world stage, day/night dim, lanterns
-│   │   ├── compass.css   # Compass HUD (top-right room list)
-│   │   ├── residents.css # Sprite layer + glow halo
-│   │   ├── effects.css   # Tab signature keyframes (seal, chalk, coin, page-turn, postcard, quill, candle)
-│   │   └── views.css     # Per-tab page styles
-│   └── js/
-│       ├── app.js        # Router, API client, theme, toasts, keyboard shortcuts, back-to-Isle helper
-│       ├── hud.js        # Top HUD logic + help / tour overlay
-│       ├── iso.js        # Tile projection (tileToScreen / screenToTile, world bounds)
-│       ├── world.js      # SVG scaffold, sky, weather, ground tiles, day/night, lanterns
-│       ├── buildings.js  # Programmatic SVG generators for the 8 buildings
-│       ├── compass.js    # Compass HUD (8 destinations, current-room highlight)
-│       ├── effects.js    # Reusable primitives — glowHalo, waxSeal, chalkDust, currencyFloat, pageTurn, slamIn
-│       ├── residents.js  # Sprite atlases, archetype mapping, walk ticker, frontmost-glow poll
-│       ├── isle.js       # Isle dashboard orchestration (mounts world + residents)
-│       ├── dashboard.js  # Daily / weekly summary tiles
-│       ├── apps.js       # Residents Registry — search, filter, detail view, page-turn
-│       ├── stats.js      # Chronicle — daily + weekly stats, Chart.js + quill sweep
-│       ├── goals.js      # Charter — goal management + wax-seal save
-│       ├── blocker.js    # Rule Board — block / whitelist + chalk write/erase
-│       ├── market.js     # Market — stalls, inventory, refunds, coin float
-│       ├── cards.js      # Postcards — slide-in preview + stamp
-│       └── settings.js   # Mayor's Study — theme, tracking, export, categories, shortcuts
-├── api/                  # Reserved for hosted FastAPI tier (Phase 2+)
-├── infra/                # docker-compose.dev.yml + future deploy configs
+│   │   ├── tokens.css           # Dawn Cove palette + spacing scale
+│   │   ├── pixel-ui.css         # Pixel buttons, panels, modals
+│   │   ├── isle.css             # Iso world stage, tiles, decor, vignette, drag cursors
+│   │   ├── compass.css          # Draggable compass HUD
+│   │   ├── hud.css, residents.css, effects.css, views.css, style.css
+│   ├── js/
+│   │   ├── auth.js              # Supabase client + session manager (with local-dev shim)
+│   │   ├── cloud.js             # auth-aware fetch wrapper
+│   │   ├── pair.js              # pair page logic
+│   │   ├── app.js               # router, API client, theme, toasts, shortcuts
+│   │   ├── iso.js               # tile projection + tile hash + shadow wedge
+│   │   ├── world.js             # SVG scaffold, sky, weather, panZ, ground decor
+│   │   ├── buildings.js         # 8 building generators with iso depth
+│   │   ├── compass.js           # draggable compass HUD
+│   │   ├── effects.js           # waxSeal, chalkDust, currencyFloat, pageTurn, slamIn
+│   │   ├── residents.js         # sprite atlases, walk ticker, frontmost glow
+│   │   ├── isle.js              # mounts world + residents + signboards
+│   │   └── dashboard.js + apps.js + stats.js + goals.js + blocker.js + market.js + cards.js + settings.js
+├── infra/
+│   ├── docker-compose.dev.yml   # Local Postgres + Redis for dev
+│   ├── railway/README.md        # Runbook: project init, env wiring, deploy, alembic
+│   ├── cloudflare/              # Optional Pages config (skipped in current deploy)
+│   ├── phase-4-smoke.md         # First-deploy smoke checklist
+│   └── build/                   # py2app + Sparkle scaffolding (Phase 3)
 ├── docs/
-│   ├── specs/            # Design specs
-│   ├── plans/            # Implementation plans (one per phase)
-│   └── adr/              # Architecture decision records
-└── data/                 # Created at runtime (gitignored)
-    ├── screentime.db
-    └── cards/
+│   ├── specs/                   # Design specs (source of truth for the redesign)
+│   ├── plans/                   # Implementation plans, one per phase
+│   └── adr/                     # Architecture decision records
+└── data/                        # Runtime, gitignored
+    ├── screentime.db            # SQLite WAL
+    ├── monitor.pid              # PID file (singleton guard)
+    └── cards/                   # Generated postcard PNGs
 ```
 
 ---
 
-## Tech Stack
+## Tech stack
 
 | Component | Technology |
-|-----------|-----------|
-| Agent | Python 3.9+, Flask, rumps |
-| Database | SQLite (WAL mode) |
-| Web | Vanilla HTML / CSS / JS — no bundler, no Node |
+|---|---|
+| Local agent | Python 3.9+, Flask, rumps, Pillow |
+| Local DB | SQLite (WAL mode) |
+| Cloud api | FastAPI (Python 3.11), uvicorn, SQLAlchemy 2 |
+| Cloud auth | Supabase Auth (magic-link + Google), JWKS-verified ES256 JWTs |
+| Cloud DB | Supabase Postgres 17 with RLS scoped via `app.current_user_id` GUC |
+| Cloud cache | Redis (Railway add-on) — rate limit + rules etag |
+| Hosting | Railway (api + Redis), Supabase (Postgres + Auth) |
+| Web | Vanilla HTML/CSS/JS — no bundler, no Node |
 | Charts | Chart.js 4.4.1 (CDN) |
 | Fonts | Press Start 2P, VT323, Inter (Google Fonts) |
 | Sprites | CC0 Kenney 1-Bit Pack atlases (≤ 64 KB) |
-| App Detection | `osascript` (AppleScript) |
-| Notifications | macOS Notification Center |
-| Card Generation | Pillow (PIL) |
-| App Blocking | `pkill -x` |
+| App detection | `osascript` (AppleScript) — macOS only |
+| App blocking | `pkill -x` (process executable name match) |
+| Notifications | macOS Notification Center via `osascript` |
+| Postcard PNGs | Pillow (PIL) — local agent only |
 
-**Local data.** The tracker, database, API, and blocking logic run locally, and your screen-time data never leaves your machine. The dashboard currently loads Chart.js and Inter font assets from public CDNs unless you vendor those files locally.
+---
+
+## Status (May 2026)
+
+| Phase | What | State |
+|---|---|---|
+| 0 | Monorepo reorg (`agent/`, `api/`, `web/`, `infra/`) | ✅ shipped |
+| 1 | Detox Isle redesign (HUD, residents, world, tab animations) | ✅ shipped |
+| 2 | FastAPI port + Postgres scaffolding | ✅ shipped |
+| 3 | py2app signed `.app` + DMG + Homebrew cask + Sparkle auto-update | 🚧 queued |
+| 4 | Auth + cloud — Supabase, RLS, ingest, rules puller, server-authoritative rewards, Railway deploy | ✅ shipped |
+| 5 | Ghost mode (hashed app names), private-beta gating, polish | 🚧 queued |
+| 6 | Public launch | 🚧 queued |
+
+**Until Phase 3 lands**, install is developer-only — clone the repo, install Python deps, `./start.sh`. Non-developer install (DMG / Homebrew cask) is the next priority.
+
+**Cloud is single-tenant per deployment** — anyone signing in with a Supabase magic link gets routed to their own user row. There's no multi-user gating; if you stand up an instance and someone has the URL + a Supabase email, they get a (separate) account. Phase 5 adds invite-only gating.
+
+---
+
+## Tests
+
+```bash
+python3 -m pytest agent/tests api/tests -q
+```
+
+The api tests skip Postgres- and Redis-marked cases unless `DETOX_TEST_DATABASE_URL` and `DETOX_TEST_REDIS_URL` point at reachable instances. The agent tests run pure-Python against a tmp SQLite file. Visual / restriction behavior (real `pkill`, real `osascript`, real browser drag) is verified manually.
+
+---
+
+## Local dev quick reference
+
+```bash
+# Agent (menu bar + Flask + monitor)
+python3 -m agent
+
+# Headless (Flask + monitor + browser)
+./start.sh
+./stop.sh
+
+# Just the monitor (foreground)
+python3 -m agent.monitor
+
+# Just the Flask server (foreground)
+python3 -m agent.server
+
+# Re-init the SQLite schema
+python3 -c "from agent.database import init_db; init_db()"
+
+# Pair against a deployed cloud
+./scripts/pair-cloud.sh
+
+# Run the FastAPI cloud locally against docker-compose Postgres + Redis
+docker compose -f infra/docker-compose.dev.yml up -d
+DETOX_DATABASE_URL=postgresql+psycopg://detox:detox@localhost:5432/detox \
+DETOX_REDIS_URL=redis://localhost:6379/0 \
+DETOX_AUTH_MODE=local DETOX_DEV_TOKEN=dev DETOX_DEV_USER_ID=$(uuidgen) \
+DETOX_DEVICE_JWT_SECRET=$(openssl rand -hex 32) \
+  python3 -m uvicorn api.app.main:app --reload --port 8080
+```
+
+---
+
+## Privacy
+
+- **Local-only mode** — no network calls. App names, timestamps, pickups, sessions, rewards all stay in `data/screentime.db`. Nothing is sent anywhere.
+- **Paired mode** — your local agent posts to your own Railway/Supabase project. The api never speaks to a third party except Supabase (for JWT JWKS, on a 1 h cache). CDN dependencies in the web bundle (Chart.js, Google Fonts) load directly from the public CDN; vendor them locally if you want zero third-party requests.
+- **Ghost Mode** (Phase 5) will hash app names with an on-device salt before they ever leave the Mac, so the cloud Postgres only sees opaque hashes. Today, app names ride in cleartext to your own Postgres.
+- **No telemetry, no analytics, no error reporting service**. Errors surface in the local log (`data/monitor.log`) and Railway's deploy logs (api).
 
 ---
 

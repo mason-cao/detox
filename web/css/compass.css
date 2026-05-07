@@ -21,7 +21,12 @@
     letter-spacing: 0.5px;
     padding: var(--sp-2) var(--sp-2) var(--sp-1);
     border-bottom: 1px solid rgba(42, 30, 42, 0.2);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
 }
+.compass.is-dragging { box-shadow: 0 0 0 2px var(--dc-ink), 0 8px 0 0 rgba(42, 30, 42, 0.28); }
+.compass.is-dragging .compass__title { cursor: grabbing; }
 
 .compass__list {
     list-style: none;
