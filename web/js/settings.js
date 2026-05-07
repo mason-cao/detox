@@ -120,6 +120,28 @@ const Settings = {
                             <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Settings.exportData('csv'))">EXPORT CSV</button>
                             <button class="pixel-button" onclick="App.runAction(() => Settings.exportData('json'))">EXPORT JSON</button>
                         </div>
+                        <div class="study-row">
+                            <div>
+                                <div class="study-row__label">FULL ARCHIVE</div>
+                                <div class="study-row__detail">Download every row stored for this account in one JSON file.</div>
+                            </div>
+                            <button class="pixel-button" onclick="App.runAction(() => Settings.exportFull())">DOWNLOAD ARCHIVE</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="study-section">
+                    <div class="study-section__header">
+                        <h2 class="study-section__title">DANGER ZONE</h2>
+                    </div>
+                    <div class="study-panel">
+                        <div class="study-row">
+                            <div>
+                                <div class="study-row__label">DELETE ALL DATA</div>
+                                <div class="study-row__detail">Wipe every session, decree, and reward this account holds. This cannot be undone.</div>
+                            </div>
+                            <button class="pixel-button pixel-button--danger" onclick="App.runAction(() => Settings.confirmDelete())">DELETE EVERYTHING</button>
+                        </div>
                     </div>
                 </div>
 
@@ -219,6 +241,47 @@ const Settings = {
             a.click();
             App.toast('JSON download started', 'success');
         }
+    },
+
+    async exportFull() {
+        const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        const a = document.createElement('a');
+        a.href = '/api/export/full';
+        a.download = `detox-full-export-${stamp}.json`;
+        a.click();
+        App.toast('Archive download started', 'success');
+    },
+
+    async confirmDelete() {
+        App.openModal(`
+            <div class="pixel-modal">
+                <h2 class="pixel-modal__title">DELETE EVERYTHING?</h2>
+                <p class="rule-board__copy">Every session, decree, reward, and inventory item tied to this account will be erased. The Mayor cannot recover them. Type <code>DELETE</code> below to proceed.</p>
+                <div class="pixel-modal__group">
+                    <label class="pixel-modal__label">CONFIRMATION</label>
+                    <input class="pixel-modal__input" type="text" id="deleteConfirm" placeholder="DELETE" autocomplete="off">
+                </div>
+                <div class="pixel-modal__actions">
+                    <button class="pixel-button" onclick="this.closest('.modal-overlay').remove()">CANCEL</button>
+                    <button class="pixel-button pixel-button--danger" onclick="App.runAction(() => Settings.runDelete())">DELETE</button>
+                </div>
+            </div>
+        `, '#deleteConfirm');
+    },
+
+    async runDelete() {
+        const value = document.getElementById('deleteConfirm').value.trim();
+        if (value !== 'DELETE') {
+            App.toast('Type DELETE exactly to proceed', 'warning');
+            return;
+        }
+        await App.api('/api/data/delete', {
+            method: 'POST',
+            body: { confirmation: 'DELETE' },
+        });
+        document.querySelector('.modal-overlay')?.remove();
+        App.toast('All data wiped. Reloading.', 'success');
+        setTimeout(() => window.location.reload(), 800);
     },
 
     async toggleGhostMode(enabled) {

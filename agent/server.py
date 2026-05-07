@@ -672,6 +672,33 @@ def export_json():
     return jsonify({"start": start, "end": end, "data": rows})
 
 
+@app.route('/api/export/full')
+@api_route
+def export_full():
+    """Download every user-owned row in the local DB as a single JSON dump."""
+    payload = db.export_all()
+    payload["exported_at"] = datetime.now().isoformat(timespec="seconds")
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    return jsonify(payload), 200, {
+        'Content-Disposition': f'attachment; filename=detox-full-export-{timestamp}.json'
+    }
+
+
+@app.route('/api/data/delete', methods=['POST'])
+@api_route
+def delete_all_data():
+    """Wipe local data after an explicit ``confirmation: "DELETE"`` token.
+
+    The token is a deliberate friction step so a stray POST can't nuke
+    months of data. The UI surfaces it as a typed-confirmation modal.
+    """
+    data = get_json_object()
+    if data.get("confirmation") != "DELETE":
+        raise ApiError("Type DELETE in confirmation to proceed")
+    db.delete_all_data()
+    return jsonify({"ok": True})
+
+
 # ── Main ─────────────────────────────────────────────────────────────────
 
 def main():

@@ -1340,6 +1340,62 @@ def get_export_data(start_date, end_date):
         return [dict(r) for r in rows]
 
 
+# Tables included in a full export / wiped on delete. Excludes sync_queue,
+# sync_state, and the cloud_* mirrors — those are derived state that init_db
+# rebuilds on next launch, and shipping the queue would leak unsent rows.
+_EXPORTABLE_TABLES = (
+    "app_usage",
+    "sessions",
+    "pickups",
+    "app_categories",
+    "goals",
+    "app_blocks",
+    "category_blocks",
+    "settings",
+    "rewards_ledger",
+    "rewards_awards",
+)
+
+
+def export_all():
+    """Return every user-owned row in the local DB, keyed by table.
+
+    Includes settings (so Ghost Mode salt and other prefs round-trip), but
+    excludes the sync queue, sync state, and cloud_* mirrors. The shape is
+    a JSON-friendly dict of lists, ordered for diff-stability.
+    """
+    out = {"version": 1, "tables": {}}
+    with get_db() as conn:
+        for table in _EXPORTABLE_TABLES:
+            rows = conn.execute(f"SELECT * FROM {table}").fetchall()
+            out["tables"][table] = [dict(r) for r in rows]
+    return out
+
+
+def delete_all_data():
+    """Wipe every user-owned row, then re-seed the defaults init_db creates.
+
+    Called by ``/api/data/delete``. Truncates the same tables that
+    ``export_all`` covers plus the sync queue and cloud mirrors so there's
+    nothing pending or stale after the wipe. The agent's ``device_id`` in
+    sync_state is preserved so a paired beta tester doesn't have to re-pair
+    just to re-test ingest after a reset; tearing down the pairing itself
+    is a separate flow (sign out + delete on the cloud).
+    """
+    with get_db() as conn:
+        for table in _EXPORTABLE_TABLES:
+            conn.execute(f"DELETE FROM {table}")
+        conn.execute("DELETE FROM sync_queue")
+        conn.execute("DELETE FROM cloud_app_blocks")
+        conn.execute("DELETE FROM cloud_category_blocks")
+        conn.execute("DELETE FROM cloud_goals")
+        conn.execute("DELETE FROM cloud_settings")
+        conn.execute(
+            "DELETE FROM sync_state WHERE key NOT IN ('device_id')"
+        )
+    init_db()
+
+
 # ── Settings ─────────────────────────────────────────────────────────────
 
 def get_settings():
