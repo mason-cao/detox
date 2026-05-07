@@ -98,6 +98,14 @@ def normalize_setting(key, value):
             return "0"
         raise ApiError("whitelist_mode must be enabled or disabled")
 
+    if key == "ghost_mode":
+        normalized = str(value).strip().lower()
+        if normalized in {"1", "true", "on", "yes"}:
+            return "1"
+        if normalized in {"0", "false", "off", "no"}:
+            return "0"
+        raise ApiError("ghost_mode must be enabled or disabled")
+
     return value
 
 

@@ -11,6 +11,7 @@ const Settings = {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         const parsedIdleTimeout = parseInt(settings.idle_timeout_minutes ?? '5', 10);
         const idleTimeout = Number.isFinite(parsedIdleTimeout) ? Math.min(120, Math.max(0, parsedIdleTimeout)) : 5;
+        const ghostMode = String(settings.ghost_mode ?? '0') === '1';
 
         // Group categories
         const catGroups = {};
@@ -74,6 +75,25 @@ const Settings = {
                             <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Settings.saveIdleTimeout())">SAVE</button>
                         </div>
                         <div class="study-row__detail">Use 0 minutes to disable idle detection.</div>
+                    </div>
+                </div>
+
+                <div class="study-section">
+                    <div class="study-section__header">
+                        <h2 class="study-section__title">PRIVACY</h2>
+                    </div>
+                    <div class="study-panel">
+                        <div class="study-row">
+                            <div>
+                                <div class="study-row__label">GHOST MODE</div>
+                                <div class="study-row__detail">Hash app names before they leave this Mac. The cloud sees opaque tokens; this dashboard still shows real names because it reads the local file.</div>
+                            </div>
+                            <label class="rule-board__toggle" aria-label="Toggle Ghost Mode">
+                                <input type="checkbox" id="ghostModeToggle" ${ghostMode ? 'checked' : ''} onchange="App.runAction(() => Settings.toggleGhostMode(this.checked))">
+                                <span class="rule-board__knob" aria-hidden="true"></span>
+                            </label>
+                        </div>
+                        <div class="study-row__detail">Salt stays on this device — see <a href="/docs/privacy.md" target="_blank" rel="noopener">privacy policy</a> for trade-offs.</div>
                     </div>
                 </div>
 
@@ -199,6 +219,14 @@ const Settings = {
             a.click();
             App.toast('JSON download started', 'success');
         }
+    },
+
+    async toggleGhostMode(enabled) {
+        await App.api('/api/settings', {
+            method: 'POST',
+            body: { ghost_mode: enabled ? '1' : '0' },
+        });
+        App.toast(enabled ? 'Ghost Mode on — app names hashed before leaving' : 'Ghost Mode off — app names sent in cleartext', 'success');
     },
 
     async saveIdleTimeout() {
