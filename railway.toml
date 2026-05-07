@@ -8,7 +8,9 @@ builder = "DOCKERFILE"
 dockerfilePath = "api/Dockerfile"
 
 [deploy]
-startCommand = "uvicorn api.app.main:app --host 0.0.0.0 --port ${PORT:-8080}"
+# Start command comes from the Dockerfile CMD (which uses sh -c so ${PORT}
+# is interpolated). Setting it here would bypass that and run the literal
+# string without shell expansion.
 healthcheckPath = "/healthz"
 healthcheckTimeout = 30
 restartPolicyType = "ON_FAILURE"
