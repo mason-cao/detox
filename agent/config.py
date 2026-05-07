@@ -30,6 +30,7 @@ CLOUD_INGEST_BATCH_ROWS = 200
 DEFAULT_SETTINGS = {
     "idle_timeout_minutes": str(DEFAULT_IDLE_TIMEOUT_MINUTES),
     "whitelist_mode": "0",
+    "ghost_mode": "0",
 }
 
 DAILY_CAP_SUNLIGHT = 120

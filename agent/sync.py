@@ -16,6 +16,7 @@ from typing import Callable
 
 from agent import cloud
 from agent import database as db
+from agent import privacy
 from agent.config import (
     CLOUD_INGEST_BATCH_ROWS,
     CLOUD_PUSH_INTERVAL_SECONDS,
@@ -66,14 +67,19 @@ def _next_batch(batch_size: int):
             (batch_size,),
         ).fetchall()
 
+    ghost = privacy.is_enabled()
     for row in rows:
         try:
             payload = json.loads(row["payload_json"])
         except (TypeError, ValueError):
             continue
         if row["kind"] == "session":
+            if ghost and isinstance(payload.get("app_name"), str):
+                payload["app_name"] = privacy.hash_app_name(payload["app_name"])
             sessions.append(payload)
         elif row["kind"] == "app_usage":
+            if ghost and isinstance(payload.get("app_name"), str):
+                payload["app_name"] = privacy.hash_app_name(payload["app_name"])
             app_usage.append(payload)
         elif row["kind"] == "pickup":
             pickups.append(payload)
