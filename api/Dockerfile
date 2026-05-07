@@ -61,6 +61,7 @@ COPY api/app ./api/app
 COPY api/alembic.ini ./api/alembic.ini
 COPY api/migrations ./api/migrations
 COPY agent ./agent
+COPY web ./web
 
 RUN useradd --create-home --shell /usr/sbin/nologin detox \
     && chown -R detox:detox /srv

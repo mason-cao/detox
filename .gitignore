@@ -24,3 +24,5 @@ CLAUDE.md
 .codex/
 infra/cloudflare/.wrangler/
 web/config.js
+supabase/.temp/
+supabase/.branches/
