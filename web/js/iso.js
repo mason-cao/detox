@@ -37,6 +37,35 @@ const Iso = {
         const hh = this.TILE_H / 2;
         return `${cx},${cy - hh} ${cx + hw},${cy} ${cx},${cy + hh} ${cx - hw},${cy}`;
     },
+
+    // Bottom-right shadow wedge of a tile — the southeast edge band that
+    // fakes elevation. A thin diamond strip running from south corner to
+    // east corner, offset upward by `inset` from the bottom edge.
+    tileShadowWedge(cx, cy, inset = 4) {
+        const hw = this.TILE_W / 2;
+        const hh = this.TILE_H / 2;
+        const k = inset / hh;
+        const sx = cx;
+        const sy = cy + hh;
+        const ex = cx + hw;
+        const ey = cy;
+        // Inset points pulled toward the tile center.
+        const isx = cx;
+        const isy = cy + hh - inset;
+        const iex = cx + hw - (inset / hh) * hw;
+        const iey = cy;
+        void k; // kept above for clarity if we ever lerp differently
+        return `${sx},${sy} ${ex},${ey} ${iex},${iey} ${isx},${isy}`;
+    },
+
+    // Deterministic 0..1 pseudo-random for a (tx, ty) tile. Cheap LCG.
+    // Stable across renders so decoration placement doesn't jitter.
+    tileHash(tx, ty, salt = 0) {
+        let h = (tx * 73856093) ^ (ty * 19349663) ^ (salt * 83492791);
+        h = (h ^ (h >>> 13)) * 1274126177;
+        h = (h ^ (h >>> 16)) >>> 0;
+        return h / 0xffffffff;
+    },
 };
 
 window.Iso = Iso;

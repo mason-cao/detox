@@ -6,33 +6,53 @@ const World = {
     _skyInterval: null,
     _motionMedia: null,
     _motionListenerBound: false,
+    _pan: { x: 0, y: 0, max: { x: 0, y: 0 } },
 
     // Mount the SVG world into the given parent. Returns the root SVG element.
     // Caller is responsible for emptying the parent before calling mount().
     mount(parent, weather) {
         const w = Iso.worldW();
         const h = Iso.worldH() + 80; // +80px sky headroom above the ground
+        // How far the camera can drift before the island runs off-stage.
+        // Roughly one third of the world dimensions in each axis.
+        this._pan.max = { x: Math.round(w * 0.32), y: Math.round(h * 0.22) };
 
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('class', 'world');
         svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
         svg.setAttribute('preserveAspectRatio', 'xMidYMin meet');
         svg.setAttribute('aria-hidden', 'true');
+        // Oversized night-dim rect so the camera can pan without revealing the edge.
+        const dimW = w * 3;
+        const dimH = h * 3;
+        const dimX = -w;
+        const dimY = -h;
         svg.innerHTML = `
+            <defs>
+                <radialGradient id="vignette" cx="50%" cy="55%" r="80%">
+                    <stop offset="60%" stop-color="rgba(0,0,0,0)"/>
+                    <stop offset="100%" stop-color="rgba(0,0,0,0.18)"/>
+                </radialGradient>
+            </defs>
             <g id="worldSky">
                 <rect class="world__sky-rect" x="0" y="0" width="${w}" height="${h}"></rect>
                 <g id="worldStars"></g>
                 <circle id="worldCelestial" r="14"></circle>
             </g>
             <g id="worldWeather"></g>
-            <g id="worldGround">${this.groundTiles()}</g>
-            <rect id="worldNightDim" x="0" y="0" width="${w}" height="${h}" pointer-events="none"></rect>
-            <g id="worldBuildings"></g>
-            <g id="worldResidents"></g>
-            <g id="worldEffects"></g>
+            <g id="worldPan" transform="translate(0 0)">
+                <g id="worldGround">${this.groundTiles()}</g>
+                <g id="worldGroundDecor">${this.groundDecor()}</g>
+                <rect id="worldNightDim" x="${dimX}" y="${dimY}" width="${dimW}" height="${dimH}" pointer-events="none"></rect>
+                <g id="worldBuildings"></g>
+                <g id="worldResidents"></g>
+                <g id="worldEffects"></g>
+            </g>
+            <rect class="world__vignette" x="0" y="0" width="${w}" height="${h}" pointer-events="none"></rect>
         `;
         parent.appendChild(svg);
 
+        this.bindPan(parent, svg);
         this.bindMotionPreference();
         this.applyWeather(weather);
         this.updateSky();
@@ -40,19 +60,183 @@ const World = {
         return svg;
     },
 
+    // ── Drag-to-pan ─────────────────────────────────────────────────────
+    //
+    // Translate the worldPan group on pointer drag. Drag distance is
+    // converted from screen pixels to viewBox units so the gesture stays
+    // 1:1 with the cursor regardless of the SVG's responsive scale.
+    bindPan(parent, svg) {
+        const panGroup = svg.querySelector('#worldPan');
+        if (!panGroup) return;
+        parent.classList.add('isle__stage--pannable');
+
+        let dragging = false;
+        let startClient = { x: 0, y: 0 };
+        let startPan = { x: 0, y: 0 };
+        let activePointerId = null;
+
+        const apply = () => {
+            panGroup.setAttribute(
+                'transform',
+                `translate(${this._pan.x.toFixed(1)} ${this._pan.y.toFixed(1)})`,
+            );
+        };
+
+        const onPointerDown = (e) => {
+            // Don't hijack clicks on buildings, residents, or interactive overlays.
+            if (e.target.closest && e.target.closest('.world__building, .world__resident, button, a, input')) {
+                return;
+            }
+            if (e.button !== undefined && e.button !== 0) return;
+            dragging = true;
+            activePointerId = e.pointerId;
+            startClient = { x: e.clientX, y: e.clientY };
+            startPan = { x: this._pan.x, y: this._pan.y };
+            parent.classList.add('isle__stage--grabbing');
+            try { svg.setPointerCapture(e.pointerId); } catch (_) {}
+            e.preventDefault();
+        };
+
+        const onPointerMove = (e) => {
+            if (!dragging) return;
+            // Convert client-space delta to viewBox-space delta using the
+            // SVG's bounding rect — accounts for responsive scaling.
+            const rect = svg.getBoundingClientRect();
+            const w = Iso.worldW();
+            const h = Iso.worldH() + 80;
+            const scaleX = rect.width  > 0 ? w / rect.width  : 1;
+            const scaleY = rect.height > 0 ? h / rect.height : 1;
+            const dx = (e.clientX - startClient.x) * scaleX;
+            const dy = (e.clientY - startClient.y) * scaleY;
+            const cx = Math.max(-this._pan.max.x, Math.min(this._pan.max.x, startPan.x + dx));
+            const cy = Math.max(-this._pan.max.y, Math.min(this._pan.max.y, startPan.y + dy));
+            this._pan.x = cx;
+            this._pan.y = cy;
+            apply();
+        };
+
+        const onPointerUp = (e) => {
+            if (!dragging) return;
+            dragging = false;
+            parent.classList.remove('isle__stage--grabbing');
+            if (activePointerId !== null) {
+                try { svg.releasePointerCapture(activePointerId); } catch (_) {}
+                activePointerId = null;
+            }
+        };
+
+        const onDoubleClick = () => {
+            // Reset camera to the centered home view.
+            this._pan.x = 0;
+            this._pan.y = 0;
+            apply();
+        };
+
+        svg.addEventListener('pointerdown', onPointerDown);
+        svg.addEventListener('pointermove', onPointerMove);
+        svg.addEventListener('pointerup', onPointerUp);
+        svg.addEventListener('pointercancel', onPointerUp);
+        svg.addEventListener('lostpointercapture', onPointerUp);
+        svg.addEventListener('dblclick', onDoubleClick);
+    },
+
     // Diamond polygons for the WORLD_TX × WORLD_TY ground grid.
-    // Alternates two greens for a checker visible at iso angle.
+    // Four green variants distributed by deterministic tile hash so the
+    // field reads as natural meadow rather than a checkerboard, plus a
+    // south-east shadow wedge per tile that fakes elevation under iso.
     groundTiles() {
         let out = '';
         for (let ty = 0; ty < Iso.WORLD_TY; ty++) {
             for (let tx = 0; tx < Iso.WORLD_TX; tx++) {
                 const { x, y } = Iso.tileToScreen(tx, ty);
                 const cy = y + Iso.TILE_H + 80; // shift down by sky headroom
-                const cls = (tx + ty) % 2 === 0 ? 'world__tile world__tile--a' : 'world__tile world__tile--b';
-                out += `<polygon class="${cls}" points="${Iso.tileDiamond(x, cy)}"></polygon>`;
+                const variant = Math.floor(Iso.tileHash(tx, ty, 1) * 4); // 0..3
+                const tone = ['a', 'b', 'c', 'd'][variant];
+                out += `<polygon class="world__tile world__tile--${tone}" points="${Iso.tileDiamond(x, cy)}"></polygon>`;
+                // South-east shadow wedge for fake elevation. ~3px offset.
+                out += `<polygon class="world__tile-shadow" points="${Iso.tileShadowWedge(x, cy, 3)}"></polygon>`;
             }
         }
         return out;
+    },
+
+    // Sparse ground decorations — daisies, pebble clusters, grass tufts —
+    // distributed via deterministic hashes so the look is stable. Avoids
+    // tiles that hold buildings (Buildings.catalog footprints).
+    groundDecor() {
+        const occupied = new Set();
+        for (const b of Buildings.catalog) {
+            const span = b.size === 'major' ? 1 : 0;
+            for (let dx = 0; dx <= span; dx++) {
+                for (let dy = 0; dy <= span; dy++) {
+                    occupied.add(`${b.tx + dx},${b.ty + dy}`);
+                }
+            }
+        }
+
+        const decor = [];
+        for (let ty = 0; ty < Iso.WORLD_TY; ty++) {
+            for (let tx = 0; tx < Iso.WORLD_TX; tx++) {
+                if (occupied.has(`${tx},${ty}`)) continue;
+                const roll = Iso.tileHash(tx, ty, 7);
+                if (roll > 0.32) continue; // 68% of tiles stay bare
+
+                const { x, y } = Iso.tileToScreen(tx, ty);
+                const cy = y + Iso.TILE_H + 80;
+                // Jitter the sprite within the diamond (within ~22px square).
+                const jx = (Iso.tileHash(tx, ty, 13) - 0.5) * 18;
+                const jy = (Iso.tileHash(tx, ty, 17) - 0.5) * 8;
+                const px = x + jx;
+                const py = cy + jy;
+
+                // Pick a sprite kind from the same hash space.
+                const kind = Math.floor(Iso.tileHash(tx, ty, 23) * 4);
+                if (kind === 0) decor.push(this.spriteDaisy(px, py));
+                else if (kind === 1) decor.push(this.spritePebble(px, py));
+                else if (kind === 2) decor.push(this.spriteGrass(px, py));
+                else decor.push(this.spriteBush(px, py));
+            }
+        }
+        return decor.join('');
+    },
+
+    spriteDaisy(cx, cy) {
+        return `
+            <g class="world__decor world__decor--daisy" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})">
+                <circle cx="-2" cy="-1" r="1"/><circle cx="2" cy="-1" r="1"/>
+                <circle cx="0" cy="-3" r="1"/><circle cx="-2" cy="2" r="1"/><circle cx="2" cy="2" r="1"/>
+                <circle class="world__decor-core" cx="0" cy="0" r="1"/>
+            </g>
+        `;
+    },
+
+    spritePebble(cx, cy) {
+        return `
+            <g class="world__decor world__decor--pebble" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})">
+                <ellipse cx="-3" cy="0" rx="2.2" ry="1.4"/>
+                <ellipse cx="2" cy="-1" rx="1.8" ry="1.1"/>
+                <ellipse cx="3" cy="2" rx="1.5" ry="1"/>
+            </g>
+        `;
+    },
+
+    spriteGrass(cx, cy) {
+        return `
+            <g class="world__decor world__decor--grass" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})">
+                <path d="M-3,2 L-3,-3 M0,2 L0,-4 M3,2 L3,-3" stroke-linecap="round"/>
+            </g>
+        `;
+    },
+
+    spriteBush(cx, cy) {
+        return `
+            <g class="world__decor world__decor--bush" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})">
+                <ellipse cx="0" cy="0" rx="6" ry="3.5"/>
+                <ellipse cx="-3" cy="-2" rx="3" ry="2.4"/>
+                <ellipse cx="3" cy="-2" rx="3" ry="2.4"/>
+                <ellipse class="world__decor-shadow" cx="0" cy="2.2" rx="6" ry="1.3"/>
+            </g>
+        `;
     },
 
     applyWeather(weather) {

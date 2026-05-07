@@ -40,11 +40,39 @@
 
 /* ── Ground tiles ────────────────────────────────────────────────────── */
 .world__tile {
-    stroke: rgba(42, 30, 42, 0.18);
+    stroke: rgba(42, 30, 42, 0.16);
     stroke-width: 1;
 }
+/* Four greens, distributed by tile hash so the field reads as meadow. */
 .world__tile--a { fill: var(--dc-moss); }
 .world__tile--b { fill: #7aa84e; }
+.world__tile--c { fill: #5a7a3f; }
+.world__tile--d { fill: #94a754; }
+
+.world__tile-shadow {
+    fill: rgba(20, 12, 18, 0.18);
+    pointer-events: none;
+}
+.is-night .world__tile-shadow { fill: rgba(0, 0, 0, 0.32); }
+
+/* ── Ground decor sprites (daisy, pebble, grass, bush) ───────────────── */
+.world__decor { pointer-events: none; }
+.world__decor--daisy circle { fill: #fff4d6; }
+.world__decor--daisy .world__decor-core { fill: var(--dc-coin); }
+.world__decor--pebble ellipse { fill: #6a6862; stroke: #2a1e2a; stroke-width: 0.4; }
+.world__decor--grass path { stroke: #4a6b3a; stroke-width: 1; fill: none; }
+.world__decor--bush ellipse { fill: #4a6b3a; stroke: #2a1e2a; stroke-width: 0.6; }
+.world__decor--bush .world__decor-shadow { fill: rgba(20, 12, 18, 0.22); stroke: none; }
+.is-night .world__decor--daisy circle { fill: #b8b0a4; }
+.is-night .world__decor--daisy .world__decor-core { fill: #8a7440; }
+
+/* ── Vignette + pannable stage ───────────────────────────────────────── */
+.world__vignette { fill: url(#vignette); pointer-events: none; }
+.isle__stage--pannable svg.world {
+    cursor: grab;
+    touch-action: none;
+}
+.isle__stage--grabbing svg.world { cursor: grabbing; }
 
 /* ── Weather ─────────────────────────────────────────────────────────── */
 .weather-cloud ellipse { fill: #fff4d6; stroke: var(--dc-ink); stroke-width: 1.5; }
@@ -184,9 +212,22 @@
 
 /* ── Buildings ───────────────────────────────────────────────────────── */
 .world__building { cursor: pointer; outline: none; }
-.world__building-shape { transition: transform 120ms ease-out; }
+.world__building-shape { transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1); }
 .world__building:hover .world__building-shape,
-.world__building:focus .world__building-shape { transform: translateY(-2px); }
+.world__building:focus .world__building-shape { transform: translateY(-3px); }
+
+/* Shared building details. .b-shadow is the ellipse beneath each base;
+   it slightly fades on hover as the building lifts so the lift reads. */
+.b-shadow {
+    fill: rgba(20, 12, 18, 0.32);
+    transition: opacity 160ms ease-out;
+}
+.is-night .b-shadow { fill: rgba(0, 0, 0, 0.5); }
+.world__building:hover .b-shadow,
+.world__building:focus .b-shadow { opacity: 0.55; }
+
+.b-window rect { transition: fill 160ms ease-out; }
+.is-night .b-window rect { fill: #ffd16a; filter: drop-shadow(0 0 2px rgba(255, 209, 106, 0.7)); }
 
 .world__building-label {
     font-family: var(--font-display);
