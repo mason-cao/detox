@@ -22,6 +22,7 @@ venv/
 CLAUDE.md
 .claude/
 .codex/
+.superpowers/
 infra/cloudflare/.wrangler/
 web/config.js
 supabase/.temp/
