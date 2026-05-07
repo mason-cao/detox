@@ -164,7 +164,7 @@ def ingest_batch(
     app_usage: list[dict],
     pickups: list[dict],
 ) -> IngestCounts:
-    return IngestCounts(
+    counts = IngestCounts(
         sessions=insert_sessions(
             session, user_id=user_id, device_id=device_id, rows=sessions
         ),
@@ -175,3 +175,10 @@ def ingest_batch(
             session, user_id=user_id, device_id=device_id, rows=pickups
         ),
     )
+    # Touch last_sync_at so the dashboard's "monitor online" check has a
+    # fresh signal — the agent's sync.flush is the canonical heartbeat.
+    session.execute(
+        text("UPDATE devices SET last_sync_at = now() WHERE id = :id"),
+        {"id": device_id},
+    )
+    return counts
