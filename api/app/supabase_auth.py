@@ -86,8 +86,8 @@ def resolve_supabase_user_id(request: Request) -> str:
     token = header.split(" ", 1)[1].strip()
 
     jwks = _get_jwks(settings.supabase_jwt_jwks_url)
-    key, alg = _signing_key_and_alg(token, jwks)
     try:
+        key, alg = _signing_key_and_alg(token, jwks)
         claims = jwt.decode(
             token,
             key=key,
