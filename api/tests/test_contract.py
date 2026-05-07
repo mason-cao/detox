@@ -1,11 +1,11 @@
 """Contract tests pinning Flask agent ↔ FastAPI service to identical JSON.
 
-The agent's local dashboard talks to ``agent/server.py``. As routes are
-ported to the hosted FastAPI tier in ``api/app/``, this suite asserts the
-two implementations return byte-equivalent JSON for every shared route.
-
-For mutation tests, the DB is reset between the Flask call and the FastAPI
-call so each implementation observes the same starting state.
+These ran while the FastAPI tier was a 1:1 SQLite mirror of the Flask
+agent (Phase 2). After the Postgres port (Phase 5 backfill brought into
+the Phase 4 deploy work), the FastAPI tier is user-scoped against
+Postgres and requires auth — the parity contract no longer holds and
+the tests are skipped wholesale. See ``api/app/services/*.py`` for the
+current Postgres-backed shape.
 """
 
 from __future__ import annotations
@@ -13,6 +13,10 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+
+pytestmark = pytest.mark.skip(
+    reason="FastAPI moved off SQLite; Flask↔FastAPI parity is no longer the design"
+)
 
 
 # ── Helpers ─────────────────────────────────────────────────────────────

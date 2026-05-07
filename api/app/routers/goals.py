@@ -1,9 +1,11 @@
-"""Goals routes ported from the local Flask agent."""
+"""Goals routes — Postgres-backed."""
 
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Request
+from sqlalchemy.orm import Session
 
+from ..db import db_session
 from ..dependencies import api_request_setup
 from ..errors import ApiError
 from ..services import goals as goals_service
@@ -24,12 +26,15 @@ _GOAL_TYPES = {"daily_total", "app_limit", "bedtime"}
 
 
 @router.get("/goals", summary="List active goals")
-async def list_goals() -> list[dict]:
-    return goals_service.list_goals()
+async def list_goals(session: Session = Depends(db_session)) -> list[dict]:
+    return goals_service.list_goals(session)
 
 
 @router.post("/goals", status_code=201, summary="Create a goal")
-async def create_goal(request: Request) -> dict[str, int]:
+async def create_goal(
+    request: Request,
+    session: Session = Depends(db_session),
+) -> dict[str, int]:
     try:
         payload = await request.json()
     except ValueError:
@@ -59,6 +64,8 @@ async def create_goal(request: Request) -> dict[str, int]:
             raise ApiError("Invalid bedtime")
 
     goal_id = goals_service.create_goal(
+        session,
+        user_id=request.state.user_id,
         goal_type=goal_type,
         target_minutes=target_minutes,
         app_name=app_name,
@@ -70,7 +77,11 @@ async def create_goal(request: Request) -> dict[str, int]:
 
 
 @router.delete("/goals/{goal_id}", summary="Delete a goal")
-async def delete_goal(goal_id: int, request: Request) -> dict[str, bool]:
-    goals_service.delete_goal(goal_id)
+async def delete_goal(
+    goal_id: int,
+    request: Request,
+    session: Session = Depends(db_session),
+) -> dict[str, bool]:
+    goals_service.delete_goal(session, goal_id=goal_id)
     rules_service.bust_for_request(request)
     return {"ok": True}

@@ -17,6 +17,7 @@ from .errors import ApiError, api_error_handler
 from .redis_client import dispose_redis, install_redis
 from .routers.apps import router as apps_router
 from .routers.blocks import router as blocks_router
+from .routers.compat import router as compat_router
 from .routers.dashboard import router as dashboard_router
 from .routers.devices import router as devices_router
 from .routers.goals import router as goals_router
@@ -76,6 +77,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(ingest_router)
     app.include_router(rules_router)
     app.include_router(rewards_router)
+    app.include_router(compat_router)
 
     _mount_web(app)
     return app

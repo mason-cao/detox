@@ -1,25 +1,39 @@
-"""Settings service.
+"""Settings service — Postgres-backed.
 
-Defaults from ``agent/config.py`` are merged on read; writes flow through a
-normalizer so the supported keys (``idle_timeout_minutes``, ``whitelist_mode``)
-land in the database with the same shape the Flask agent has always produced.
+Defaults come from ``agent/config.py``; writes go to the user-scoped
+``settings`` row table. RLS scopes everything to ``app.current_user_id``
+so the SQL doesn't carry an explicit ``user_id`` clause.
 """
 
 from __future__ import annotations
 
-from agent import database as db
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
 from agent.config import DEFAULT_SETTINGS, MAX_IDLE_TIMEOUT_MINUTES
 
 from ..errors import ApiError
 
 
-def get_settings() -> dict[str, str]:
-    return {**DEFAULT_SETTINGS, **db.get_settings()}
+def get_settings(session: Session, *, user_id: str) -> dict[str, str]:
+    rows = session.execute(text("SELECT key, value FROM settings")).all()
+    overrides = {r[0]: r[1] for r in rows}
+    return {**DEFAULT_SETTINGS, **overrides}
 
 
-def set_settings(payload: dict) -> None:
+def set_settings(session: Session, *, user_id: str, payload: dict) -> None:
     for key, value in payload.items():
-        db.set_setting(key, _normalize_setting(key, value))
+        normalized = _normalize_setting(key, value)
+        session.execute(
+            text(
+                """
+                INSERT INTO settings (user_id, key, value)
+                VALUES (:user_id, :key, :value)
+                ON CONFLICT (user_id, key) DO UPDATE SET value = EXCLUDED.value
+                """
+            ),
+            {"user_id": user_id, "key": key, "value": str(normalized)},
+        )
 
 
 def _normalize_setting(key: str, value: object) -> object:
