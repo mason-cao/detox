@@ -206,7 +206,10 @@ const Settings = {
                         <div class="about-study__title">DETOX ISLE</div>
                         <div class="about-study__copy">
                             A private screen-time tracker for macOS.<br>
-                            Monitor polls every 2 seconds. Data stays on this Mac.
+                            Monitor polls every 2 seconds. Data stays on this Mac.<br>
+                            <a href="/docs/privacy.md" target="_blank" rel="noopener">Privacy policy</a>
+                            &nbsp;·&nbsp;
+                            <a href="/docs/terms.md" target="_blank" rel="noopener">Terms of service</a>
                         </div>
                     </div>
                 </div>

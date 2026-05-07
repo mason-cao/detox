@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from flask import Flask, jsonify, request, send_from_directory
 
 from agent.config import (
+    BASE_DIR,
     CARDS_DIR,
     CHANGELOG_ENTRIES,
     DEFAULT_SETTINGS,
@@ -238,6 +239,23 @@ def serve_js(filename):
 @app.route("/assets/<path:filename>")
 def serve_assets(filename):
     return send_from_directory(os.path.join(WEB_DIR, "assets"), filename)
+
+
+@app.route("/docs/<path:filename>")
+def serve_docs(filename):
+    """Serve the in-repo policy markdown so the Mayor's Study can link to it.
+
+    Browsers render .md as plaintext, which is good enough for the privacy
+    policy and TOS — no build step, no extra dependency. Restricted to
+    .md files to keep this from accidentally exposing arbitrary repo paths.
+    """
+    if not filename.endswith(".md") or "/" in filename or ".." in filename:
+        return ("", 404)
+    return send_from_directory(
+        os.path.join(BASE_DIR, "docs"),
+        filename,
+        mimetype="text/markdown; charset=utf-8",
+    )
 
 
 # ── Dashboard API ────────────────────────────────────────────────────────

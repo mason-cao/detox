@@ -42,7 +42,7 @@ Detox is a macOS screen-time tracker that polls your frontmost app every 2 secon
 - **Charter** (Goals) — daily total decree, per-app limits, bedtime bell.
 - **Market** — closed-economy reward loop. Detoxed minutes earn ☀ Sunlight; streaks earn ✦ Starshards. Spend on visual upgrades to the Isle. 100% refund within 24 h, 50% after. Hall of Honor records milestones.
 - **Postcards** — generate a 1080×1920 PNG of the day's stats to share. (Local agent only — cloud renders the rest of the dashboard but card generation needs Pillow on the device.)
-- **Mayor's Study** (Settings) — theme toggle, idle timeout, CSV/JSON export, categories, keyboard shortcuts.
+- **Mayor's Study** (Settings) — theme toggle, idle timeout, **Ghost Mode** toggle (hash app names before they leave the Mac), CSV/JSON range exports, **full archive** JSON download, **Delete Everything** with typed confirmation, categories, keyboard shortcuts. Links to the in-repo [privacy policy](docs/privacy.md) and [terms of service](docs/terms.md).
 
 ### Keyboard shortcuts
 
@@ -279,8 +279,9 @@ detox/
 | 2 | FastAPI port + Postgres scaffolding | ✅ shipped |
 | 3 | py2app signed `.app` + DMG + Homebrew cask + Sparkle auto-update | 🚧 queued |
 | 4 | Auth + cloud — Supabase, RLS, ingest, rules puller, server-authoritative rewards, Railway deploy | ✅ shipped |
-| 5 | Ghost mode (hashed app names), private-beta gating, polish | 🚧 queued |
-| 6 | Public launch | 🚧 queued |
+| 5 | Privacy — Ghost Mode (hashed app names), full archive export, one-click delete, in-repo privacy/TOS docs | ✅ shipped |
+| 5+ | Private-beta runtime — invite gating, telemetry, iteration | 🚧 queued |
+| 6 | Public launch — landing page, Homebrew cask, signed DMG, announcement | 🚧 queued |
 
 **Until Phase 3 lands**, install is developer-only — clone the repo, install Python deps, `./start.sh`. Non-developer install (DMG / Homebrew cask) is the next priority.
 
@@ -331,12 +332,13 @@ DETOX_DEVICE_JWT_SECRET=$(openssl rand -hex 32) \
 
 ---
 
-## Privacy
-
 - **Local-only mode** — no network calls. App names, timestamps, pickups, sessions, rewards all stay in `data/screentime.db`. Nothing is sent anywhere.
 - **Paired mode** — your local agent posts to your own Railway/Supabase project. The api never speaks to a third party except Supabase (for JWT JWKS, on a 1 h cache). CDN dependencies in the web bundle (Chart.js, Google Fonts) load directly from the public CDN; vendor them locally if you want zero third-party requests.
-- **Ghost Mode** (Phase 5) will hash app names with an on-device salt before they ever leave the Mac, so the cloud Postgres only sees opaque hashes. Today, app names ride in cleartext to your own Postgres.
+- **Ghost Mode** — opt-in toggle in Mayor's Study. With it on, the agent rewrites app names to `resident-XXXXXXXX` (SHA-256 of `salt + ":" + name`, truncated) before they leave the Mac. The salt is generated locally on first enable and never sent anywhere. The local SQLite still holds plaintext, so your dashboard is unchanged; only the cloud sees hashes. Known v1 limit: salt is per-device, so multi-device aggregation is broken under Ghost Mode.
+- **One-click export** — Mayor's Study → Data Export → Download Archive ships every row in your account as a single JSON file. Works locally and against the paired cloud.
+- **One-click delete** — Mayor's Study → Danger Zone → Delete Everything wipes every session, decree, reward, and milestone after a typed `DELETE` confirmation. The cloud version cascades from the `users` row, so a single statement empties your account.
 - **No telemetry, no analytics, no error reporting service**. Errors surface in the local log (`data/monitor.log`) and Railway's deploy logs (api).
+- Full policy: [`docs/privacy.md`](docs/privacy.md) · [`docs/terms.md`](docs/terms.md).
 
 ---
 
