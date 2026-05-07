@@ -25,9 +25,10 @@ def _device_name() -> str:
 
 
 def _prompt_code() -> str:
+    base = CLOUD_API_BASE.rstrip("/")
     print("\nDetox pairing")
-    print(f"  Cloud: {CLOUD_API_BASE}")
-    print("  1. Open https://app.detox.app/pair and sign in.")
+    print(f"  Cloud: {base}")
+    print(f"  1. Open {base}/pair.html and sign in.")
     print("  2. Copy the 6-character code shown on that page.")
     print("  3. Paste it below.\n")
     raw = input("Pairing code: ").strip().upper()
