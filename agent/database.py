@@ -254,7 +254,7 @@ def record_usage(app_name, timestamp=None):
             conn,
             "app_usage",
             cur.lastrowid,
-            {"app_name": app_name, "timestamp": timestamp},
+            {"app_name": app_name, "timestamp": timestamp, "date": date},
             timestamp,
         )
 
@@ -273,7 +273,12 @@ def record_session(app_name, start_time, end_time):
             conn,
             "session",
             cur.lastrowid,
-            {"app_name": app_name, "start_time": start_time, "end_time": end_time},
+            {
+                "app_name": app_name,
+                "start_time": start_time,
+                "end_time": end_time,
+                "date": date,
+            },
             end_time,
         )
 
@@ -291,7 +296,7 @@ def record_pickup(timestamp=None):
             conn,
             "pickup",
             cur.lastrowid,
-            {"timestamp": timestamp},
+            {"timestamp": timestamp, "date": date},
             timestamp,
         )
 

@@ -5,16 +5,34 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$DIR"
 
 STARTED_MONITOR=0
+MONITOR_PID=""
+
+monitor_pid_is_running() {
+    [ -f data/monitor.pid ] || return 1
+    pid="$(cat data/monitor.pid 2>/dev/null || true)"
+    case "$pid" in
+        ""|*[!0-9]*) return 1 ;;
+    esac
+    kill -0 "$pid" 2>/dev/null || return 1
+    cmd="$(ps -p "$pid" -o command= 2>/dev/null || true)"
+    case "$cmd" in
+        *"agent.monitor"*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
 
 cleanup() {
     status=$?
     trap - EXIT INT TERM
     echo ""
     echo "Shutting down..."
-    if [ "$STARTED_MONITOR" = "1" ] && [ -f data/monitor.pid ]; then
+    if [ "$STARTED_MONITOR" = "1" ] && monitor_pid_is_running; then
         kill "$(cat data/monitor.pid)" 2>/dev/null || true
         rm -f data/monitor.pid
         echo "  ✓ Monitor stopped"
+    elif [ "$STARTED_MONITOR" = "1" ] && [ -f data/monitor.pid ]; then
+        rm -f data/monitor.pid
+        echo "  Monitor was not running"
     elif [ -f data/monitor.pid ]; then
         echo "  Monitor was already running; leaving it running"
     fi
@@ -46,7 +64,12 @@ echo "  ✓ Database ready"
 
 # 4. Start monitor daemon
 echo "[3/4] Starting monitor..."
-if [ -f data/monitor.pid ] && kill -0 "$(cat data/monitor.pid)" 2>/dev/null; then
+if [ -f data/monitor.pid ] && ! monitor_pid_is_running; then
+    echo "  Removing stale monitor PID file"
+    rm -f data/monitor.pid
+fi
+
+if monitor_pid_is_running; then
     echo "  ✓ Monitor already running (PID $(cat data/monitor.pid))"
 else
     python3 -m agent.monitor > data/monitor.log 2>&1 &

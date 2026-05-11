@@ -25,7 +25,7 @@
 
     async function loadDevices() {
         try {
-            const resp = await Cloud.fetch('/api/devices');
+            const resp = await Cloud.fetch('/v1/devices');
             if (!resp.ok) return [];
             return await resp.json();
         } catch (_) {
@@ -42,7 +42,7 @@
         knownDeviceIds = new Set(baseline.map((d) => d.id));
 
         try {
-            const resp = await Cloud.fetch('/api/devices/pair-init', {
+            const resp = await Cloud.fetch('/v1/devices/pair-init', {
                 method: 'POST',
                 body: JSON.stringify({}),
             });

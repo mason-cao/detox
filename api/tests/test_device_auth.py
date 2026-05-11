@@ -9,6 +9,7 @@ from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
 from api.app.config import Settings
+from api.app.auth import require_user_jwt
 from api.app.device_auth import (
     issue_device_token,
     looks_like_device_token,
@@ -61,6 +62,39 @@ def test_issue_requires_secret():
             user_id=str(uuid.uuid4()),
             device_id=str(uuid.uuid4()),
         )
+
+
+def test_require_user_jwt_sets_request_state_user_id():
+    user_id = str(uuid.uuid4())
+    settings = Settings(
+        auth_mode="local",
+        dev_token="dev-token",
+        dev_user_id=user_id,
+        device_jwt_secret=_SECRET,
+    )
+    app = FastAPI()
+    app.state.settings = settings
+    app.add_exception_handler(ApiError, api_error_handler)
+
+    @app.get("/whoami-user")
+    def whoami_user(request: Request):
+        resolved = require_user_jwt(request)
+        return {
+            "resolved": resolved,
+            "state_user_id": getattr(request.state, "user_id", None),
+        }
+
+    client = TestClient(app, raise_server_exceptions=False)
+    resp = client.get(
+        "/whoami-user",
+        headers={"Authorization": "Bearer dev-token"},
+    )
+
+    assert resp.status_code == 200
+    assert resp.json() == {
+        "resolved": user_id,
+        "state_user_id": user_id,
+    }
 
 
 def test_wrong_audience_rejected():

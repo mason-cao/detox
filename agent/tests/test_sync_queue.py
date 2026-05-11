@@ -1,5 +1,6 @@
 import json
 import uuid
+from datetime import datetime
 
 
 def _use_temp_db(tmp_path, monkeypatch):
@@ -44,9 +45,13 @@ def test_record_functions_enqueue_matching_source_rows(tmp_path, monkeypatch):
     database = _use_temp_db(tmp_path, monkeypatch)
     database.init_db()
 
-    database.record_usage("Slack", 1_714_492_800.0)
-    database.record_session("Code", 1_714_492_900.0, 1_714_492_960.0)
-    database.record_pickup(1_714_493_000.0)
+    usage_ts = 1_714_492_800.0
+    session_start = 1_714_492_900.0
+    session_end = 1_714_492_960.0
+    pickup_ts = 1_714_493_000.0
+    database.record_usage("Slack", usage_ts)
+    database.record_session("Code", session_start, session_end)
+    database.record_pickup(pickup_ts)
 
     rows = _sync_rows(database)
 
@@ -54,15 +59,18 @@ def test_record_functions_enqueue_matching_source_rows(tmp_path, monkeypatch):
     assert [row["row_id"] for row in rows] == [1, 1, 1]
     assert json.loads(rows[0]["payload_json"]) == {
         "app_name": "Slack",
-        "timestamp": 1_714_492_800.0,
+        "timestamp": usage_ts,
+        "date": datetime.fromtimestamp(usage_ts).strftime("%Y-%m-%d"),
     }
     assert json.loads(rows[1]["payload_json"]) == {
         "app_name": "Code",
-        "start_time": 1_714_492_900.0,
-        "end_time": 1_714_492_960.0,
+        "start_time": session_start,
+        "end_time": session_end,
+        "date": datetime.fromtimestamp(session_start).strftime("%Y-%m-%d"),
     }
     assert json.loads(rows[2]["payload_json"]) == {
-        "timestamp": 1_714_493_000.0,
+        "timestamp": pickup_ts,
+        "date": datetime.fromtimestamp(pickup_ts).strftime("%Y-%m-%d"),
     }
 
 
