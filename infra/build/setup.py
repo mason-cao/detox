@@ -15,7 +15,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 BUILD_DIR = pathlib.Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-APP = [str(ROOT / "agent" / "__main__.py")]
+APP = [str(BUILD_DIR / "launcher.py")]
 INFO_PLIST = pathlib.Path(
     os.environ.get("DETOX_INFO_PLIST", BUILD_DIR / "Info.plist.tmpl")
 )
