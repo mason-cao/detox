@@ -9,7 +9,7 @@ acks at the row level, just "did the request succeed".
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -32,7 +32,20 @@ class IngestCounts:
 
 
 def _date_for(timestamp: float) -> str:
-    return datetime.fromtimestamp(timestamp, tz=timezone.utc).strftime("%Y-%m-%d")
+    return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d")
+
+
+def _date_from_row(row: dict, timestamp_key: str) -> str:
+    value = row.get("date")
+    if value is None:
+        return _date_for(_require_float(row, timestamp_key))
+    if not isinstance(value, str):
+        raise ApiError("row has invalid 'date'", status_code=400)
+    try:
+        datetime.strptime(value, "%Y-%m-%d")
+    except ValueError:
+        raise ApiError("row has invalid 'date'", status_code=400)
+    return value
 
 
 def _require_str(row: dict, key: str) -> str:
@@ -72,6 +85,7 @@ def insert_sessions(
                     (:user_id, :device_id, :app_name, :start_time, :end_time,
                      :duration, :date)
                 ON CONFLICT (user_id, device_id, start_time, app_name)
+                    WHERE device_id IS NOT NULL
                 DO NOTHING
                 """
             ),
@@ -82,7 +96,7 @@ def insert_sessions(
                 "start_time": start_time,
                 "end_time": end_time,
                 "duration": duration,
-                "date": _date_for(start_time),
+                "date": _date_from_row(row, "start_time"),
             },
         )
         accepted += result.rowcount or 0
@@ -108,6 +122,7 @@ def insert_app_usage(
                 VALUES
                     (:user_id, :device_id, :app_name, :timestamp, :date)
                 ON CONFLICT (user_id, device_id, timestamp, app_name)
+                    WHERE device_id IS NOT NULL
                 DO NOTHING
                 """
             ),
@@ -116,7 +131,7 @@ def insert_app_usage(
                 "device_id": device_id,
                 "app_name": app_name,
                 "timestamp": timestamp,
-                "date": _date_for(timestamp),
+                "date": _date_from_row(row, "timestamp"),
             },
         )
         accepted += result.rowcount or 0
@@ -141,6 +156,7 @@ def insert_pickups(
                 VALUES
                     (:user_id, :device_id, :timestamp, :date)
                 ON CONFLICT (user_id, device_id, timestamp)
+                    WHERE device_id IS NOT NULL
                 DO NOTHING
                 """
             ),
@@ -148,7 +164,7 @@ def insert_pickups(
                 "user_id": user_id,
                 "device_id": device_id,
                 "timestamp": timestamp,
-                "date": _date_for(timestamp),
+                "date": _date_from_row(row, "timestamp"),
             },
         )
         accepted += result.rowcount or 0

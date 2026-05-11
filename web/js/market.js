@@ -99,17 +99,19 @@ const Market = {
     renderInventoryItem(item) {
         const fullRefund = item.refund_pct === 100;
         const title = `Refund: ${this.currency(item.refund_amount, item.currency)} ${fullRefund ? '(within 24h)' : '(50%)'}`;
+        const purchaseId = item.inventory_id ?? item.spend_id;
+        const purchasedAt = item.purchased_at ?? item.acquired_at;
         return `
             <div class="inventory-row pixel-panel">
                 <div>
                     <div class="inventory-row__name">${App.escapeHtml(item.name)}</div>
-                    <div class="inventory-row__meta">Purchased ${this.formatDateTime(item.purchased_at)}</div>
+                    <div class="inventory-row__meta">Purchased ${this.formatDateTime(purchasedAt)}</div>
                 </div>
                 <div class="inventory-row__refund" title="${App.escapeAttr(title)}">
                     ${this.currency(item.refund_amount, item.currency)}
                     <span>${fullRefund ? 'within 24h' : '50%'}</span>
                 </div>
-                <button class="pixel-button" onclick="Market.refund(${Number(item.spend_id)})" title="${App.escapeAttr(title)}">REFUND</button>
+                <button class="pixel-button" onclick="Market.refund(${App.inlineArg(purchaseId)})" title="${App.escapeAttr(title)}" ${purchaseId ? '' : 'disabled'}>REFUND</button>
             </div>
         `;
     },
@@ -167,13 +169,22 @@ const Market = {
         }
     },
 
-    async refund(spendId) {
+    async refund(purchaseId) {
         try {
+            const id = String(purchaseId ?? '').trim();
+            const numericId = Number(id);
+            const body = Number.isInteger(numericId) && String(numericId) === id
+                ? { spend_id: numericId }
+                : { inventory_id: id };
             const result = await App.api('/api/market/refund', {
                 method: 'POST',
-                body: { spend_id: spendId },
+                body,
             });
-            App.toast(`Refunded ${this.currency(result.refunded, result.currency)}`, 'success');
+            if (result.refunded !== undefined && result.currency) {
+                App.toast(`Refunded ${this.currency(result.refunded, result.currency)}`, 'success');
+            } else {
+                App.toast('Refund processed', 'success');
+            }
             await this.refresh();
         } catch (e) {
             App.toast(this.errorMessage(e.message), 'error');
@@ -191,6 +202,7 @@ const Market = {
             insufficient_funds: 'Not enough currency for that purchase.',
             already_owned: 'That item is already in your inventory.',
             unknown_spend: 'That inventory item could not be found.',
+            unknown_inventory: 'That inventory item could not be found.',
             already_refunded: 'That item has already been refunded.',
         };
         return messages[code] || code || 'Market action failed.';
@@ -206,7 +218,10 @@ const Market = {
     },
 
     formatDateTime(timestamp) {
-        const date = new Date(Number(timestamp) * 1000);
+        const value = String(timestamp ?? '').trim();
+        const isNumeric = value !== '' && !Number.isNaN(Number(value));
+        const date = isNumeric ? new Date(Number(value) * 1000) : new Date(value);
+        if (Number.isNaN(date.getTime())) return 'unknown date';
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     },
 

@@ -93,6 +93,7 @@ def require_user_jwt(request: Request) -> str:
     user_id = resolve_user_id(request)
     if not user_id:
         raise ApiError("authentication required", status_code=401)
+    request.state.user_id = user_id
     return user_id
 
 

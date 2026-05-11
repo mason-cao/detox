@@ -4,6 +4,21 @@ import time
 
 from sqlalchemy import create_engine, text
 
+from api.app.services import ingest as ingest_service
+
+
+class _FakeResult:
+    rowcount = 1
+
+
+class _FakeSession:
+    def __init__(self):
+        self.calls = []
+
+    def execute(self, statement, params=None):
+        self.calls.append((str(statement), params or {}))
+        return _FakeResult()
+
 
 def _user_headers(client) -> dict:
     return {"Authorization": f"Bearer {client.bearer}"}
@@ -33,6 +48,56 @@ def _build_sessions(device_offset: float = 0.0, count: int = 100) -> list[dict]:
         }
         for i in range(count)
     ]
+
+
+def test_insert_app_usage_respects_agent_supplied_local_date():
+    session = _FakeSession()
+
+    ingest_service.insert_app_usage(
+        session,
+        user_id="00000000-0000-0000-0000-000000000001",
+        device_id="11111111-1111-1111-1111-111111111111",
+        rows=[
+            {
+                "app_name": "Slack",
+                "timestamp": 0.0,
+                "date": "1969-12-31",
+            }
+        ],
+    )
+
+    assert session.calls[0][1]["date"] == "1969-12-31"
+
+
+def test_ingest_conflict_targets_match_partial_device_indexes():
+    session = _FakeSession()
+    user_id = "00000000-0000-0000-0000-000000000001"
+    device_id = "11111111-1111-1111-1111-111111111111"
+
+    ingest_service.insert_sessions(
+        session,
+        user_id=user_id,
+        device_id=device_id,
+        rows=[{"app_name": "Code", "start_time": 10.0, "end_time": 20.0}],
+    )
+    ingest_service.insert_app_usage(
+        session,
+        user_id=user_id,
+        device_id=device_id,
+        rows=[{"app_name": "Code", "timestamp": 10.0}],
+    )
+    ingest_service.insert_pickups(
+        session,
+        user_id=user_id,
+        device_id=device_id,
+        rows=[{"timestamp": 10.0}],
+    )
+
+    insert_sql = "\n".join(sql for sql, _params in session.calls)
+    assert "ON CONFLICT (user_id, device_id, start_time, app_name)" in insert_sql
+    assert "ON CONFLICT (user_id, device_id, timestamp, app_name)" in insert_sql
+    assert "ON CONFLICT (user_id, device_id, timestamp)" in insert_sql
+    assert insert_sql.count("WHERE device_id IS NOT NULL") == 3
 
 
 def test_ingest_happy_path(pg_client):

@@ -22,6 +22,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from ..config import Settings
+from ..db import set_user_guc
 from ..device_auth import issue_device_token
 from ..errors import ApiError
 
@@ -109,6 +110,7 @@ def pair_claim(
     if expires_at <= datetime.now(timezone.utc):
         raise ApiError("pairing code expired", status_code=410)
 
+    set_user_guc(session, str(user_id))
     inserted = session.execute(
         text(
             """

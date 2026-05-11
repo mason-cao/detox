@@ -17,10 +17,11 @@
         async fetch(path, init = {}) {
             await window.Auth.bootstrap();
 
-            const apiBase = window.DETOX_API_BASE || '';
-            const url = apiBase && path.startsWith('/api')
-                ? apiBase + path.replace(/^\/api/, '/v1')
-                : (apiBase ? apiBase + path : path);
+            const apiBase = (window.DETOX_API_BASE || '').replace(/\/$/, '');
+            const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+            const url = apiBase && !/^https?:\/\//i.test(path)
+                ? apiBase + normalizedPath
+                : path;
 
             const headers = new Headers(init.headers || {});
             if (!headers.has('Content-Type') && init.body) {
