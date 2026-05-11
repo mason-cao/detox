@@ -279,13 +279,13 @@ detox/
 | 0 | Monorepo reorg (`agent/`, `api/`, `web/`, `infra/`) | ✅ shipped |
 | 1 | Detox Isle redesign (HUD, residents, world, tab animations) | ✅ shipped |
 | 2 | FastAPI port + Postgres scaffolding | ✅ shipped |
-| 3 | py2app signed `.app` + DMG + Homebrew cask + Sparkle auto-update | 🚧 queued |
+| 3 | py2app `.app` bundle + menu-bar + local sync queue + Sparkle/DMG scaffolding | ✅ shipped (signed release cert-gated) |
 | 4 | Auth + cloud — Supabase, RLS, ingest, rules puller, server-authoritative rewards, Railway deploy | ✅ shipped |
 | 5 | Privacy — Ghost Mode (hashed app names), full archive export, one-click delete, in-repo privacy/TOS docs | ✅ shipped |
 | 5+ | Private-beta runtime — invite gating, telemetry, iteration | 🚧 queued |
 | 6 | Public launch — landing page, Homebrew cask, signed DMG, announcement | 🚧 queued |
 
-**Until Phase 3 lands**, install is developer-only — clone the repo, install Python deps, `./start.sh`. Non-developer install (DMG / Homebrew cask) is the next priority.
+**Until the signed DMG ships**, install is developer-only — clone the repo, `pip3 install -r requirements.txt`, then `python3 -m agent` (menu-bar) or `./start.sh` (headless). The py2app config in `infra/build/` produces a working `.app` from a checkout (`cd infra/build && python3 setup.py py2app -A`); codesign + notarize + Homebrew cask wait on an Apple Developer ID and Sparkle EdDSA keys.
 
 **Cloud is single-tenant per deployment** — anyone signing in with a Supabase magic link gets routed to their own user row. There's no multi-user gating; if you stand up an instance and someone has the URL + a Supabase email, they get a (separate) account. Phase 5 adds invite-only gating.
 
