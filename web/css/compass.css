@@ -2,7 +2,7 @@
 
 .compass {
     position: fixed;
-    top: calc(var(--hud-top-h) + var(--sp-2));
+    top: calc(var(--hud-top-h) + 128px);
     right: var(--sp-3);
     z-index: 60;
     display: none;
@@ -15,6 +15,7 @@
 }
 .compass.is-open { display: block; }
 .compass.compass--isle-hidden { display: none; }
+.compass.compass--subtab-hidden { display: none; }
 
 .compass__title {
     display: block;
@@ -61,7 +62,7 @@
 .compass-toggle {
     display: inline-block;
     position: fixed;
-    top: calc(var(--hud-top-h) + var(--sp-2));
+    top: calc(var(--hud-top-h) + 84px);
     right: var(--sp-3);
     z-index: 60;
     min-width: 44px;
@@ -76,7 +77,8 @@
     font-size: 9px;
 }
 .compass-toggle--isle-hidden { display: none; }
+.compass-toggle--subtab-hidden { display: none; }
 
 @media (max-width: 760px) {
-    .compass { top: calc(var(--hud-top-h) + var(--sp-2) + 40px); }
+    .compass { top: calc(var(--hud-top-h) + 168px); }
 }

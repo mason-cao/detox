@@ -2,6 +2,15 @@
 
 .world__resident {
     outline: none;
+    will-change: transform;
+}
+
+.world__resident[data-preview="true"] {
+    opacity: 0.86;
+}
+
+.world__resident[data-preview="true"] .world__resident-ring {
+    stroke-dasharray: 3 2;
 }
 
 .world__resident-shadow {
