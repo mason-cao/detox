@@ -98,7 +98,7 @@ Eight sections. The existing left sidebar is retired. Navigation happens two way
 | Blocker | **The Rule Board** | Chalkboard at the town hall. Block/whitelist toggles are gate-control levers. |
 | *(new)* | **The Market** | Pixel-art bazaar. Sunlight/Starshard economy. |
 | Share (cards) | **Postcards** | Mail desk. Pick a postcard template, stamp it, download. |
-| Settings | **The Mayor's Study** | Wood-paneled office. Dark mode = candle. Shortcuts = framed cheat sheet. Export = filing cabinet. |
+| Settings | **The Mayor's Study** | Wood-paneled office. Privacy controls, shortcuts, and export = filing cabinet. |
 
 ### 4.1 Persistent HUD
 

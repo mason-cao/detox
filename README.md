@@ -20,8 +20,8 @@ Detox is a macOS screen-time tracker that polls your frontmost app every 2 secon
 - **Detailed buildings** — every building has iso depth (right-side wall panel + roof side slope), a base-shadow ellipse that fades when you hover, mullioned windows that light up at night, and ornaments that read its purpose: a clock + weather vane on Town Hall, ledger sign on Registry, striped awning + produce baskets on Market, smoking chimney on Chronicle, scroll inset on Charter, chalk piece on the Rule Board, postcard + mailbox flag on Postcards, arched stained glass on Mayor's Study.
 - **Day/night light pass** driven by the system clock. Soft dim and warm lantern glow above each building at dusk.
 - **Live frontmost glow** on the resident marker representing your current app (3 s frontend poll, 2 s server cache).
-- **Calm resident markers** keep app presence readable without turning the Isle into a jittery sprite field. The active app marker rises visually through glow and layer priority.
-- **Tucked-away compass** on non-Isle views. The Isle itself is the primary navigation surface; open the map only when you need a shortcut.
+- **Smooth resident markers** keep app presence readable while gliding through eased routes. The active app marker rises visually through glow and layer priority.
+- **Compact compass** stays available on the Isle as a small map control. Open it only when you need a shortcut; buildings remain the primary navigation surface.
 
 ### Tab signature animations
 
@@ -31,7 +31,7 @@ Detox is a macOS screen-time tracker that polls your frontmost app every 2 secon
 - **Market** — coin floats from the bought stall card up to the HUD currency badge.
 - **Registry** — parchment page-turn between filter views.
 - **Chronicle** — quill sweeps across the bar chart in sync with Chart.js bar growth.
-- **Mayor's Study** — candle flame flickers on dark-mode toggle, smoke puff when going dark.
+- **Mayor's Study** — archive downloads and privacy controls stay in the wood-paneled settings room.
 - Every animation has a no-motion equivalent gated on `prefers-reduced-motion: reduce`.
 
 ### Tracking + intervention
@@ -42,7 +42,7 @@ Detox is a macOS screen-time tracker that polls your frontmost app every 2 secon
 - **Charter** (Goals) — daily total decree, per-app limits, bedtime bell.
 - **Market** — closed-economy reward loop. Detoxed minutes earn ☀ Sunlight; streaks earn ✦ Starshards. Spend on visual upgrades to the Isle. 100% refund within 24 h, 50% after. Hall of Honor records milestones.
 - **Postcards** — generate a 1080×1920 PNG of the day's stats to share. (Local agent only — cloud renders the rest of the dashboard but card generation needs Pillow on the device.)
-- **Mayor's Study** (Settings) — theme toggle, idle timeout, **Ghost Mode** toggle (hash app names before they leave the Mac), CSV/JSON range exports, **full archive** JSON download, **Delete Everything** with typed confirmation, categories, keyboard shortcuts. Links to the in-repo [privacy policy](docs/privacy.md) and [terms of service](docs/terms.md).
+- **Mayor's Study** (Settings) — idle timeout, **Ghost Mode** toggle (hash app names before they leave the Mac), CSV/JSON range exports, **full archive** JSON download, **Delete Everything** with typed confirmation, categories, keyboard shortcuts. Links to the in-repo [privacy policy](docs/privacy.md) and [terms of service](docs/terms.md).
 
 ### Keyboard shortcuts
 
@@ -50,7 +50,6 @@ Detox is a macOS screen-time tracker that polls your frontmost app every 2 secon
 |-----|--------|
 | `1`–`8` | Jump to tab (Isle, Residents, Chronicle, Charter, Rule Board, Market, Postcards, Study) |
 | `← →` | Navigate dates |
-| `D` | Toggle theme |
 | `/` | Search residents |
 | `?` | Open help / tour |
 | `Esc` | Back to the Isle (or close the open overlay) |
@@ -215,19 +214,19 @@ detox/
 │   │   ├── tokens.css           # Dawn Cove palette + spacing scale
 │   │   ├── pixel-ui.css         # Pixel buttons, panels, modals
 │   │   ├── isle.css             # Iso world stage, tiles, decor, vignette, drag cursors
-│   │   ├── compass.css          # Tucked-away town map HUD
+│   │   ├── compass.css          # Compact town map HUD
 │   │   ├── hud.css, residents.css, effects.css, views.css, style.css
 │   ├── js/
 │   │   ├── auth.js              # Supabase client + session manager (with local-dev shim)
 │   │   ├── cloud.js             # auth-aware fetch wrapper
 │   │   ├── pair.js              # pair page logic
-│   │   ├── app.js               # router, API client, theme, toasts, shortcuts
+│   │   ├── app.js               # router, API client, toasts, shortcuts
 │   │   ├── iso.js               # tile projection + tile hash + shadow wedge
 │   │   ├── world.js             # SVG scaffold, sky, weather, panZ, ground decor
 │   │   ├── buildings.js         # 8 building generators with iso depth
 │   │   ├── compass.js           # compact town map HUD
 │   │   ├── effects.js           # waxSeal, chalkDust, currencyFloat, pageTurn, slamIn
-│   │   ├── residents.js         # static resident markers + frontmost glow
+│   │   ├── residents.js         # smooth resident markers + frontmost glow
 │   │   ├── isle.js              # mounts world + residents + signboards
 │   │   └── dashboard.js + apps.js + stats.js + goals.js + blocker.js + market.js + cards.js + settings.js
 ├── infra/
@@ -262,7 +261,7 @@ detox/
 | Web | Vanilla HTML/CSS/JS — no bundler, no Node |
 | Charts | Chart.js 4.4.1 (CDN) |
 | Fonts | Press Start 2P, VT323, Inter (Google Fonts) |
-| Resident markers | Programmatic SVG markers, no sprite atlas dependency |
+| Resident markers | Programmatic SVG markers, eased RAF movement, no sprite atlas dependency |
 | App detection | `osascript` (AppleScript) — macOS only |
 | App blocking | `pkill -x` (process executable name match) |
 | Notifications | macOS Notification Center via `osascript` |

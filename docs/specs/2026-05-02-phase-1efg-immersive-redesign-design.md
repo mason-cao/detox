@@ -6,11 +6,12 @@ Owner: Mason Cao
 Supersedes: portions of `docs/specs/2026-04-17-detox-redesign-design.md` §3.1, §4
 
 2026-05-17 launch amendment: the walking sprite direction is retired.
-Residents are now static programmatic SVG markers with frontmost glow.
-No sprite atlas, walk ticker, or wandering loop should ship in the main
-Isle. The compass is tucked away outside the Isle so clickable buildings
-remain the primary navigation surface. Monitor refreshes must update
-Isle data in place instead of tearing down and remounting the world.
+Residents are now programmatic SVG markers with eased requestAnimationFrame
+movement and frontmost glow. No sprite atlas or low-frame-rate walk cycle
+should ship in the main Isle. The compact compass remains available on
+the Isle while clickable buildings stay the primary navigation surface.
+Monitor refreshes must update Isle data in place instead of tearing down
+and remounting the world.
 
 ## 1. Summary
 
@@ -40,11 +41,11 @@ The work splits into three plans (1e Foundation, 1f Living world, 1g Tab polish)
 
 ## 3. What changes, conceptually
 
-The Isle becomes a place, not a grid. Eight buildings sit at fixed coordinates on an isometric tile field. Residents are quiet markers assigned an archetype style based on their app's category. The frontmost application's marker has a glowing aura and rises above the other markers. At night, the world dims and lanterns above each building glow.
+The Isle becomes a place, not a grid. Eight buildings sit at fixed coordinates on an isometric tile field. Residents are quiet markers assigned an archetype style based on their app's category. They glide through small open-ground routes instead of running on sprite frames. The frontmost application's marker has a glowing aura and rises above the other markers. At night, the world dims and lanterns above each building glow.
 
-Navigation is the world. Clicking a building deep-links to the section it represents. A small compass card pinned top-right lists the eight destinations and highlights the current room, so a sub-tab visitor can jump sideways without bouncing through the Isle. The bottom ribbon disappears. Keyboard `1`–`8` continues to work as a power-user shortcut.
+Navigation is the world. Clicking a building deep-links to the section it represents. A small compass card on the Isle lists the eight destinations when needed, while sub-tabs keep their own uncluttered page controls. The bottom ribbon disappears. Keyboard `1`–`8` continues to work as a power-user shortcut.
 
-The seven sub-tabs keep their current data and routes. What changes is one signature interaction per tab: chalk write/erase on the Rule Board, parchment page-turn on the Registry, wax seal stamps on the Charter, candle flame swap on Study dark-mode toggle, and so on. Each is a small CSS keyframe + JS hook; nothing structural moves.
+The seven sub-tabs keep their current data and routes. What changes is one signature interaction per tab: chalk write/erase on the Rule Board, parchment page-turn on the Registry, wax seal stamps on the Charter, coin float on Market, postcard slide on Postcards, and so on. Each is a small CSS keyframe + JS hook; nothing structural moves.
 
 ## 4. Architecture
 
@@ -57,7 +58,7 @@ One `<svg>` element with five top-level `<g>` groups, painted in order:
 <g id="weather">   clouds, rain, sunbeams (above sky, below world)
 <g id="ground">    iso diamond tile grid, painted once on render
 <g id="buildings"> 8 buildings at fixed iso coords
-<g id="residents"> N static resident markers with frontmost glow
+<g id="residents"> N eased resident markers with frontmost glow
 <g id="effects">   currency floats, glow auras, dust particles
 ```
 
@@ -70,7 +71,7 @@ HUD overlays (date bar, weather badge, signboards) stay as absolutely-positioned
 - `iso.js` — projection helpers. `tileToScreen(tx, ty) → {x, y}`, `screenToTile(x, y) → {tx, ty}`, plus tile-grid constants (tile width / height, world tile bounds).
 - `world.js` — SVG scaffold, layer mounting, ground-tile painting, building placement, sky / celestial / day-night logic (refactored from `isle.js`).
 - `buildings.js` — programmatic SVG generators, one function per building (`townHall`, `registry`, `market`, `charter`, `ruleBoard`, `chronicle`, `postcards`, `study`).
-- `residents.js` — programmatic resident markers, archetype assignment, frontmost-glow binding.
+- `residents.js` — programmatic resident markers, eased route movement, archetype assignment, frontmost-glow binding.
 - `effects.js` — reusable visual primitives (wax seal, chalk dust burst, currency float, glow halo).
 - `compass.js` — compass HUD: 8 destinations, current-room highlight, click to teleport, collapsible at <760 px.
 
@@ -97,9 +98,9 @@ Implementation: read the latest row from `usage_log` ordered by timestamp. Cache
 ### 5.1 Residents - programmatic markers
 
 Residents are SVG markers generated in `residents.js`. They do not use
-PNG atlases and they do not walk. Each marker has a stable tile slot,
-category-colored ring, app initials, app name, optional minutes label on
-hover/focus, and a frontmost glow when the live agent reports that app.
+PNG atlases or frame-based walk cycles. Each marker has an eased open-ground
+route, category-colored ring, app initials, app name, optional minutes label
+on hover/focus, and a frontmost glow when the live agent reports that app.
 
 Eight archetypes; each tracked app maps to one based on its category in `agent/config.py`:
 
@@ -136,7 +137,9 @@ the launch surface smaller and avoids sprite-license churn.
 | Sky gradient | Real time, every 60 s | `world.js#updateSky` | Static painted snapshot at noon |
 | Celestial arc | Real time | `world.js` | Static at current phase, no transition |
 | Cloud drift / rain / sunbeam | Continuous CSS keyframes | `weather.css` | All `animation: none`, single decorative cloud |
+| Resident marker glide | Continuous RAF route movement | `residents.js` | No route movement |
 | Resident marker lift | Hover/focus/frontmost state | CSS transform only | No transform |
+| Chimney smoke / water drift / twinkle | Continuous CSS keyframes | `isle.css` | All `animation: none` |
 | Frontmost glow | `/api/dashboard/now` poll, 3 s | `residents.js#applyFrontmost` | Static halo, no pulse |
 | Currency earn float | `+1 ☀` rises 24 px from the active marker, fades | `effects.js` | HUD counter flashes once, no float |
 | Day/night light pass | Real time, every 60 s | `world.js#updateSky` | Snap to current phase |
@@ -153,12 +156,12 @@ Flow:
 4. When frontmost changes, the previous resident's glow fades over 600 ms; the new one's halo fades in.
 5. If frontmost is null (no app focused), all glows fade over 600 ms.
 
-### 6.3 Static marker slots
+### 6.3 Smooth marker routes
 
-Each visible app gets one stable tile slot on open ground. The list is
-top-eight by daily usage from `/api/dashboard`, and the set only remounts
-when that top-eight signature changes. Normal monitor refreshes update
-labels and weather in place so the Isle does not flash or reset.
+Each visible app gets one stable open-ground route. The list is top-eight
+by daily usage from `/api/dashboard`, and the set only remounts when that
+top-eight signature changes. Normal monitor refreshes update labels and
+weather in place so the Isle does not flash or reset.
 
 ### 6.4 Performance
 
@@ -192,11 +195,11 @@ Spec §4.2's town-crier first-visit tooltip system is reused: on a user's first 
 | Rule Board | Add / remove a block | Chalk write on add (letter-by-letter + dust particles), chalk-erase swipe on remove | `@keyframes typewriter` + 12-particle SVG burst from `effects.js#chalkDust` |
 | Market | Buy an item | Coin clink + item floats to inventory icon | `effects.js#currencyFloat` from item card to top-right HUD over 500 ms |
 | Postcards | Generate a card | Postcard slides out + stamp slams down | `transform: translateY` with cubic-bezier overshoot + `effects.js#waxSeal` reused |
-| Study | Toggle dark mode | Candle flame swaps frame; smoke puff on snuff | Existing dark-mode toggle gains a candle SVG with frame swap |
+| Study | Export / privacy action | Study controls animate as filing-cabinet actions | Existing settings actions stay in the Study without a theme switch |
 
 **Reused primitives.** `effects.js` exposes `waxSeal`, `chalkDust`, `currencyFloat`, `glowHalo`. Each is called from multiple tabs, written once. Wax seal is reused by Charter and Postcards; chalk dust by Rule Board and any future "law passed" event; currency float by Market and the live-earn token from §6.1.
 
-**Reduced motion.** Each animation has a no-motion equivalent: page-turn becomes fade, quill becomes static, wax seal pops in without rotation, chalk text appears whole, coin teleports, postcard fades, candle snaps state. All gated on `prefers-reduced-motion: reduce`.
+**Reduced motion.** Each animation has a no-motion equivalent: page-turn becomes fade, quill becomes static, wax seal pops in without rotation, chalk text appears whole, coin teleports, and postcard fades. All gated on `prefers-reduced-motion: reduce`.
 
 **Sound is out of scope.** "Thunk" and "clink" descriptors above describe character, not committed audio.
 
@@ -216,10 +219,10 @@ Suggested commits:
 
 ### 9.2 Plan 1f — Living world (~1.5 weeks)
 
-**Goal:** Isle feels alive without walking residents. Static markers stay calm while the frontmost app glows in real time.
+**Goal:** Isle feels alive without sprite-sheet walking residents. Programmatic markers move smoothly while the frontmost app glows in real time.
 
 Suggested commits:
-- `feat(residents): static SVG markers + 8 archetypes mapped from category`
+- `feat(residents): smooth SVG markers + 8 archetypes mapped from category`
 - `fix(isle): refresh live data without remounting the world`
 - `feat(api): GET /api/dashboard/now for live frontmost binding`
 - `feat(isle): frontmost resident glows in real time`
@@ -237,23 +240,23 @@ Suggested commits:
 - `feat(rules): chalk write/erase + dust particles`
 - `feat(market): coin clink + item-to-HUD float`
 - `feat(postcards): postcard slide-out + stamp slam`
-- `feat(study): candle flame swap on dark mode toggle`
+- `feat(study): filing-cabinet export interactions`
 
 **Total surface across the three plans:** ~600 new LOC, ~400 modified, no `requirements.txt` change, no schema change, no Python deps added.
 
 ## 10. Risks
 
-1. **Sprite pack mismatch with Dawn Cove palette.** CC0 packs vary in style. A mismatch costs a day in pack hunting. Mitigation: plan 1f starts with a 1-day timebox to evaluate three candidate packs, then commit. Fallback: programmatic SVG residents (uglier but ships).
+1. **Programmatic residents look too abstract.** Markers can become too symbolic if they never feel embodied. Mitigation: keep the marker style but give each app a slow eased route, minute label, hover/focus lift, and frontmost glow.
 2. **Iso projection on small viewports.** SVG world targets 720×400 minimum. Below that, buildings overlap. Mitigation: a `max-width: 1200px` container and "scroll to pan" mechanic at <760 px width. Verify at 360 px during 1e.
 3. **3 s frontmost poll cost.** ~1200 requests/hour to the local Flask server. Mitigation: cache the latest frontmost in `agent/server.py` module memory, refresh from the existing 2 s monitor heartbeat. The poll reads cache, not DB. Confirm during 1f.
-4. **Walking sprites distract from data.** Resolved for launch by removing walking sprites entirely. Resident markers are static; only frontmost glow and hover/focus lift remain.
+4. **Walking sprites distract from data.** Resolved for launch by removing walking sprites entirely. Resident markers move through slow eased routes; frontmost glow and hover/focus lift remain readable.
 5. **Bottom ribbon retirement breaks muscle memory.** Mitigation: first-run town-crier bubble explains the new nav; compass HUD is always visible; keyboard `1`–`8` still works.
 
 ## 11. Spec amendments
 
 Apply to `docs/specs/2026-04-17-detox-redesign-design.md`:
 
-- **§3.1 — Core game loop.** Add: "The frontmost application's resident marker glows in real time. Background residents are static app markers, not walking sprites."
+- **§3.1 — Core game loop.** Add: "The frontmost application's resident marker glows in real time. Background residents are smoothly moving app markers, not sprite-sheet walkers."
 - **§4 — Information architecture.** Replace "Bottom ribbon — a persistent pixel-art bulletin board with 8 tiles" with: "Compass HUD — small pinned card top-right listing the 8 destinations, highlights current room, collapses on mobile. Keyboard `1`–`8` retained. Bottom ribbon retired."
 - **§4.1 — Persistent HUD.** Add "Compass card" to the list. Drop the ribbon mention.
 
