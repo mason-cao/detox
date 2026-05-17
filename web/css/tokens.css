@@ -61,21 +61,6 @@
     --chart-tick:     #5a4a5a;
 }
 
-/* Dark-mode: app.js toggles [data-theme="dark"] on <html>. */
-:root[data-theme="dark"] {
-    --sky-top:       var(--dc-night);
-    --sky-bottom:    #2a3050;
-    --ground-tint:   #4a4060;
-    --ink-current:   #e8ddf0;
-
-    --bg:             #1a1f3a;
-    --bg-card:        #2a2438;
-    --text:           #e8ddf0;
-    --text-secondary: #b0a8c0;
-    --chart-grid:     rgba(232, 221, 240, 0.12);
-    --chart-tick:     #b0a8c0;
-}
-
 /* Pixel-perfect rendering for scaled SVG / image assets. */
 .pixel-art {
     image-rendering: pixelated;

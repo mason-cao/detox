@@ -487,61 +487,9 @@ const App = {
         }, 3000);
     },
 
-    /* ── Dark Mode ──────────────────────────────────────────────────── */
-
-    toggleDarkMode() {
-        const html = document.documentElement;
-        const isDark = html.getAttribute('data-theme') === 'dark';
-        const newTheme = isDark ? 'light' : 'dark';
-        html.setAttribute('data-theme', newTheme);
-        localStorage.setItem('detox-theme', newTheme);
-        this.updateThemeIcon();
-        this.toast(isDark ? 'Light mode enabled' : 'Dark mode enabled', 'info');
-        this._flickerCandle(newTheme);
-    },
-
-    _flickerCandle(newTheme) {
-        if (this.prefersReducedMotion()) return;
-        const candle = document.querySelector('[data-role="candle"]');
-        if (!candle) return;
-        const flame = candle.querySelector('[data-role="flame"]');
-        if (flame) {
-            flame.classList.remove('effect-candle-flame');
-            void flame.getBoundingClientRect();
-            flame.classList.add('effect-candle-flame');
-            setTimeout(() => flame.classList.remove('effect-candle-flame'), 620);
-        }
-        if (newTheme === 'dark') {
-            const rect = candle.getBoundingClientRect();
-            const puff = document.createElement('span');
-            puff.className = 'effect-candle-puff';
-            puff.style.position = 'fixed';
-            puff.style.left = `${rect.left + rect.width / 2 - 5}px`;
-            puff.style.top = `${rect.top + 4}px`;
-            document.body.appendChild(puff);
-            setTimeout(() => puff.remove(), 500);
-        }
-    },
-
-    updateThemeIcon() {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const icon = document.getElementById('themeIcon');
-        const label = document.querySelector('.theme-toggle-label');
-        if (isDark) {
-            icon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
-            if (label) label.textContent = 'Light Mode';
-        } else {
-            icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
-            if (label) label.textContent = 'Dark Mode';
-        }
-    },
-
-    initTheme() {
-        const saved = localStorage.getItem('detox-theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = saved || (prefersDark ? 'dark' : 'light');
-        document.documentElement.setAttribute('data-theme', theme);
-        this.updateThemeIcon();
+    clearLegacyTheme() {
+        document.documentElement.removeAttribute('data-theme');
+        try { localStorage.removeItem('detox-theme'); } catch (_) {}
     },
 
     /* ── Keyboard Shortcuts ─────────────────────────────────────────── */
@@ -568,7 +516,6 @@ const App = {
                     break;
                 case 'ArrowLeft': e.preventDefault(); this.prevDate(); break;
                 case 'ArrowRight': e.preventDefault(); this.nextDate(); break;
-                case 'd': this.toggleDarkMode(); break;
                 case '/':
                     e.preventDefault();
                     if (this.currentTab === 'apps') {
@@ -624,7 +571,7 @@ const App = {
     /* ── Init ───────────────────────────────────────────────────────── */
 
     init() {
-        this.initTheme();
+        this.clearLegacyTheme();
 
         document.querySelectorAll('[data-tab]').forEach(el => {
             el.addEventListener('click', (e) => {

@@ -16,7 +16,7 @@ const HUD = {
         ['Rule Board', 'Banish distracting apps, whitelist essentials, or enable full lockdown.'],
         ['Market', 'Spend earned Sunlight and Starshards on owned items. No real money is accepted.'],
         ['Postcards', 'Stamp a shareable snapshot of a day on the Isle.'],
-        ['Study', 'Tune settings, categories, exports, theme, and keyboard reminders.'],
+        ['Study', 'Tune settings, categories, exports, privacy, and keyboard reminders.'],
     ],
 
     init() {

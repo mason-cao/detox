@@ -114,28 +114,6 @@
     animation: quill-sweep 760ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* ── Candle flame swap — flicker on dark/light toggle ───────────────── */
-@keyframes candle-flicker {
-    0%, 100% { transform: scaleY(1)   scaleX(1); }
-    25%      { transform: scaleY(1.1) scaleX(0.9); }
-    50%      { transform: scaleY(0.9) scaleX(1.05); }
-    75%      { transform: scaleY(1.05) scaleX(0.95); }
-}
-.effect-candle-flame { animation: candle-flicker 600ms ease-in-out; transform-origin: center bottom; }
-
-@keyframes candle-puff {
-    0%   { transform: translateY(0) scale(0.4); opacity: 0.7; }
-    100% { transform: translateY(-18px) scale(1.6); opacity: 0; }
-}
-.effect-candle-puff {
-    position: absolute;
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    background: rgba(220, 220, 220, 0.65);
-    pointer-events: none;
-    animation: candle-puff 460ms ease-out forwards;
-}
-
 /* ── Back-to-isle door icon — tiny press affordance ─────────────────── */
 .back-to-isle {
     background: transparent;
@@ -169,13 +147,10 @@
     .effect-page-turn,
     .effect-postcard-in,
     .effect-quill,
-    .effect-candle-flame,
-    .effect-candle-puff,
     .back-to-isle { animation: none; transition: none; }
     .effect-seal { opacity: 1; transform: translate(-50%, -50%) scale(1); }
     .effect-postcard-in { opacity: 1; transform: none; }
     .effect-chalk-write { clip-path: none; }
     .effect-coin,
-    .effect-chalk-dust,
-    .effect-candle-puff { display: none; }
+    .effect-chalk-dust { display: none; }
 }

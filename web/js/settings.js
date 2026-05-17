@@ -8,7 +8,6 @@ const Settings = {
             App.api('/api/categories'),
         ]);
 
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         const parsedIdleTimeout = parseInt(settings.idle_timeout_minutes ?? '5', 10);
         const idleTimeout = Number.isFinite(parsedIdleTimeout) ? Math.min(120, Math.max(0, parsedIdleTimeout)) : 5;
         const ghostMode = String(settings.ghost_mode ?? '0') === '1';
@@ -30,30 +29,6 @@ const Settings = {
                 <div class="page-bar">
                     ${App.backToIsleButton()}
                     <h1 class="page-heading">The Mayor's Study</h1>
-                </div>
-
-                <div class="study-section">
-                    <div class="study-section__header">
-                        <h2 class="study-section__title">APPEARANCE</h2>
-                    </div>
-                    <div class="study-panel">
-                        <div class="study-row">
-                            <div>
-                                <div class="study-row__label">CANDLELIGHT</div>
-                                <div class="study-row__detail">Switch between dawn and midnight palettes.</div>
-                            </div>
-                            <span class="study-candle" data-role="candle" aria-hidden="true">
-                                <svg viewBox="0 0 16 24" width="16" height="24">
-                                    <rect x="6" y="10" width="4" height="12" fill="#c4a47a" stroke="#2a1e2a" stroke-width="1"/>
-                                    <path data-role="flame" d="M8 10c-2-2-2-5 0-7 2 2 2 5 0 7z" fill="#ffd04a" stroke="#b8860b" stroke-width="0.5"/>
-                                </svg>
-                            </span>
-                            <label class="rule-board__toggle" aria-label="Toggle candlelight">
-                                <input type="checkbox" ${isDark ? 'checked' : ''} onchange="App.toggleDarkMode()">
-                                <span class="rule-board__knob" aria-hidden="true"></span>
-                            </label>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="study-section">
@@ -177,10 +152,6 @@ const Settings = {
                         <div class="kbd-scroll__row">
                             <span class="kbd-scroll__keys"><span class="kbd-scroll__key">←</span><span class="kbd-scroll__key">→</span></span>
                             <span>Navigate dates</span>
-                        </div>
-                        <div class="kbd-scroll__row">
-                            <span class="kbd-scroll__keys"><span class="kbd-scroll__key">D</span></span>
-                            <span>Toggle candlelight</span>
                         </div>
                         <div class="kbd-scroll__row">
                             <span class="kbd-scroll__keys"><span class="kbd-scroll__key">/</span></span>
