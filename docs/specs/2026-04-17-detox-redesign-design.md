@@ -267,8 +267,7 @@ Each phase is a shippable milestone.
 | **2** Backend extract | Port Flask → FastAPI, SQLite → Postgres, user scaffolding (dev token). Runs via docker-compose. | 1.5 wk |
 | **3** Agent packaging | `py2app` bundle, menu bar, Sparkle updater, install script. Agent targets local API. | 1 wk |
 | **4** Auth + cloud | Supabase, RLS, cloud ingest, rules puller, rewards ledger. Deploy to Railway + Cloudflare. | 2 wk |
-| **5** Private beta | 10–20 invite users, telemetry, iteration. | 2 wk |
-| **6** Public launch | Landing, Homebrew cask, signed DMG, announcement. | 1 wk |
+| **5** Public launch | Landing page, signed DMG, Homebrew cask, announcement, support runbook. | 1 wk |
 
 ## 12. Commit plan
 
@@ -322,7 +321,7 @@ Every commit below is one atomic change. Ordering matches phase sequence. Messag
 - `feat(infra): Railway api deploy with managed Postgres and Redis`
 - `feat(infra): Cloudflare Pages web deploy + API routing`
 
-### Phases 5–6
+### Phase 5 - Public launch
 - `feat(privacy): ghost mode (hashed app names) opt-in`
 - `feat(privacy): one-click data export + delete`
 - `docs: privacy policy and terms of service`

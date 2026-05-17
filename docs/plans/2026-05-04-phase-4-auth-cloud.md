@@ -37,7 +37,7 @@ The agent is the only writer of session/usage/pickup rows; the cloud is the syst
 **Non-goals (deferred):**
 - **Ghost Mode** (hashed app names, on-device salt). Spec §10 — lands in Phase 5.
 - **Sparkle release of agent with cloud build baked in.** Phase 4 is dev-builds only; Phase 5 cuts the first signed `Detox.app` that ships with cloud enabled.
-- **Email-domain allowlist / invites.** Private beta gating is a Phase 5 concern.
+- **Invite gating.** Removed from the launch path; the hosted app relies on Supabase auth plus per-user RLS.
 - **Real-time push (websockets).** All cloud → agent flow is poll + ETag.
 - **Multi-region or read replicas.** Single Fly region is fine at our user count.
 - **Apple Sign-In native flow.** Web Supabase Apple provider is enough for the v1.

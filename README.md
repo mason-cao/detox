@@ -19,9 +19,9 @@ Detox is a macOS screen-time tracker that polls your frontmost app every 2 secon
 - **Sophisticated terrain** — four green tile variants distributed by deterministic tile hash (no checkerboard), south-east shadow wedge per tile for fake elevation, scattered meadow decor (daisies, pebbles, grass tufts, bushes) on a hash-seeded distribution that skips building footprints.
 - **Detailed buildings** — every building has iso depth (right-side wall panel + roof side slope), a base-shadow ellipse that fades when you hover, mullioned windows that light up at night, and ornaments that read its purpose: a clock + weather vane on Town Hall, ledger sign on Registry, striped awning + produce baskets on Market, smoking chimney on Chronicle, scroll inset on Charter, chalk piece on the Rule Board, postcard + mailbox flag on Postcards, arched stained glass on Mayor's Study.
 - **Day/night light pass** driven by the system clock. Soft dim and warm lantern glow above each building at dusk.
-- **Live frontmost glow** on the resident representing your current app (3 s frontend poll, 2 s server cache).
-- **Walking residents** wander 3-waypoint loops between buildings on a 6 fps walk-cycle ticker. Banished apps sit offshore.
-- **Draggable compass** in the corner — the room list is a movable HUD. Drag its title bar anywhere on screen, double-click the title to reset. Position persists in `localStorage`.
+- **Live frontmost glow** on the resident marker representing your current app (3 s frontend poll, 2 s server cache).
+- **Calm resident markers** keep app presence readable without turning the Isle into a jittery sprite field. The active app marker rises visually through glow and layer priority.
+- **Tucked-away compass** on non-Isle views. The Isle itself is the primary navigation surface; open the map only when you need a shortcut.
 
 ### Tab signature animations
 
@@ -58,8 +58,6 @@ Detox is a macOS screen-time tracker that polls your frontmost app every 2 secon
 ---
 
 ## Two ways to run it
-
-> 🧪 **Phase 5 beta tester?** Read [`docs/beta-onboarding.md`](docs/beta-onboarding.md) — it's the install + permissions + what-to-test + how-to-file-feedback walkthrough specifically for the invite cohort.
 
 ### A. Local-only (default)
 
@@ -217,7 +215,7 @@ detox/
 │   │   ├── tokens.css           # Dawn Cove palette + spacing scale
 │   │   ├── pixel-ui.css         # Pixel buttons, panels, modals
 │   │   ├── isle.css             # Iso world stage, tiles, decor, vignette, drag cursors
-│   │   ├── compass.css          # Draggable compass HUD
+│   │   ├── compass.css          # Tucked-away town map HUD
 │   │   ├── hud.css, residents.css, effects.css, views.css, style.css
 │   ├── js/
 │   │   ├── auth.js              # Supabase client + session manager (with local-dev shim)
@@ -227,9 +225,9 @@ detox/
 │   │   ├── iso.js               # tile projection + tile hash + shadow wedge
 │   │   ├── world.js             # SVG scaffold, sky, weather, panZ, ground decor
 │   │   ├── buildings.js         # 8 building generators with iso depth
-│   │   ├── compass.js           # draggable compass HUD
+│   │   ├── compass.js           # compact town map HUD
 │   │   ├── effects.js           # waxSeal, chalkDust, currencyFloat, pageTurn, slamIn
-│   │   ├── residents.js         # sprite atlases, walk ticker, frontmost glow
+│   │   ├── residents.js         # static resident markers + frontmost glow
 │   │   ├── isle.js              # mounts world + residents + signboards
 │   │   └── dashboard.js + apps.js + stats.js + goals.js + blocker.js + market.js + cards.js + settings.js
 ├── infra/
@@ -264,7 +262,7 @@ detox/
 | Web | Vanilla HTML/CSS/JS — no bundler, no Node |
 | Charts | Chart.js 4.4.1 (CDN) |
 | Fonts | Press Start 2P, VT323, Inter (Google Fonts) |
-| Sprites | CC0 Kenney 1-Bit Pack atlases (≤ 64 KB) |
+| Resident markers | Programmatic SVG markers, no sprite atlas dependency |
 | App detection | `osascript` (AppleScript) — macOS only |
 | App blocking | `pkill -x` (process executable name match) |
 | Notifications | macOS Notification Center via `osascript` |
@@ -282,12 +280,11 @@ detox/
 | 3 | py2app `.app` bundle + menu-bar + local sync queue + Sparkle/DMG scaffolding | ✅ shipped (signed release cert-gated) |
 | 4 | Auth + cloud — Supabase, RLS, ingest, rules puller, server-authoritative rewards, Railway deploy | ✅ shipped |
 | 5 | Privacy — Ghost Mode (hashed app names), full archive export, one-click delete, in-repo privacy/TOS docs | ✅ shipped |
-| 5+ | Private-beta runtime — invite gating, telemetry, iteration | 🚧 queued |
-| 6 | Public launch — landing page, Homebrew cask, signed DMG, announcement | 🚧 queued |
+| 5+ | Public launch — landing page, signed DMG, Homebrew cask, announcement | 🚧 queued |
 
 **Until the signed DMG ships**, install is developer-only — clone the repo, `pip3 install -r requirements.txt`, then `python3 -m agent` (menu-bar) or `./start.sh` (headless). The py2app config in `infra/build/` produces a working `.app` from a checkout (`cd infra/build && python3 setup.py py2app -A`); codesign + notarize + Homebrew cask wait on an Apple Developer ID and Sparkle EdDSA keys.
 
-**Cloud is single-tenant per deployment** — anyone signing in with a Supabase magic link gets routed to their own user row. There's no multi-user gating; if you stand up an instance and someone has the URL + a Supabase email, they get a (separate) account. Phase 5 adds invite-only gating.
+**Cloud is single-tenant per deployment** — anyone signing in with a Supabase magic link gets routed to their own user row. There's no invite gate in the launch plan; if you stand up an instance and someone has the URL + a Supabase email, they get a separate account.
 
 ---
 
