@@ -147,10 +147,11 @@ const Compass = {
         const card = document.getElementById('compass');
         const toggle = document.getElementById('compassToggle');
         if (!list || !window.Buildings) return;
+
         const onIsle = App.currentTab === 'dashboard';
-        card?.classList.toggle('compass--isle-hidden', onIsle);
-        toggle?.classList.toggle('compass-toggle--isle-hidden', onIsle);
-        if (onIsle) this.toggleOpen(false);
+        card?.classList.toggle('compass--subtab-hidden', !onIsle);
+        toggle?.classList.toggle('compass-toggle--subtab-hidden', !onIsle);
+        if (!onIsle) this.toggleOpen(false);
 
         list.innerHTML = Buildings.catalog.map(b => {
             const cur = App.currentTab === b.tab ? 'is-current' : '';
