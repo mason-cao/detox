@@ -5,13 +5,16 @@
     top: calc(var(--hud-top-h) + var(--sp-2));
     right: var(--sp-3);
     z-index: 60;
-    width: 92px;
+    display: none;
+    width: 112px;
     background: var(--dc-parchment);
     color: var(--dc-ink);
     box-shadow: 0 0 0 2px var(--dc-ink), 0 4px 0 0 rgba(42, 30, 42, 0.18);
     font-family: var(--font-game);
     font-size: 13px;
 }
+.compass.is-open { display: block; }
+.compass.compass--isle-hidden { display: none; }
 
 .compass__title {
     display: block;
@@ -56,26 +59,24 @@
 
 /* ── Mobile: collapse to icon ─────────────────────────────────────── */
 .compass-toggle {
-    display: none;
+    display: inline-block;
     position: fixed;
     top: calc(var(--hud-top-h) + var(--sp-2));
     right: var(--sp-3);
     z-index: 60;
-    width: 36px;
+    min-width: 44px;
     height: 36px;
+    padding: 0 var(--sp-2);
     background: var(--dc-parchment);
     color: var(--dc-ink);
     border: 0;
     box-shadow: 0 0 0 2px var(--dc-ink);
     cursor: pointer;
-    font-size: 18px;
+    font-family: var(--font-display);
+    font-size: 9px;
 }
+.compass-toggle--isle-hidden { display: none; }
 
 @media (max-width: 760px) {
-    .compass {
-        display: none;
-        top: calc(var(--hud-top-h) + var(--sp-2) + 40px);
-    }
-    .compass.is-open { display: block; }
-    .compass-toggle { display: inline-block; }
+    .compass { top: calc(var(--hud-top-h) + var(--sp-2) + 40px); }
 }
