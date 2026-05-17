@@ -366,6 +366,13 @@ const App = {
         this.showTab(this.currentTab);
     },
 
+    refreshVisibleData() {
+        if (this.currentTab === 'dashboard' && window.Isle) {
+            return Isle.refreshLive();
+        }
+        return Promise.resolve();
+    },
+
     prefersReducedMotion() {
         return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     },
@@ -608,9 +615,7 @@ const App = {
 
     startAutoRefresh() {
         setInterval(() => {
-            if (this.currentTab === 'dashboard' || this.currentTab === 'stats') {
-                this.refresh();
-            }
+            this.refreshVisibleData();
             this.checkMonitor();
             this.refreshFocusMode();
         }, 30000);
