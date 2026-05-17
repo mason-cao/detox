@@ -2,8 +2,8 @@
 
 Phase 4 introduces a SQLAlchemy engine for the new Phase-4 tables (devices,
 ingest, rewards balances, inventory, milestones). Existing Phase-2 services
-keep talking to the local SQLite agent database until they're ported in
-Phase 5; this module is the shared seam new routers will plug into.
+kept talking to the local SQLite agent database until the Postgres port;
+this module is the shared seam new routers plug into.
 
 The migration in ``0002_user_scoping_and_rls.py`` set RLS policies that filter
 on ``current_setting('app.current_user_id', true)``. Every request that has a

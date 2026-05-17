@@ -1383,9 +1383,9 @@ def delete_all_data():
     Called by ``/api/data/delete``. Truncates the same tables that
     ``export_all`` covers plus the sync queue and cloud mirrors so there's
     nothing pending or stale after the wipe. The agent's ``device_id`` in
-    sync_state is preserved so a paired beta tester doesn't have to re-pair
-    just to re-test ingest after a reset; tearing down the pairing itself
-    is a separate flow (sign out + delete on the cloud).
+    sync_state is preserved so a paired user does not have to re-pair
+    after a local reset; tearing down the pairing itself is a separate
+    flow (sign out + delete on the cloud).
     """
     with get_db() as conn:
         for table in _EXPORTABLE_TABLES:
