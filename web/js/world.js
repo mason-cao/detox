@@ -7,19 +7,22 @@ const World = {
     _motionMedia: null,
     _motionListenerBound: false,
     _pan: { x: 0, y: 0, max: { x: 0, y: 0 } },
+    VIEW_PAD_X: 96,
+    VIEW_PAD_BOTTOM: 56,
 
     // Mount the SVG world into the given parent. Returns the root SVG element.
     // Caller is responsible for emptying the parent before calling mount().
     mount(parent, weather) {
         const w = Iso.worldW();
         const h = Iso.worldH() + 80; // +80px sky headroom above the ground
+        const view = this.viewBox(w, h);
         // How far the camera can drift before the island runs off-stage.
         // Roughly one third of the world dimensions in each axis.
         this._pan.max = { x: Math.round(w * 0.32), y: Math.round(h * 0.22) };
 
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('class', 'world');
-        svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+        svg.setAttribute('viewBox', `${view.x} ${view.y} ${view.width} ${view.height}`);
         svg.setAttribute('preserveAspectRatio', 'xMidYMin meet');
         svg.setAttribute('aria-hidden', 'true');
         // Oversized night-dim rect so the camera can pan without revealing the edge.
@@ -45,11 +48,11 @@ const World = {
                 </radialGradient>
             </defs>
             <g id="worldSky">
-                <rect class="world__sky-rect" x="0" y="0" width="${w}" height="${h}"></rect>
+                <rect class="world__sky-rect" x="${view.x}" y="${view.y}" width="${view.width}" height="${view.height}"></rect>
                 <g id="worldStars"></g>
                 <circle id="worldCelestial" r="14"></circle>
             </g>
-            ${this.seaLayer(w, h)}
+            ${this.seaLayer(w, h, view)}
             <g id="worldWeather"></g>
             <g id="worldPan" transform="translate(0 0)">
                 ${this.islandBackdrop()}
@@ -60,7 +63,7 @@ const World = {
                 <g id="worldResidents"></g>
                 <g id="worldEffects"></g>
             </g>
-            <rect class="world__vignette" x="0" y="0" width="${w}" height="${h}" pointer-events="none"></rect>
+            <rect class="world__vignette" x="${view.x}" y="${view.y}" width="${view.width}" height="${view.height}" pointer-events="none"></rect>
         `;
         parent.appendChild(svg);
 
@@ -72,25 +75,34 @@ const World = {
         return svg;
     },
 
-    seaLayer(w, h) {
+    viewBox(w = Iso.worldW(), h = Iso.worldH() + 80) {
+        return {
+            x: -this.VIEW_PAD_X,
+            y: 0,
+            width: w + this.VIEW_PAD_X * 2,
+            height: h + this.VIEW_PAD_BOTTOM,
+        };
+    },
+
+    seaLayer(w, h, view = this.viewBox(w, h)) {
         const horizon = Math.round(h * 0.48);
         return `
             <g id="worldSea" aria-hidden="true">
-                <rect class="world__sea" x="0" y="${horizon}" width="${w}" height="${h - horizon}"></rect>
-                <path class="world__sea-line world__sea-line--a" d="M28 ${horizon + 52} C118 ${horizon + 36}, 182 ${horizon + 70}, 280 ${horizon + 50} S470 ${horizon + 46}, 612 ${horizon + 66}"></path>
-                <path class="world__sea-line world__sea-line--b" d="M-10 ${horizon + 108} C94 ${horizon + 88}, 194 ${horizon + 128}, 318 ${horizon + 106} S520 ${horizon + 92}, 666 ${horizon + 124}"></path>
+                <rect class="world__sea" x="${view.x}" y="${horizon}" width="${view.width}" height="${view.height - horizon}"></rect>
+                <path class="world__sea-line world__sea-line--a" d="M${view.x + 16} ${horizon + 52} C118 ${horizon + 36}, 182 ${horizon + 70}, 280 ${horizon + 50} S470 ${horizon + 46}, ${view.x + view.width - 18} ${horizon + 66}"></path>
+                <path class="world__sea-line world__sea-line--b" d="M${view.x - 10} ${horizon + 108} C94 ${horizon + 88}, 194 ${horizon + 128}, 318 ${horizon + 106} S520 ${horizon + 92}, ${view.x + view.width + 26} ${horizon + 124}"></path>
+                <path class="world__sea-line world__sea-line--c" d="M${view.x + 42} ${horizon + 158} C144 ${horizon + 142}, 246 ${horizon + 170}, 358 ${horizon + 150} S574 ${horizon + 138}, ${view.x + view.width - 48} ${horizon + 166}"></path>
                 <ellipse class="world__island-aura" cx="${w / 2}" cy="${horizon + 76}" rx="${w * 0.46}" ry="92"></ellipse>
             </g>
         `;
     },
 
     islandBackdrop() {
-        const cx = Iso.worldW() / 2;
         return `
             <g id="worldIslandBackdrop" aria-hidden="true">
-                <ellipse class="world__island-shadow" cx="${cx}" cy="282" rx="286" ry="106"></ellipse>
-                <ellipse class="world__shore world__shore--outer" cx="${cx}" cy="266" rx="270" ry="98"></ellipse>
-                <ellipse class="world__shore world__shore--inner" cx="${cx}" cy="258" rx="236" ry="76"></ellipse>
+                <path class="world__island-shadow" d="M10 276 C50 214 160 154 312 142 C476 130 612 174 682 244 C730 294 650 354 502 390 C336 428 166 392 72 334 C30 306 -12 288 10 276 Z"></path>
+                <path class="world__shore world__shore--outer" d="M6 262 C48 202 160 140 314 128 C484 116 628 164 696 234 C742 288 654 344 504 376 C340 412 172 378 78 320 C36 294 -18 274 6 262 Z"></path>
+                <path class="world__shore world__shore--inner" d="M54 258 C94 210 186 170 318 158 C458 146 578 182 634 236 C672 276 604 318 484 346 C342 378 202 354 112 312 C78 292 34 272 54 258 Z"></path>
             </g>
         `;
     },
@@ -135,16 +147,16 @@ const World = {
         const onPointerMove = (e) => {
             if (!dragging) return;
             // Convert client-space delta to viewBox-space delta using the
-            // SVG's bounding rect — accounts for responsive scaling.
+            // SVG's bounding rect. Dragging right moves the camera right,
+            // so the world content translates left under the pointer.
             const rect = svg.getBoundingClientRect();
-            const w = Iso.worldW();
-            const h = Iso.worldH() + 80;
-            const scaleX = rect.width  > 0 ? w / rect.width  : 1;
-            const scaleY = rect.height > 0 ? h / rect.height : 1;
+            const view = this.viewBox();
+            const scaleX = rect.width  > 0 ? view.width / rect.width  : 1;
+            const scaleY = rect.height > 0 ? view.height / rect.height : 1;
             const dx = (e.clientX - startClient.x) * scaleX;
             const dy = (e.clientY - startClient.y) * scaleY;
-            const cx = Math.max(-this._pan.max.x, Math.min(this._pan.max.x, startPan.x + dx));
-            const cy = Math.max(-this._pan.max.y, Math.min(this._pan.max.y, startPan.y + dy));
+            const cx = Math.max(-this._pan.max.x, Math.min(this._pan.max.x, startPan.x - dx));
+            const cy = Math.max(-this._pan.max.y, Math.min(this._pan.max.y, startPan.y - dy));
             this._pan.x = cx;
             this._pan.y = cy;
             apply();
@@ -280,9 +292,11 @@ const World = {
 
         const cloud = (cx, cy, scale = 1) => `
             <g class="weather-cloud" transform="translate(${cx} ${cy}) scale(${scale})">
-                <ellipse cx="0" cy="0" rx="22" ry="8"></ellipse>
-                <ellipse cx="-12" cy="-4" rx="10" ry="6"></ellipse>
-                <ellipse cx="14" cy="-2" rx="12" ry="6"></ellipse>
+                <g class="weather-cloud__puff">
+                    <ellipse cx="0" cy="0" rx="22" ry="8"></ellipse>
+                    <ellipse cx="-12" cy="-4" rx="10" ry="6"></ellipse>
+                    <ellipse cx="14" cy="-2" rx="12" ry="6"></ellipse>
+                </g>
             </g>
         `;
 
