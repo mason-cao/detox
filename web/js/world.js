@@ -33,14 +33,26 @@ const World = {
                     <stop offset="60%" stop-color="rgba(0,0,0,0)"/>
                     <stop offset="100%" stop-color="rgba(0,0,0,0.18)"/>
                 </radialGradient>
+                <linearGradient id="seaGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="rgba(127, 200, 223, 0.24)"/>
+                    <stop offset="50%" stop-color="rgba(91, 143, 185, 0.72)"/>
+                    <stop offset="100%" stop-color="rgba(46, 124, 166, 0.94)"/>
+                </linearGradient>
+                <radialGradient id="islandAura" cx="50%" cy="42%" r="58%">
+                    <stop offset="0%" stop-color="rgba(255, 244, 214, 0.36)"/>
+                    <stop offset="72%" stop-color="rgba(255, 244, 214, 0.08)"/>
+                    <stop offset="100%" stop-color="rgba(255, 244, 214, 0)"/>
+                </radialGradient>
             </defs>
             <g id="worldSky">
                 <rect class="world__sky-rect" x="0" y="0" width="${w}" height="${h}"></rect>
                 <g id="worldStars"></g>
                 <circle id="worldCelestial" r="14"></circle>
             </g>
+            ${this.seaLayer(w, h)}
             <g id="worldWeather"></g>
             <g id="worldPan" transform="translate(0 0)">
+                ${this.islandBackdrop()}
                 <g id="worldGround">${this.groundTiles()}</g>
                 <g id="worldGroundDecor">${this.groundDecor()}</g>
                 <rect id="worldNightDim" x="${dimX}" y="${dimY}" width="${dimW}" height="${dimH}" pointer-events="none"></rect>
@@ -58,6 +70,29 @@ const World = {
         this.updateSky();
         this.syncSkyTimer();
         return svg;
+    },
+
+    seaLayer(w, h) {
+        const horizon = Math.round(h * 0.48);
+        return `
+            <g id="worldSea" aria-hidden="true">
+                <rect class="world__sea" x="0" y="${horizon}" width="${w}" height="${h - horizon}"></rect>
+                <path class="world__sea-line world__sea-line--a" d="M28 ${horizon + 52} C118 ${horizon + 36}, 182 ${horizon + 70}, 280 ${horizon + 50} S470 ${horizon + 46}, 612 ${horizon + 66}"></path>
+                <path class="world__sea-line world__sea-line--b" d="M-10 ${horizon + 108} C94 ${horizon + 88}, 194 ${horizon + 128}, 318 ${horizon + 106} S520 ${horizon + 92}, 666 ${horizon + 124}"></path>
+                <ellipse class="world__island-aura" cx="${w / 2}" cy="${horizon + 76}" rx="${w * 0.46}" ry="92"></ellipse>
+            </g>
+        `;
+    },
+
+    islandBackdrop() {
+        const cx = Iso.worldW() / 2;
+        return `
+            <g id="worldIslandBackdrop" aria-hidden="true">
+                <ellipse class="world__island-shadow" cx="${cx}" cy="282" rx="286" ry="106"></ellipse>
+                <ellipse class="world__shore world__shore--outer" cx="${cx}" cy="266" rx="270" ry="98"></ellipse>
+                <ellipse class="world__shore world__shore--inner" cx="${cx}" cy="258" rx="236" ry="76"></ellipse>
+            </g>
+        `;
     },
 
     // ── Drag-to-pan ─────────────────────────────────────────────────────

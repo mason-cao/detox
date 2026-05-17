@@ -1,10 +1,9 @@
-/* Residents — sprite-atlas walk + frontmost-glow binding.
-   Foundation: archetype assignment from app category. */
+/* Residents - calm app markers + frontmost-glow binding.
+   The Isle is the focus, so residents are static presence markers rather
+   than moving sprite actors. */
 
 const Residents = {
-    // Eight archetypes, each backed by a 128×32 PNG atlas under
-    // web/assets/sprites/residents/. Order is the enumeration order
-    // used when no app maps to a given archetype.
+    // Eight archetypes. These map categories to marker styling, not sprite art.
     archetypes: ['scribe', 'builder', 'jester', 'banished', 'farmer', 'musician', 'wanderer', 'sheriff'],
 
     // Map an app's category (from agent/config.py) to an archetype.
@@ -34,6 +33,13 @@ const Residents = {
         return Math.abs(h) % 360;
     },
 
+    initialsFor(appName) {
+        const words = String(appName || '').trim().split(/[\s._-]+/).filter(Boolean);
+        if (!words.length) return '?';
+        if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+        return `${words[0][0]}${words[1][0]}`.toUpperCase();
+    },
+
     // Build the resident objects from /api/dashboard's `apps` array.
     // Residents are stable per app_name across renders so frontmost-binding
     // can target a known DOM node.
@@ -43,24 +49,26 @@ const Residents = {
             appName: app.app_name,
             archetype: this.archetypeFor(app.category),
             tint: this.tintFor(app.app_name),
-            tile: { tx: 0, ty: 0 },     // assigned by walk-path init in Task 5
-            progress: 0,                 // 0-1 within the current path leg
-            frame: 0,                    // 0-3 walk-cycle frame
+            initials: this.initialsFor(app.app_name),
+            minutes: Number(app.minutes || app.total_minutes || 0),
+            category: app.category || 'Uncategorized',
+            tile: { tx: 0, ty: 0 },
             isFrontmost: false,
         }));
     },
 
     // Internal cache of the mounted residents, keyed by app_name.
     _state: new Map(),
+    _mountedSignature: '',
 
-    // Slots reused from 1e — open ground row at ty=4 plus two corners.
+    // Open ground row at ty=4 plus two corners.
     _initialSlots: [
         { tx: 0, ty: 4 }, { tx: 2, ty: 4 }, { tx: 4, ty: 4 },
         { tx: 6, ty: 4 }, { tx: 8, ty: 4 }, { tx: 10, ty: 4 },
         { tx: 1, ty: 7 }, { tx: 11, ty: 7 },
     ],
 
-    // Mount sprite residents into the world's #worldResidents <g>.
+    // Mount resident markers into the world's #worldResidents <g>.
     // Replaces any existing children. Idempotent across re-renders.
     mount(apps) {
         const layer = document.getElementById('worldResidents');
@@ -72,6 +80,7 @@ const Residents = {
         }));
 
         this._state.clear();
+        this._mountedSignature = built.map(r => r.appName).join('\u0000');
         layer.innerHTML = built.map(r => this._render(r)).join('');
         built.forEach(r => this._state.set(r.appName, r));
 
@@ -82,61 +91,57 @@ const Residents = {
         this.startTicker();
     },
 
-    // Render one resident as an SVG <g>. The <image>'s x attribute is
-    // -frame*32 so the same atlas serves all four walk frames.
+    update(apps) {
+        const nextSignature = (apps || []).slice(0, 8).map(app => app.app_name).join('\u0000');
+        if (nextSignature !== this._mountedSignature) {
+            this.mount(apps);
+            if (this._frontmostAppName) this._setGlow(this._frontmostAppName, true);
+            return;
+        }
+
+        (apps || []).slice(0, 8).forEach(app => {
+            const r = this._state.get(app.app_name);
+            if (!r) return;
+            r.minutes = Number(app.minutes || app.total_minutes || 0);
+            const node = this._nodeFor(app.app_name);
+            if (!node) return;
+            node.dataset.minutes = String(Math.round(r.minutes));
+            const label = node.querySelector('.world__resident-minutes');
+            if (label) label.textContent = App.formatTime(r.minutes);
+        });
+    },
+
+    // Render one resident as an SVG marker. No sprite atlas or walk cycle.
     _render(r) {
         const { x, y } = Iso.tileToScreen(r.tile.tx, r.tile.ty);
         const cy = y + Iso.TILE_H / 2 + 80; // sky headroom + tile-center
-        const ix = -r.frame * 32;
-        const clipId = `resClip-${this._slug(r.appName)}`;
         return `
             <g class="world__resident" transform="translate(${x.toFixed(1)} ${cy.toFixed(1)})"
                data-app="${App.escapeAttr(r.appName)}"
                data-archetype="${r.archetype}"
+               data-minutes="${Math.round(r.minutes)}"
                data-active="false"
                style="--tint: ${r.tint};">
-                <defs>
-                    <clipPath id="${clipId}"><rect x="-16" y="-32" width="32" height="32"/></clipPath>
-                </defs>
+                <title>${App.escapeHtml(r.appName)} - ${App.escapeHtml(App.formatTime(r.minutes))}</title>
                 <circle class="effect-halo" cx="0" cy="-16" r="22" style="display: none;"></circle>
-                <image class="world__resident-sprite"
-                       href="/assets/sprites/residents/${r.archetype}.png"
-                       x="${ix - 16}" y="-32" width="128" height="32"
-                       clip-path="url(#${clipId})"
-                       style="filter: hue-rotate(${r.tint}deg);"></image>
+                <ellipse class="world__resident-shadow" cx="0" cy="1" rx="18" ry="5"></ellipse>
+                <g class="world__resident-token">
+                    <circle class="world__resident-ring" cx="0" cy="-18" r="16"></circle>
+                    <circle class="world__resident-core" cx="0" cy="-18" r="11"></circle>
+                    <text class="world__resident-initial" text-anchor="middle" x="0" y="-14">${App.escapeHtml(r.initials)}</text>
+                </g>
                 <text class="world__resident-name" text-anchor="middle" y="14">${App.escapeHtml(r.appName)}</text>
+                <text class="world__resident-minutes" text-anchor="middle" y="27">${App.escapeHtml(App.formatTime(r.minutes))}</text>
             </g>
         `;
     },
 
-    _slug(s) { return s.replace(/[^a-z0-9]/gi, '_'); },
-
-    // Three-waypoint loops, in tile coords. Walks are slow — 4 s per leg.
-    // Tuned to keep residents on open ground (ty=3..6, tx=0..11) and away
-    // from the major-building 2x2 footprints.
-    paths: {
-        // All waypoints clear of major footprints — Town Hall (5-6, 1-2),
-        // Registry (1-2, 2-3), Market (9-10, 2-3), Chronicle (5-6, 5-6) —
-        // and minor footprints Charter (3,0), Rule Board (8,5), Postcards (2,6),
-        // Mayor Study (10,0). Open ground is ty=4 and ty=7.
-        scribe:    [{ tx: 0, ty: 4 }, { tx: 3, ty: 4 }, { tx: 3, ty: 7 }],
-        builder:   [{ tx: 6, ty: 4 }, { tx: 8, ty: 4 }, { tx: 7, ty: 7 }],
-        jester:    [{ tx: 4, ty: 4 }, { tx: 4, ty: 7 }, { tx: 1, ty: 7 }],
-        farmer:    [{ tx: 11, ty: 4 }, { tx: 11, ty: 7 }, { tx: 9, ty: 7 }],
-        musician:  [{ tx: 5, ty: 4 }, { tx: 5, ty: 7 }, { tx: 6, ty: 7 }],
-        wanderer:  [{ tx: 7, ty: 4 }, { tx: 0, ty: 7 }, { tx: 11, ty: 7 }],
-        sheriff:   [{ tx: 4, ty: 4 }, { tx: 7, ty: 4 }, { tx: 9, ty: 4 }],
-        // Banished sits offshore; never walks.
-        banished:  null,
-    },
-
     _tickInterval: null,
-    _legDurationMs: 4000,
 
     startTicker() {
         this.stopTicker();
-        if (App.prefersReducedMotion()) return; // residents stand still
-        this._tickInterval = setInterval(() => this._tick(), 1000 / 6); // 6 fps
+        // Static markers replaced the wandering sprite loop. Keeping this
+        // method preserves the App.showTab contract without starting timers.
     },
 
     stopTicker() {
@@ -144,45 +149,9 @@ const Residents = {
         this._tickInterval = null;
     },
 
-    _tick() {
-        const layer = document.getElementById('worldResidents');
-        if (!layer) return this.stopTicker();
-        const now = performance.now();
-
-        this._state.forEach((r, appName) => {
-            // Frontmost residents stand at their home tile and don't walk.
-            if (r.isFrontmost) return;
-
-            const path = this.paths[r.archetype];
-            if (!path) return; // banished — no walk
-
-            // Use an app-name-keyed offset so the 8 residents don't march in lockstep.
-            const offset = this.tintFor(appName) * 13;
-            const cycleMs = path.length * this._legDurationMs;
-            const t = ((now + offset) % cycleMs) / cycleMs;
-            const legCount = path.length;
-            const leg = Math.floor(t * legCount);
-            const legProgress = (t * legCount) - leg;
-            const a = path[leg];
-            const b = path[(leg + 1) % legCount];
-            const tx = a.tx + (b.tx - a.tx) * legProgress;
-            const ty = a.ty + (b.ty - a.ty) * legProgress;
-
-            // Walk-frame advances by one every 167ms; mod 4.
-            const frame = Math.floor(now / 167) % 4;
-
-            this._reposition(appName, tx, ty, frame);
-        });
-    },
-
-    _reposition(appName, tx, ty, frame) {
-        const node = document.querySelector(`.world__resident[data-app="${App.escapeAttr(appName)}"]`);
-        if (!node) return;
-        const { x, y } = Iso.tileToScreen(tx, ty);
-        const cy = y + Iso.TILE_H / 2 + 80;
-        node.setAttribute('transform', `translate(${x.toFixed(1)} ${cy.toFixed(1)})`);
-        const img = node.querySelector('.world__resident-sprite');
-        if (img) img.setAttribute('x', String(-frame * 32 - 16));
+    _nodeFor(appName) {
+        return [...document.querySelectorAll('.world__resident')]
+            .find(node => node.dataset.app === appName) || null;
     },
 
     _pollInterval: null,
@@ -223,7 +192,7 @@ const Residents = {
         if (!r) return;
         r.isFrontmost = on;
 
-        const node = document.querySelector(`.world__resident[data-app="${App.escapeAttr(appName)}"]`);
+        const node = this._nodeFor(appName);
         if (!node) return;
 
         node.setAttribute('data-active', on ? 'true' : 'false');
@@ -235,12 +204,9 @@ const Residents = {
         }
 
         // When turning on, snap the resident to home tile (their archetype's
-        // first waypoint) so the glow appears at a stable, readable spot.
+        // first waypoint) no longer applies because residents are static.
         if (on) {
-            const path = this.paths[r.archetype];
-            if (path && path.length) {
-                this._reposition(appName, path[0].tx, path[0].ty, 0);
-            }
+            node.parentNode?.appendChild(node);
         }
     },
 };

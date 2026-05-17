@@ -1,6 +1,7 @@
 /* Compass HUD — diegetic nav alongside clickable buildings on the Isle.
-   Lists Buildings.catalog entries. Highlights current tab. Click teleports.
-   On <760px, collapses to a 🧭 toggle button.
+   Lists Buildings.catalog entries only when opened. The Isle itself is
+   the primary navigation surface, so the compass stays out of the way
+   on the main view.
 
    Draggable by its title bar; position persists in localStorage so the
    user's preferred spot survives reloads. Double-click the title to
@@ -23,8 +24,8 @@ const Compass = {
         toggle.id = 'compassToggle';
         toggle.className = 'compass-toggle';
         toggle.type = 'button';
-        toggle.setAttribute('aria-label', 'Open compass');
-        toggle.textContent = '🧭';
+        toggle.setAttribute('aria-label', 'Open town map');
+        toggle.textContent = 'Map';
         toggle.addEventListener('click', () => this.toggleOpen());
 
         const card = document.createElement('aside');
@@ -32,7 +33,7 @@ const Compass = {
         card.className = 'compass';
         card.setAttribute('aria-label', 'Isle compass');
         card.innerHTML = `
-            <span class="compass__title" data-role="compass-handle" title="Drag to move, double-click to reset">🧭 Isle</span>
+            <span class="compass__title" data-role="compass-handle" title="Drag to move, double-click to reset">Town Map</span>
             <ul class="compass__list" id="compassList"></ul>
         `;
 
@@ -143,7 +144,13 @@ const Compass = {
 
     refresh() {
         const list = document.getElementById('compassList');
+        const card = document.getElementById('compass');
+        const toggle = document.getElementById('compassToggle');
         if (!list || !window.Buildings) return;
+        const onIsle = App.currentTab === 'dashboard';
+        card?.classList.toggle('compass--isle-hidden', onIsle);
+        toggle?.classList.toggle('compass-toggle--isle-hidden', onIsle);
+        if (onIsle) this.toggleOpen(false);
 
         list.innerHTML = Buildings.catalog.map(b => {
             const cur = App.currentTab === b.tab ? 'is-current' : '';

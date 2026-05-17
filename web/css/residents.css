@@ -1,12 +1,41 @@
-/* Resident sprite layer — atlas-based walk + halo glow. */
+/* Resident marker layer — static app presence + active glow. */
 
-.world__resident-sprite {
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
+.world__resident {
+    outline: none;
 }
 
-.world__resident[data-archetype="banished"] .world__resident-sprite {
-    filter: grayscale(1) brightness(0.7);
+.world__resident-shadow {
+    fill: rgba(42, 30, 42, 0.26);
+    pointer-events: none;
+}
+
+.world__resident-token {
+    transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.world__resident:hover .world__resident-token,
+.world__resident:focus .world__resident-token,
+.world__resident[data-active="true"] .world__resident-token {
+    transform: translateY(-2px);
+}
+
+.world__resident-ring {
+    fill: hsl(var(--tint), 48%, 72%);
+    stroke: var(--dc-ink);
+    stroke-width: 1.4;
+}
+
+.world__resident-core {
+    fill: rgba(255, 244, 214, 0.95);
+    stroke: rgba(42, 30, 42, 0.45);
+    stroke-width: 0.8;
+}
+
+.world__resident-initial {
+    font-family: var(--font-display);
+    font-size: 6px;
+    fill: var(--dc-ink);
+    pointer-events: none;
 }
 
 .world__resident-name {
@@ -17,6 +46,31 @@
     stroke: var(--dc-parchment);
     stroke-width: 2;
 }
+
+.world__resident-minutes {
+    font-family: var(--font-game);
+    font-size: 8px;
+    fill: var(--dc-ink-soft);
+    paint-order: stroke;
+    stroke: var(--dc-parchment);
+    stroke-width: 2;
+    opacity: 0;
+    transition: opacity 140ms ease-out;
+}
+
+.world__resident:hover .world__resident-minutes,
+.world__resident:focus .world__resident-minutes,
+.world__resident[data-active="true"] .world__resident-minutes {
+    opacity: 1;
+}
+
+.world__resident[data-archetype="builder"] .world__resident-ring { fill: #9fd4ef; }
+.world__resident[data-archetype="scribe"] .world__resident-ring { fill: #c9b8ff; }
+.world__resident[data-archetype="jester"] .world__resident-ring { fill: #ffb4a4; }
+.world__resident[data-archetype="farmer"] .world__resident-ring { fill: #b8d58f; }
+.world__resident[data-archetype="musician"] .world__resident-ring { fill: #ffd98a; }
+.world__resident[data-archetype="wanderer"] .world__resident-ring { fill: #d6c6aa; }
+.world__resident[data-archetype="banished"] .world__resident-ring { fill: #9a8d8f; }
 
 .effect-halo {
     fill: var(--dc-coin);
@@ -31,5 +85,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .world__resident-token,
+    .world__resident-minutes { transition: none; }
+    .world__resident:hover .world__resident-token,
+    .world__resident:focus .world__resident-token,
+    .world__resident[data-active="true"] .world__resident-token { transform: none; }
     .effect-halo.is-active { animation: none; opacity: 0.30; }
 }

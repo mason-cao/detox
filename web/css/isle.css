@@ -5,18 +5,22 @@
     display: grid;
     grid-template-rows: 1fr auto;
     gap: var(--sp-4);
-    min-height: calc(100vh - var(--hud-top-h) - var(--sp-6));
+    min-height: calc(100vh - var(--hud-top-h));
+    height: calc(100vh - var(--hud-top-h));
+    margin: calc(var(--sp-4) * -1);
     padding: 0;
+    overflow: hidden;
 }
 
 /* ── World stage — holds the SVG element ─────────────────────────────── */
 .isle__stage {
     position: relative;
     border: 0;
-    box-shadow: 0 0 0 2px var(--dc-ink);
+    box-shadow: inset 0 -18px 36px rgba(42, 30, 42, 0.16);
     background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
     overflow: hidden;
-    min-height: 460px;
+    min-height: 0;
+    height: 100%;
 }
 
 .isle__stage svg.world {
@@ -37,6 +41,28 @@
     fill: #e8ddf0;
     filter: drop-shadow(0 0 4px rgba(232, 221, 240, 0.6));
 }
+
+/* ── Sea and island base ─────────────────────────────────────────────── */
+.world__sea {
+    fill: url(#seaGradient);
+}
+.world__sea-line {
+    fill: none;
+    stroke: rgba(255, 244, 214, 0.38);
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+.world__sea-line--b {
+    stroke: rgba(255, 244, 214, 0.22);
+    stroke-width: 1.4;
+}
+.world__island-aura { fill: url(#islandAura); }
+.world__island-shadow { fill: rgba(42, 30, 42, 0.22); }
+.world__shore--outer { fill: #f6d39b; opacity: 0.92; }
+.world__shore--inner { fill: rgba(255, 244, 214, 0.22); }
+.is-night .world__sea-line { stroke: rgba(232, 221, 240, 0.16); }
+.is-night .world__shore--outer { fill: #59405f; opacity: 0.72; }
+.is-night .world__shore--inner { fill: rgba(232, 221, 240, 0.08); }
 
 /* ── Ground tiles ────────────────────────────────────────────────────── */
 .world__tile {
@@ -115,9 +141,9 @@
 .isle__date-label {
     min-width: 148px;
     padding: var(--sp-2) var(--sp-3);
-    background: var(--dc-parchment);
+    background: rgba(255, 244, 214, 0.94);
     color: var(--dc-ink);
-    box-shadow: 0 0 0 2px var(--dc-ink);
+    box-shadow: 0 0 0 2px rgba(42, 30, 42, 0.86), 0 10px 24px rgba(42, 30, 42, 0.12);
 }
 .isle__date-label span,
 .isle-signboard span {
@@ -144,9 +170,9 @@
     grid-template-columns: auto 1fr;
     gap: 2px var(--sp-2);
     align-items: center;
-    background: var(--dc-parchment);
+    background: rgba(255, 244, 214, 0.94);
     color: var(--dc-ink);
-    box-shadow: 0 0 0 2px var(--dc-ink);
+    box-shadow: 0 0 0 2px rgba(42, 30, 42, 0.86), 0 10px 24px rgba(42, 30, 42, 0.12);
 }
 .isle__weather-badge span {
     grid-row: span 2;
@@ -179,9 +205,9 @@
     flex-direction: column;
     justify-content: center;
     padding: var(--sp-3);
-    background: #6d4a2d;
+    background: linear-gradient(180deg, #7b5635 0%, #5c3e25 100%);
     color: #fff4d6;
-    box-shadow: 0 0 0 2px var(--dc-ink), inset 0 -8px 0 rgba(42, 30, 42, 0.16);
+    box-shadow: 0 0 0 2px var(--dc-ink), inset 0 -8px 0 rgba(42, 30, 42, 0.18), 0 12px 24px rgba(42, 30, 42, 0.16);
     text-align: center;
 }
 .isle-signboard span { color: #ffe38f; }
@@ -198,7 +224,8 @@
 }
 
 @media (max-width: 760px) {
-    .isle__stage { min-height: 540px; }
+    .isle { margin: calc(var(--sp-4) * -1); }
+    .isle__stage { min-height: 0; }
     .isle__datebar { right: var(--sp-4); }
     .isle__date-label { flex: 1; min-width: 0; }
     .isle__weather-badge {
