@@ -34,9 +34,19 @@
     fill: transparent; /* The .isle__stage gradient shows through */
 }
 
-.world__star { fill: #fff4d6; opacity: 0.9; }
+.world__star {
+    fill: #fff4d6;
+    opacity: 0.9;
+    animation: star-twinkle 3.8s ease-in-out infinite;
+}
+.world__star:nth-child(2n) { animation-delay: -1.4s; }
+.world__star:nth-child(3n) { animation-delay: -2.6s; }
 
-#worldCelestial { fill: var(--dc-coin); filter: drop-shadow(0 0 6px rgba(255, 208, 74, 0.7)); }
+#worldCelestial {
+    fill: var(--dc-coin);
+    filter: drop-shadow(0 0 6px rgba(255, 208, 74, 0.7));
+    transition: cx 1200ms ease-out, cy 1200ms ease-out;
+}
 #worldCelestial.world__celestial--moon {
     fill: #e8ddf0;
     filter: drop-shadow(0 0 4px rgba(232, 221, 240, 0.6));
@@ -48,18 +58,28 @@
 }
 .world__sea-line {
     fill: none;
-    stroke: rgba(255, 244, 214, 0.38);
-    stroke-width: 2;
+    stroke: rgba(255, 244, 214, 0.46);
+    stroke-width: 2.8;
     stroke-linecap: round;
+    stroke-dasharray: 24 18;
+    animation: sea-drift 5.8s linear infinite;
+    transform-box: fill-box;
 }
 .world__sea-line--b {
-    stroke: rgba(255, 244, 214, 0.22);
-    stroke-width: 1.4;
+    stroke: rgba(255, 244, 214, 0.30);
+    stroke-width: 2.1;
+    animation-duration: 7.4s;
+    animation-direction: reverse;
+}
+.world__sea-line--c {
+    stroke: rgba(255, 244, 214, 0.24);
+    stroke-width: 2;
+    animation-duration: 8.8s;
 }
 .world__island-aura { fill: url(#islandAura); }
-.world__island-shadow { fill: rgba(42, 30, 42, 0.22); }
-.world__shore--outer { fill: #f6d39b; opacity: 0.92; }
-.world__shore--inner { fill: rgba(255, 244, 214, 0.22); }
+.world__island-shadow { fill: rgba(42, 30, 42, 0.18); }
+.world__shore--outer { fill: #f6d39b; opacity: 0.84; }
+.world__shore--inner { fill: rgba(255, 244, 214, 0.15); }
 .is-night .world__sea-line { stroke: rgba(232, 221, 240, 0.16); }
 .is-night .world__shore--outer { fill: #59405f; opacity: 0.72; }
 .is-night .world__shore--inner { fill: rgba(232, 221, 240, 0.08); }
@@ -102,6 +122,8 @@
 
 /* ── Weather ─────────────────────────────────────────────────────────── */
 .weather-cloud ellipse { fill: #fff4d6; stroke: var(--dc-ink); stroke-width: 1.5; }
+.weather-cloud__puff { animation: cloud-drift 14s ease-in-out infinite alternate; }
+.weather-cloud:nth-child(2n) .weather-cloud__puff { animation-delay: -3s; animation-duration: 17s; }
 .weather-layer--storm .weather-cloud ellipse { fill: #4b5878; }
 .weather-sunbeam {
     fill: rgba(255, 244, 214, 0.18);
@@ -110,6 +132,16 @@
 }
 
 @keyframes sunbeam-spin { to { transform: rotate(1turn); } }
+@keyframes sea-drift {
+    0% { stroke-dashoffset: 0; transform: translateX(0); }
+    50% { transform: translateX(10px); }
+    100% { stroke-dashoffset: -126; transform: translateX(0); }
+}
+@keyframes cloud-drift { to { transform: translateX(14px); } }
+@keyframes star-twinkle {
+    0%, 100% { opacity: 0.42; }
+    50% { opacity: 0.95; }
+}
 
 /* ── HUD overlays (HTML on top of SVG) ───────────────────────────────── */
 .isle__datebar,
@@ -256,6 +288,32 @@
 .b-window rect { transition: fill 160ms ease-out; }
 .is-night .b-window rect { fill: #ffd16a; filter: drop-shadow(0 0 2px rgba(255, 209, 106, 0.7)); }
 
+.b-smoke {
+    fill: none;
+    stroke: rgba(255, 244, 214, 0.88);
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-dasharray: 8 9;
+    opacity: 0;
+    animation: chimney-smoke 3.4s ease-out infinite;
+}
+.b-smoke--b { animation-delay: -1.6s; }
+.b-smoke--c { animation-delay: -3.1s; }
+
+@keyframes chimney-smoke {
+    0% {
+        opacity: 0;
+        stroke-dashoffset: 0;
+        transform: translate(0, 0) scale(0.96);
+    }
+    18% { opacity: 0.82; }
+    100% {
+        opacity: 0;
+        stroke-dashoffset: -42;
+        transform: translate(7px, -18px) scale(1.22);
+    }
+}
+
 .world__building-label {
     font-family: var(--font-display);
     font-size: 7px;
@@ -272,7 +330,13 @@
 
 @media (prefers-reduced-motion: reduce) {
     .world__building-shape,
-    .world__building-label { transition: none; }
+    .world__building-label,
+    #worldCelestial { transition: none; }
+    .world__star,
+    .world__sea-line,
+    .weather-cloud__puff,
+    .b-smoke { animation: none; }
+    .b-smoke { opacity: 0.42; }
     .world__building:hover .world__building-shape,
     .world__building:focus .world__building-shape { transform: none; }
 }
