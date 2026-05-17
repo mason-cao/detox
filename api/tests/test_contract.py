@@ -1,8 +1,8 @@
 """Contract tests pinning Flask agent ↔ FastAPI service to identical JSON.
 
 These ran while the FastAPI tier was a 1:1 SQLite mirror of the Flask
-agent (Phase 2). After the Postgres port (Phase 5 backfill brought into
-the Phase 4 deploy work), the FastAPI tier is user-scoped against
+agent (Phase 2). After the Postgres port moved into the Phase 4 deploy
+work, the FastAPI tier is user-scoped against
 Postgres and requires auth — the parity contract no longer holds and
 the tests are skipped wholesale. See ``api/app/services/*.py`` for the
 current Postgres-backed shape.

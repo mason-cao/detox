@@ -1,8 +1,8 @@
 """Account-scoped privacy endpoints — full export and full delete.
 
-Phase 5 (private beta) gives every user a one-click way to pull a full
-JSON dump of their cloud data and a one-click way to wipe it. Both honor
-the spec §10 privacy commitment: "GDPR- and CCPA-clean."
+The launch privacy surface gives every user a one-click way to pull a
+full JSON dump of their cloud data and a one-click way to wipe it. Both
+honor the spec §10 privacy commitment: "GDPR- and CCPA-clean."
 
 Implementation notes:
 
