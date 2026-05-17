@@ -19,6 +19,32 @@ const Isle = {
         }
     },
 
+    async refreshLive() {
+        const root = document.querySelector('.isle');
+        if (!root) return;
+
+        try {
+            const data = await App.api(`/api/dashboard?date=${App.currentDate}`);
+            const weather = App.describeGoalWeather(data);
+            const total = Number(data.total_minutes || 0);
+            const goal = Number(data.goal_target || 0);
+            const remaining = goal ? goal - total : null;
+
+            if (window.HUD) HUD.updateWeather(weather);
+            if (window.World) World.applyWeather(weather);
+            root.dataset.weather = weather.key;
+
+            this.updateWeatherBadge(root, weather);
+            this.updateSignboard(root, 'tracked', App.formatTime(total), 'Total tracked screen time on the selected day.');
+            this.updateSignboard(root, 'goal', goal ? App.formatTime(goal) : 'Set one', 'Active daily-total goal.');
+            this.updateSignboard(root, 'left', this.remainingLabel(remaining), weather.detail);
+
+            if (window.Residents) Residents.update(data.apps || []);
+        } catch (e) {
+            // Keep the current Isle painted if a refresh request fails.
+        }
+    },
+
     scaffold(data, weather) {
         const date = data.date || App.currentDate;
         const total = Number(data.total_minutes || 0);
@@ -43,21 +69,41 @@ const Isle = {
                     <em>${App.escapeHtml(weather.tone)}</em>
                 </div>
                 <div class="isle__signboards">
-                    ${this.renderSignboard('Tracked', App.formatTime(total), 'Total tracked screen time on the selected day.')}
-                    ${this.renderSignboard('Goal', goal ? App.formatTime(goal) : 'Set one', 'Active daily-total goal.')}
-                    ${this.renderSignboard('Left', this.remainingLabel(remaining), weather.detail)}
+                    ${this.renderSignboard('tracked', 'Tracked', App.formatTime(total), 'Total tracked screen time on the selected day.')}
+                    ${this.renderSignboard('goal', 'Goal', goal ? App.formatTime(goal) : 'Set one', 'Active daily-total goal.')}
+                    ${this.renderSignboard('left', 'Left', this.remainingLabel(remaining), weather.detail)}
                 </div>
             </section>
         `;
     },
 
-    renderSignboard(label, value, title) {
+    renderSignboard(key, label, value, title) {
         return `
-            <div class="isle-signboard" title="${App.escapeAttr(title)}">
+            <div class="isle-signboard" data-stat="${App.escapeAttr(key)}" title="${App.escapeAttr(title)}">
                 <span>${App.escapeHtml(label)}</span>
-                <strong>${App.escapeHtml(value)}</strong>
+                <strong data-role="value">${App.escapeHtml(value)}</strong>
             </div>
         `;
+    },
+
+    updateSignboard(root, key, value, title) {
+        const node = root.querySelector(`[data-stat="${App.escapeAttr(key)}"]`);
+        if (!node) return;
+        const valueNode = node.querySelector('[data-role="value"]');
+        if (valueNode) valueNode.textContent = value;
+        node.title = title;
+    },
+
+    updateWeatherBadge(root, weather) {
+        const badge = root.querySelector('.isle__weather-badge');
+        if (!badge || !weather) return;
+        badge.title = weather.detail;
+        const glyph = badge.querySelector('span');
+        const label = badge.querySelector('strong');
+        const tone = badge.querySelector('em');
+        if (glyph) glyph.textContent = weather.glyph;
+        if (label) label.textContent = weather.label;
+        if (tone) tone.textContent = weather.tone;
     },
 
     remainingLabel(remaining) {
