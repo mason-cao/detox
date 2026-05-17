@@ -1,17 +1,17 @@
 # Terms of Service
 
 **Effective:** 2026-05-07
-**Version:** 1.0 (Phase 5 — private beta)
+**Version:** 1.0
 
 These terms govern your use of Detox ("Detox", "the app", "we"). Using
 Detox means you agree to them. If you don't, don't use Detox.
 
-## 1. Beta status
+## 1. Release status
 
-Detox is in private beta. Things will break. Data may be lost. APIs and
-schemas may change without notice. Treat the local SQLite as the source
-of truth and export it (Mayor's Study → Download Archive) before
-upgrades.
+Detox is on the public launch track. Until signed DMG distribution is
+available, install from source and treat the local SQLite file as the
+source of truth. Export it (Mayor's Study → Download Archive) before
+major upgrades.
 
 ## 2. Personal use
 

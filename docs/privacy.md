@@ -1,7 +1,7 @@
 # Privacy Policy
 
 **Effective:** 2026-05-07
-**Version:** 1.0 (Phase 5 — private beta)
+**Version:** 1.0
 
 This is the privacy policy for Detox, the macOS screen-time tracker
 ("Detox", "we", "the app"). It is short on purpose. Read all of it.
@@ -60,7 +60,7 @@ Known limitations of v1 Ghost Mode:
 
 - **Per-device salt.** If you pair more than one Mac, each generates its
   own salt. The same real app produces different hashes per device, so
-  multi-device aggregation under Ghost Mode is broken in the v1 beta.
+  multi-device aggregation under Ghost Mode is broken in v1.
 - **Not retroactive.** Rows ingested *before* you turn Ghost Mode on
   remain in cleartext on the server. Disabling Ghost Mode does not
   rotate hashes.
