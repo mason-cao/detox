@@ -3,7 +3,10 @@
 
 const Isle = {
     async render(container) {
-        const data = await App.api(`/api/dashboard?date=${App.currentDate}`);
+        const [data, inventory] = await Promise.all([
+            App.api(`/api/dashboard?date=${App.currentDate}`),
+            this.marketInventory(),
+        ]);
         const apps = data.apps || [];
         const weather = App.describeGoalWeather(data);
 
@@ -16,6 +19,7 @@ const Isle = {
             World.mountBuildings();
             World.mountLanterns();
             Residents.mount(apps);
+            World.applyMarketInventory(inventory);
         }
     },
 
@@ -24,7 +28,10 @@ const Isle = {
         if (!root) return;
 
         try {
-            const data = await App.api(`/api/dashboard?date=${App.currentDate}`);
+            const [data, inventory] = await Promise.all([
+                App.api(`/api/dashboard?date=${App.currentDate}`),
+                this.marketInventory(),
+            ]);
             const weather = App.describeGoalWeather(data);
             const total = Number(data.total_minutes || 0);
             const goal = Number(data.goal_target || 0);
@@ -40,8 +47,17 @@ const Isle = {
             this.updateSignboard(root, 'left', this.remainingLabel(remaining), weather.detail);
 
             if (window.Residents) Residents.update(data.apps || []);
+            if (window.World) World.applyMarketInventory(inventory);
         } catch (e) {
             // Keep the current Isle painted if a refresh request fails.
+        }
+    },
+
+    async marketInventory() {
+        try {
+            return await App.api('/api/market/inventory');
+        } catch (_) {
+            return [];
         }
     },
 
