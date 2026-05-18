@@ -14,9 +14,23 @@
     pointer-events: none;
 }
 
+.world__resident-boat {
+    fill: #7b5635;
+    stroke: var(--dc-ink);
+    stroke-width: 1.4;
+}
+
+.world__resident-boat-line {
+    fill: none;
+    stroke: var(--dc-ink);
+    stroke-width: 1.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
 .world__resident-villager {
     transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
-    transform-origin: 0 -8px;
+    transform-origin: 0 -24px;
 }
 
 .world__resident:hover .world__resident-villager,
@@ -25,16 +39,92 @@
     transform: translateY(-2px);
 }
 
+.world__resident-portrait-rim {
+    fill: #7b5635;
+    stroke: rgba(42, 30, 42, 0.72);
+    stroke-width: 1.2;
+    filter: drop-shadow(0 3px 3px rgba(42, 30, 42, 0.24));
+}
+
+.world__resident-portrait-well {
+    fill: #fff8ef;
+    stroke: rgba(255, 244, 214, 0.92);
+    stroke-width: 1;
+}
+
+.world__resident-portrait-img {
+    pointer-events: none;
+    filter: saturate(1.04) contrast(1.03);
+}
+
+.world__resident-portrait-pin {
+    fill: #d6bd72;
+    stroke: rgba(42, 30, 42, 0.62);
+    stroke-width: 1;
+    stroke-linejoin: round;
+}
+
+.world__resident-sprite {
+    pointer-events: none;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 3px 0 rgba(42, 30, 42, 0.32)) saturate(1.04) contrast(1.02);
+}
+
+.world__resident[data-archetype="builder"] .world__resident-portrait-rim { fill: #5d88a0; }
+.world__resident[data-archetype="scribe"] .world__resident-portrait-rim { fill: #8d7fc2; }
+.world__resident[data-archetype="jester"] .world__resident-portrait-rim { fill: #b85a4f; }
+.world__resident[data-archetype="farmer"] .world__resident-portrait-rim { fill: #6f894f; }
+.world__resident[data-archetype="musician"] .world__resident-portrait-rim { fill: #b48334; }
+.world__resident[data-archetype="wanderer"] .world__resident-portrait-rim { fill: #8f7856; }
+.world__resident[data-archetype="banished"] .world__resident-portrait-rim { fill: #675e63; }
+.world__resident[data-archetype="sheriff"] .world__resident-portrait-rim { fill: #8a6245; }
+
 .world__resident-head {
     fill: #d8a56e;
     stroke: var(--dc-ink);
     stroke-width: 1.1;
 }
 
+.world__resident-hair {
+    fill: #5a3a2a;
+    stroke: var(--dc-ink);
+    stroke-width: 0.9;
+}
+
 .world__resident-hat {
     fill: #d6bd72;
     stroke: var(--dc-ink);
     stroke-width: 1;
+}
+
+.world__resident-cap,
+.world__resident-hardhat,
+.world__resident-hood,
+.world__resident-jester-cap,
+.world__resident-sheriff-hat {
+    fill: #d6bd72;
+    stroke: var(--dc-ink);
+    stroke-width: 1;
+    stroke-linejoin: round;
+}
+
+.world__resident-hardhat { fill: var(--dc-coin); }
+.world__resident-hood { fill: rgba(91, 143, 185, 0.52); }
+.world__resident-jester-cap { fill: #c4453a; }
+.world__resident-sheriff-hat { fill: #9d7354; }
+.world__resident-hardhat-line,
+.world__resident-hat-band,
+.world__resident-feather {
+    fill: none;
+    stroke: var(--dc-ink);
+    stroke-width: 1.1;
+    stroke-linecap: round;
+}
+.world__resident-feather { stroke: var(--dc-ok); }
+.world__resident-bell {
+    fill: var(--dc-coin);
+    stroke: var(--dc-ink);
+    stroke-width: 0.9;
 }
 
 .world__resident-brim {
@@ -50,16 +140,132 @@
     stroke-width: 1.1;
 }
 
-.world__resident-arms,
-.world__resident-legs {
+.world__resident-cloak {
+    fill: rgba(42, 30, 42, 0.12);
+    stroke: var(--dc-ink);
+    stroke-width: 1;
+}
+
+.world__resident-collar,
+.world__resident-sash,
+.world__resident-arm,
+.world__resident-leg {
     fill: none;
     stroke: var(--dc-ink);
-    stroke-width: 1.6;
+    stroke-width: 1.7;
     stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.world__resident-collar {
+    stroke: rgba(255, 244, 214, 0.85);
+    stroke-width: 1.2;
+}
+
+.world__resident-sash {
+    stroke: var(--dc-coin);
+    stroke-width: 2;
+}
+
+.world__resident-satchel {
+    fill: #7b5635;
+    stroke: var(--dc-ink);
+    stroke-width: 1;
+}
+
+.world__resident-limbs {
+    transform-box: fill-box;
+    transform-origin: center;
 }
 
 .world__resident-eye {
     fill: var(--dc-ink);
+}
+
+.world__resident-mouth {
+    fill: none;
+    stroke: var(--dc-ink);
+    stroke-width: 0.7;
+    stroke-linecap: round;
+}
+
+.world__resident-glasses,
+.world__resident-brow {
+    fill: none;
+    stroke: var(--dc-ink);
+    stroke-width: 0.9;
+    stroke-linecap: round;
+}
+
+.world__resident-cheek {
+    fill: rgba(196, 69, 58, 0.52);
+}
+
+.world__resident-diamond,
+.world__resident-badge,
+.world__resident-patch {
+    fill: var(--dc-coin);
+    stroke: var(--dc-ink);
+    stroke-width: 0.9;
+}
+
+.world__resident-patch { fill: #8f8487; }
+
+.world__resident-accessory {
+    display: none;
+    fill: var(--dc-coin);
+    stroke: var(--dc-ink);
+    stroke-width: 1.1;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.world__resident[data-archetype="builder"] .world__resident-accessory--builder,
+.world__resident[data-archetype="scribe"] .world__resident-accessory--scribe,
+.world__resident[data-archetype="musician"] .world__resident-accessory--musician,
+.world__resident[data-archetype="farmer"] .world__resident-accessory--farmer,
+.world__resident[data-archetype="sheriff"] .world__resident-accessory--sheriff {
+    display: block;
+}
+
+.world__resident[data-archetype="jester"] .world__resident-sash { stroke: #c4453a; }
+.world__resident[data-archetype="wanderer"] .world__resident-cloak { fill: rgba(91, 143, 185, 0.30); }
+.world__resident[data-archetype="banished"] .world__resident-cloak { fill: rgba(42, 30, 42, 0.34); }
+.world__resident[data-archetype="sheriff"] .world__resident-hat { fill: #9d7354; }
+.world__resident[data-archetype="banished"] .world__resident-satchel { display: none; }
+
+.world__resident-tool {
+    fill: var(--dc-coin);
+    stroke: var(--dc-ink);
+    stroke-width: 1.1;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.world__resident-tool--scribe { fill: var(--dc-parchment); }
+.world__resident-tool--builder { fill: #7b5635; }
+.world__resident-tool--musician { fill: #d6bd72; }
+.world__resident-tool--farmer { fill: var(--dc-ok); }
+.world__resident-tool--sheriff circle {
+    fill: rgba(255, 208, 74, 0.38);
+    stroke-width: 0;
+}
+.world__resident-tool--wanderer { fill: #7b5635; }
+.world__resident-tool--banished {
+    fill: none;
+    stroke-width: 1.3;
+}
+
+body:not(.reduce-motion) .world__resident-villager {
+    animation: villager-idle 2.6s ease-in-out infinite;
+}
+
+body:not(.reduce-motion) .world__resident-limbs--front {
+    animation: villager-limb-front 1.4s ease-in-out infinite;
+}
+
+body:not(.reduce-motion) .world__resident-limbs--back {
+    animation: villager-limb-back 1.4s ease-in-out infinite;
 }
 
 .world__resident-name {
@@ -108,10 +314,25 @@
     0%, 100% { opacity: 0.15; }
     50%      { opacity: 0.45; }
 }
+@keyframes villager-idle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-0.8px); }
+}
+@keyframes villager-limb-front {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-1px, 0.8px); }
+}
+@keyframes villager-limb-back {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(1px, 0.8px); }
+}
 
 @media (prefers-reduced-motion: reduce) {
     .world__resident-villager,
     .world__resident-minutes { transition: none; }
+    .world__resident-villager,
+    .world__resident-limbs--front,
+    .world__resident-limbs--back { animation: none; }
     .world__resident:hover .world__resident-villager,
     .world__resident:focus .world__resident-villager,
     .world__resident[data-active="true"] .world__resident-villager { transform: none; }

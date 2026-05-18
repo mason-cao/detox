@@ -209,14 +209,42 @@ const Residents = {
 
     _openTiles() {
         const blocked = this._blockedTiles();
+        const buildingBoxes = this._buildingBoxes();
         const tiles = [];
         for (let ty = 0; ty < Iso.WORLD_TY; ty++) {
             for (let tx = 0; tx < Iso.WORLD_TX; tx++) {
                 if (blocked.has(`${tx},${ty}`)) continue;
+                if (this._tileOverlapsBuilding({ tx, ty }, buildingBoxes)) continue;
                 tiles.push({ tx, ty });
             }
         }
         return tiles.length ? tiles : [{ tx: 0, ty: 0 }];
+    },
+
+    _buildingBoxes() {
+        if (!window.Buildings || !Buildings.catalog) return [];
+        return Buildings.catalog.map(b => {
+            const { x, y } = Buildings.anchor(b.tx, b.ty, b.size);
+            const major = b.size === 'major';
+            return {
+                id: b.id,
+                left: x - (major ? 58 : 42),
+                right: x + (major ? 66 : 50),
+                top: y - (major ? 90 : 68),
+                bottom: y + (major ? 24 : 20),
+            };
+        });
+    },
+
+    _tileOverlapsBuilding(tile, buildingBoxes) {
+        const { x, y } = Iso.tileToScreen(tile.tx, tile.ty);
+        const cy = y + Iso.TILE_H / 2 + 80;
+        return buildingBoxes.some(box => (
+            x >= box.left
+            && x <= box.right
+            && cy >= box.top
+            && cy <= box.bottom
+        ));
     },
 
     _walkableTiles(openTiles) {
@@ -277,37 +305,129 @@ const Residents = {
             const label = node.querySelector('.world__resident-minutes');
             if (label) label.textContent = App.formatTime(r.minutes);
             const title = node.querySelector('title');
-            if (title) title.textContent = `${app.app_name}${app.preview ? ' preview' : ''} - ${App.formatTime(r.minutes)}`;
+            if (title) title.textContent = `${app.app_name}${app.preview ? ' preview' : ''} - ${this.roleLabelFor(r.archetype)} - ${App.formatTime(r.minutes)}`;
         });
     },
 
-    // Render one resident as a simple villager. No sprite atlas or walk cycle.
+    roleLabelFor(archetype) {
+        const labels = {
+            scribe: 'registry scribe',
+            builder: 'dock builder',
+            jester: 'social jester',
+            banished: 'banished rower',
+            farmer: 'field keeper',
+            musician: 'harbor musician',
+            wanderer: 'isle wanderer',
+            sheriff: 'rule sheriff',
+        };
+        return labels[archetype] || 'isle villager';
+    },
+
+    boatFor(archetype) {
+        if (archetype !== 'banished') return '';
+        return `
+            <path class="world__resident-boat" d="M-22,-2 C-13,7 13,7 22,-2 L16,8 H-16 Z"></path>
+            <path class="world__resident-boat-line" d="M-14,1 H14 M-18,-2 L-25,-12 M18,-2 L25,-12"></path>
+        `;
+    },
+
+    cloakFor(archetype) {
+        if (archetype === 'wanderer') {
+            return `<path class="world__resident-cloak" d="M-14,-19 Q0,-30 14,-19 L16,-2 Q0,5 -16,-2 Z"></path>`;
+        }
+        if (archetype === 'banished') {
+            return `<path class="world__resident-cloak" d="M-12,-18 Q0,-26 12,-18 L10,-4 Q0,1 -10,-4 Z"></path>`;
+        }
+        return `<path class="world__resident-cloak" d="M-11,-18 Q0,-27 11,-18 L14,-4 Q0,2 -14,-4 Z"></path>`;
+    },
+
+    headwearFor(archetype) {
+        const hats = {
+            builder: '<path class="world__resident-hardhat" d="M-10,-31 Q0,-40 10,-31 H-10 Z"></path><path class="world__resident-brim" d="M-13,-31 H13"></path><path class="world__resident-hardhat-line" d="M0,-38 V-31"></path>',
+            scribe: '<path class="world__resident-hair" d="M-7,-29 Q-1,-37 8,-31 Q3,-34 -5,-28 Z"></path><path class="world__resident-cap" d="M-9,-32 Q0,-39 9,-32 L4,-36 Q0,-38 -4,-36 Z"></path>',
+            jester: '<path class="world__resident-jester-cap" d="M-9,-31 Q-16,-42 -4,-35 Q0,-42 5,-35 Q16,-42 10,-31 Z"></path><circle class="world__resident-bell" cx="-15" cy="-42" r="2"></circle><circle class="world__resident-bell" cx="15" cy="-42" r="2"></circle>',
+            farmer: '<path class="world__resident-hat" d="M-14,-31 Q0,-43 14,-31 Z"></path><path class="world__resident-brim" d="M-18,-31 H18"></path><path class="world__resident-hat-band" d="M-8,-32 H8"></path>',
+            musician: '<path class="world__resident-cap" d="M-11,-31 Q0,-41 11,-31 Z"></path><path class="world__resident-feather" d="M7,-36 C16,-46 18,-33 9,-31"></path><path class="world__resident-brim" d="M-13,-31 H13"></path>',
+            wanderer: '<path class="world__resident-hood" d="M-11,-28 Q0,-42 11,-28 Q6,-35 0,-35 Q-6,-35 -11,-28 Z"></path>',
+            sheriff: '<path class="world__resident-sheriff-hat" d="M-14,-31 Q0,-42 14,-31 Z"></path><path class="world__resident-brim" d="M-19,-31 H19"></path><path class="world__resident-hat-band" d="M-9,-32 H9"></path>',
+            banished: '<path class="world__resident-hair" d="M-7,-29 Q0,-34 7,-29 Q1,-31 -5,-27 Z"></path>',
+        };
+        return hats[archetype] || hats.wanderer;
+    },
+
+    faceDetailFor(archetype) {
+        if (archetype === 'scribe') {
+            return `<circle class="world__resident-glasses" cx="-3" cy="-27" r="2.2"></circle><circle class="world__resident-glasses" cx="3" cy="-27" r="2.2"></circle><path class="world__resident-glasses" d="M-1,-27 H1"></path>`;
+        }
+        if (archetype === 'sheriff') {
+            return `<path class="world__resident-brow" d="M-5,-29 L-2,-28 M2,-28 L5,-29"></path>`;
+        }
+        if (archetype === 'jester') {
+            return `<circle class="world__resident-cheek" cx="-5" cy="-25" r="1.5"></circle><circle class="world__resident-cheek" cx="5" cy="-25" r="1.5"></circle>`;
+        }
+        return '';
+    },
+
+    torsoDetailFor(archetype) {
+        if (archetype === 'jester') {
+            return `<path class="world__resident-diamond" d="M0,-17 L4,-13 L0,-9 L-4,-13 Z"></path>`;
+        }
+        if (archetype === 'sheriff') {
+            return `<path class="world__resident-badge" d="M0,-18 L2,-15 L5,-15 L3,-13 L4,-10 L0,-12 L-4,-10 L-3,-13 L-5,-15 L-2,-15 Z"></path>`;
+        }
+        if (archetype === 'banished') {
+            return `<path class="world__resident-patch" d="M-4,-17 H4 L3,-12 H-3 Z"></path>`;
+        }
+        return '';
+    },
+
+    toolFor(archetype) {
+        const tools = {
+            builder: '<g class="world__resident-tool world__resident-tool--builder"><path d="M11,-17 L20,-26"></path><rect x="18" y="-30" width="8" height="6"></rect></g>',
+            scribe: '<g class="world__resident-tool world__resident-tool--scribe"><rect x="-18" y="-20" width="10" height="13"></rect><path d="M-16,-16 H-10 M-16,-12 H-11"></path><path d="M-7,-21 L-1,-28"></path></g>',
+            musician: '<g class="world__resident-tool world__resident-tool--musician"><path d="M12,-18 C23,-21 24,-8 12,-9 Z"></path><path d="M15,-18 V-28"></path><path d="M16,-25 H23"></path></g>',
+            farmer: '<g class="world__resident-tool world__resident-tool--farmer"><path d="M13,-17 C21,-24 26,-18 20,-10"></path><path d="M16,-20 C16,-13 21,-12 24,-15"></path></g>',
+            sheriff: '<g class="world__resident-tool world__resident-tool--sheriff"><path d="M14,-18 V-31"></path><rect x="10" y="-33" width="8" height="10"></rect><circle cx="14" cy="-28" r="5"></circle></g>',
+            jester: '<g class="world__resident-tool world__resident-tool--jester"><path d="M12,-18 Q20,-23 23,-15 Q19,-10 13,-13"></path><circle cx="22" cy="-15" r="2"></circle></g>',
+            wanderer: '<g class="world__resident-tool world__resident-tool--wanderer"><path d="M-11,-17 L-20,-8"></path><rect x="-23" y="-12" width="8" height="10"></rect></g>',
+            banished: '<g class="world__resident-tool world__resident-tool--banished"><path d="M-18,-5 L-28,-18 M18,-5 L28,-18"></path></g>',
+        };
+        return tools[archetype] || '';
+    },
+
+    spriteFor(archetype) {
+        const roles = new Set(['scribe', 'builder', 'jester', 'banished', 'farmer', 'musician', 'wanderer', 'sheriff']);
+        const role = roles.has(archetype) ? archetype : 'wanderer';
+        return `/assets/market/pixel/residents/${role}.png`;
+    },
+
+    // Render one resident as a full-body pixel sprite marker.
     _render(r) {
         const { x, y } = Iso.tileToScreen(r.tile.tx, r.tile.ty);
         const cy = y + Iso.TILE_H / 2 + 80; // sky headroom + tile-center
+        const role = this.roleLabelFor(r.archetype);
+        const sprite = this.spriteFor(r.archetype);
         return `
             <g class="world__resident" transform="translate(${x.toFixed(1)} ${cy.toFixed(1)})"
                data-app="${App.escapeAttr(r.appName)}"
                data-archetype="${r.archetype}"
+               data-role="${App.escapeAttr(role)}"
                data-minutes="${Math.round(r.minutes)}"
                data-preview="${r.preview ? 'true' : 'false'}"
                data-active="false"
                style="--tint: ${r.tint};">
-                <title>${App.escapeHtml(r.appName)}${r.preview ? ' preview' : ''} - ${App.escapeHtml(App.formatTime(r.minutes))}</title>
+                <title>${App.escapeHtml(r.appName)}${r.preview ? ' preview' : ''} - ${App.escapeHtml(role)} - ${App.escapeHtml(App.formatTime(r.minutes))}</title>
                 <circle class="effect-halo" cx="0" cy="-17" r="22" style="display: none;"></circle>
-                <ellipse class="world__resident-shadow" cx="0" cy="2" rx="13" ry="4"></ellipse>
-                <g class="world__resident-villager">
-                    <path class="world__resident-legs" d="M-4,-5 L-7,1 M4,-5 L7,1"></path>
-                    <path class="world__resident-arms" d="M-8,-15 L-13,-9 M8,-15 L13,-9"></path>
-                    <path class="world__resident-tunic" d="M-9,-18 Q0,-23 9,-18 L7,-6 L-7,-6 Z"></path>
-                    <circle class="world__resident-head" cx="0" cy="-27" r="7"></circle>
-                    <path class="world__resident-hat" d="M-12,-29 Q0,-40 12,-29 Z"></path>
-                    <path class="world__resident-brim" d="M-14,-29 H14"></path>
-                    <circle class="world__resident-eye" cx="-2.4" cy="-27" r="0.7"></circle>
-                    <circle class="world__resident-eye" cx="2.4" cy="-27" r="0.7"></circle>
+                <ellipse class="world__resident-shadow" cx="0" cy="4" rx="17" ry="5"></ellipse>
+                ${this.boatFor(r.archetype)}
+                <g class="world__resident-villager world__resident-villager--${r.archetype}">
+                    <image class="world__resident-sprite"
+                        href="${App.escapeAttr(sprite)}"
+                        x="-24" y="-58" width="48" height="66"
+                        preserveAspectRatio="xMidYMax meet"></image>
                 </g>
-                <text class="world__resident-name" text-anchor="middle" y="14">${App.escapeHtml(r.appName)}</text>
-                <text class="world__resident-minutes" text-anchor="middle" y="27">${App.escapeHtml(App.formatTime(r.minutes))}</text>
+                <text class="world__resident-name" text-anchor="middle" y="25">${App.escapeHtml(r.appName)}</text>
+                <text class="world__resident-minutes" text-anchor="middle" y="38">${App.escapeHtml(App.formatTime(r.minutes))}</text>
             </g>
         `;
     },
