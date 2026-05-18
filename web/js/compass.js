@@ -1,7 +1,6 @@
-/* Compass HUD — diegetic nav alongside clickable buildings on the Isle.
-   Lists Buildings.catalog entries only when opened. The Isle itself is
-   the primary navigation surface, so the compass stays out of the way
-   on the main view.
+/* Compass HUD — compact destination list alongside the Isle.
+   The Isle itself is the primary navigation surface, so this stays tucked
+   behind an icon and only mirrors the building catalog when opened.
 
    Draggable by its title bar; position persists in localStorage so the
    user's preferred spot survives reloads. Double-click the title to
@@ -25,7 +24,13 @@ const Compass = {
         toggle.className = 'compass-toggle';
         toggle.type = 'button';
         toggle.setAttribute('aria-label', 'Open town map');
-        toggle.textContent = 'Map';
+        toggle.innerHTML = `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M12 4 L15 12 L12 20 L9 12 Z"></path>
+                <path d="M4 12 H20 M12 4 V20"></path>
+            </svg>
+        `;
         toggle.addEventListener('click', () => this.toggleOpen());
 
         const card = document.createElement('aside');
@@ -33,8 +38,8 @@ const Compass = {
         card.className = 'compass';
         card.setAttribute('aria-label', 'Isle compass');
         card.innerHTML = `
-            <span class="compass__title" data-role="compass-handle" title="Drag to move, double-click to reset">Town Map</span>
-            <ul class="compass__list" id="compassList"></ul>
+            <span class="compass__title" data-role="compass-handle" title="Drag to move, double-click to reset">Compass</span>
+            <div class="compass__list" id="compassList"></div>
         `;
 
         document.body.appendChild(toggle);
@@ -153,19 +158,29 @@ const Compass = {
         toggle?.classList.toggle('compass-toggle--subtab-hidden', !onIsle);
         if (!onIsle) this.toggleOpen(false);
 
-        list.innerHTML = Buildings.catalog.map(b => {
-            const cur = App.currentTab === b.tab ? 'is-current' : '';
-            return `<li><button class="compass__item ${cur}" type="button" data-tab="${b.tab}">${App.escapeHtml(b.label)}</button></li>`;
-        }).join('');
-
-        list.querySelectorAll('[data-tab]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                App.showTab(btn.dataset.tab);
+        list.innerHTML = this.renderList();
+        list.querySelectorAll('[data-tab]').forEach(button => {
+            const go = () => {
+                App.showTab(button.dataset.tab);
                 if (window.matchMedia('(max-width: 760px)').matches) {
                     this.toggleOpen(false);
                 }
-            });
+            };
+            button.addEventListener('click', go);
         });
+    },
+
+    renderList() {
+        return Buildings.catalog.map(b => {
+            const cur = App.currentTab === b.tab ? 'is-current' : '';
+            const abbr = b.label.split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase();
+            return `
+                <button class="compass__item ${cur}" type="button" data-tab="${App.escapeAttr(b.tab)}">
+                    <span class="compass__abbr" aria-hidden="true">${App.escapeHtml(abbr)}</span>
+                    <span>${App.escapeHtml(b.label)}</span>
+                </button>
+            `;
+        }).join('');
     },
 
     toggleOpen(force) {
