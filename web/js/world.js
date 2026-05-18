@@ -88,14 +88,16 @@ const World = {
 
     seaLayer(w, h, view = this.viewBox(w, h)) {
         const horizon = Math.round(h * 0.48);
+        const seaX = view.x - view.width;
+        const seaW = view.width * 3;
         return `
             <g id="worldSea" aria-hidden="true">
-                <rect class="world__sea" x="${view.x}" y="${horizon}" width="${view.width}" height="${view.height - horizon}"></rect>
-                <path class="world__sea-current world__sea-current--a" d="M${view.x - 52} ${horizon + 112} C104 ${horizon + 64}, 250 ${horizon + 126}, 402 ${horizon + 88} S624 ${horizon + 72}, ${view.x + view.width + 72} ${horizon + 130}"></path>
-                <path class="world__sea-current world__sea-current--b" d="M${view.x - 70} ${horizon + 190} C126 ${horizon + 152}, 266 ${horizon + 214}, 434 ${horizon + 176} S636 ${horizon + 160}, ${view.x + view.width + 88} ${horizon + 212}"></path>
-                <path class="world__sea-line world__sea-line--a" d="M${view.x + 28} ${horizon + 52} C118 ${horizon + 38}, 196 ${horizon + 70}, 286 ${horizon + 52} S476 ${horizon + 48}, ${view.x + view.width - 44} ${horizon + 66}"></path>
-                <path class="world__sea-line world__sea-line--b" d="M${view.x + 18} ${horizon + 108} C110 ${horizon + 90}, 206 ${horizon + 126}, 326 ${horizon + 106} S526 ${horizon + 94}, ${view.x + view.width - 26} ${horizon + 124}"></path>
-                <path class="world__sea-line world__sea-line--c" d="M${view.x + 58} ${horizon + 158} C152 ${horizon + 144}, 254 ${horizon + 170}, 366 ${horizon + 152} S580 ${horizon + 140}, ${view.x + view.width - 66} ${horizon + 166}"></path>
+                <rect class="world__sea" x="${seaX}" y="${horizon}" width="${seaW}" height="${view.height - horizon}"></rect>
+                <path class="world__sea-current world__sea-current--a" d="M${seaX - 52} ${horizon + 112} C104 ${horizon + 64}, 250 ${horizon + 126}, 402 ${horizon + 88} S624 ${horizon + 72}, ${seaX + seaW + 72} ${horizon + 130}"></path>
+                <path class="world__sea-current world__sea-current--b" d="M${seaX - 70} ${horizon + 190} C126 ${horizon + 152}, 266 ${horizon + 214}, 434 ${horizon + 176} S636 ${horizon + 160}, ${seaX + seaW + 88} ${horizon + 212}"></path>
+                <path class="world__sea-line world__sea-line--a" d="M${seaX + 28} ${horizon + 52} C118 ${horizon + 38}, 196 ${horizon + 70}, 286 ${horizon + 52} S476 ${horizon + 48}, ${seaX + seaW - 44} ${horizon + 66}"></path>
+                <path class="world__sea-line world__sea-line--b" d="M${seaX + 18} ${horizon + 108} C110 ${horizon + 90}, 206 ${horizon + 126}, 326 ${horizon + 106} S526 ${horizon + 94}, ${seaX + seaW - 26} ${horizon + 124}"></path>
+                <path class="world__sea-line world__sea-line--c" d="M${seaX + 58} ${horizon + 158} C152 ${horizon + 144}, 254 ${horizon + 170}, 366 ${horizon + 152} S580 ${horizon + 140}, ${seaX + seaW - 66} ${horizon + 166}"></path>
                 <ellipse class="world__island-aura" cx="${w / 2}" cy="${horizon + 76}" rx="${w * 0.46}" ry="92"></ellipse>
             </g>
         `;
@@ -535,8 +537,31 @@ const World = {
 
     marketPropSprite(item, index) {
         const category = String(item.category || 'decor').toLowerCase();
-        const hue = Math.floor(Iso.tileHash(index + 1, String(item.item_key || item.key || '').length, 83) * 360);
+        const key = String(item.item_key || item.key || item.name || '');
+        const hue = Math.floor(Iso.tileHash(index + 1, key.length, 83) * 360);
         const accent = `hsl(${hue}, 54%, 62%)`;
+        const palette = {
+            ink: '#2a1e2a',
+            sand: '#f6d39b',
+            parchment: '#fff4d6',
+            moss: '#6b8e4e',
+            mossDark: '#4a6b3a',
+            sea: '#3f8fba',
+            coin: '#ffd04a',
+            coral: '#c4453a',
+            wood: '#7b5635',
+            night: '#2a3050',
+            shard: '#b59cff',
+        };
+
+        if (typeof Market !== 'undefined' && Market.previewScene) {
+            return `
+                <ellipse class="market-prop__shadow" cx="0" cy="4" rx="13" ry="4"></ellipse>
+                <svg x="-18" y="-31" width="36" height="27" viewBox="0 0 96 72" aria-hidden="true">
+                    ${Market.previewScene(category, key, accent, palette)}
+                </svg>
+            `;
+        }
 
         if (category === 'outfit') {
             return `
