@@ -139,41 +139,42 @@ const Buildings = {
     },
 
     market() {
-        const wall = '#8b5e3c', wallSide = '#5e3e25', trim = '#3d2618';
-        const stripeA = '#c4453a', stripeB = '#fff4d6';
+        const wall = '#9a643d', wallSide = '#664127', trim = '#3d2618';
+        const roof = '#9f342b', roofSide = '#6f241e', stripeA = '#c4453a', stripeB = '#fff4d6';
         return `
             ${this.baseShadow(42, 6)}
-            <!-- rear wall and right depth make this a full stall building, not a cutaway counter -->
-            ${this.sideWall({ x: -34, y: -45, w: 68, h: 45, depth: 10, fill: wallSide })}
-            <polygon points="-38,-46 38,-46 18,-70 -18,-70" fill="${stripeB}" stroke="#2a1e2a" stroke-width="1.4"/>
-            <polygon points="38,-46 48,-53 26,-77 18,-70" fill="#7f2c25" stroke="#2a1e2a" stroke-width="1.1"/>
-            <g class="b-stripe">
-                ${[-32, -20, -8, 4, 16, 28].map(x => `<polygon points="${x},-46 ${x + 8},-46 ${x - 12},-70 ${x - 20},-70" fill="${stripeA}"/>`).join('')}
-            </g>
-            <rect x="-34" y="-45" width="68" height="45" fill="${wall}" stroke="#2a1e2a" stroke-width="1.5"/>
-            <rect x="-34" y="-45" width="68" height="8" fill="#a77748" stroke="#2a1e2a" stroke-width="0.8"/>
-            <rect x="-30" y="-39" width="6" height="39" fill="${trim}" stroke="#2a1e2a" stroke-width="0.6"/>
-            <rect x="24" y="-39" width="6" height="39" fill="${trim}" stroke="#2a1e2a" stroke-width="0.6"/>
-            <rect x="-20" y="-32" width="40" height="21" fill="#2f2118" stroke="#2a1e2a" stroke-width="1"/>
-            <rect x="-17" y="-29" width="34" height="15" fill="#f1c77d" stroke="#2a1e2a" stroke-width="0.8"/>
-            <line x1="-12" y1="-29" x2="-12" y2="-14" stroke="#2a1e2a" stroke-width="0.45" opacity="0.55"/>
-            <line x1="-1" y1="-29" x2="-1" y2="-14" stroke="#2a1e2a" stroke-width="0.45" opacity="0.55"/>
-            <line x1="10" y1="-29" x2="10" y2="-14" stroke="#2a1e2a" stroke-width="0.45" opacity="0.55"/>
-            <rect x="-34" y="-12" width="68" height="8" fill="${trim}" stroke="#2a1e2a" stroke-width="1"/>
+            ${this.sideWall({ x: -34, y: -42, w: 68, h: 42, depth: 10, fill: wallSide })}
+            ${this.roofSide({
+                apex: { x: 0, y: -72 },
+                eaveLeft: { x: -40, y: -42 },
+                eaveRight: { x: 40, y: -42 },
+                depth: 10,
+                fill: roofSide,
+            })}
+            <rect x="-34" y="-42" width="68" height="42" fill="${wall}" stroke="#2a1e2a" stroke-width="1.5"/>
+            <polygon points="-40,-42 40,-42 0,-72" fill="${roof}" stroke="#2a1e2a" stroke-width="1.5"/>
+            <line x1="-28" y1="-51" x2="28" y2="-51" stroke="#6f241e" stroke-width="1.2" opacity="0.7"/>
+            <rect x="-42" y="-43" width="84" height="12" fill="${stripeB}" stroke="#2a1e2a" stroke-width="1.2"/>
+            <polygon points="42,-43 52,-49 52,-37 42,-31" fill="#7f2c25" stroke="#2a1e2a" stroke-width="1"/>
+            ${[-38, -26, -14, -2, 10, 22, 34].map(x => `<rect x="${x}" y="-43" width="6" height="12" fill="${stripeA}"/>`).join('')}
+            <rect x="-31" y="-31" width="62" height="26" fill="#6f4729" stroke="#2a1e2a" stroke-width="1"/>
+            <rect x="-28" y="-28" width="56" height="16" fill="#f1c77d" stroke="#2a1e2a" stroke-width="0.8"/>
+            <line x1="-14" y1="-28" x2="-14" y2="-12" stroke="#2a1e2a" stroke-width="0.45" opacity="0.55"/>
+            <line x1="0" y1="-28" x2="0" y2="-12" stroke="#2a1e2a" stroke-width="0.45" opacity="0.55"/>
+            <line x1="14" y1="-28" x2="14" y2="-12" stroke="#2a1e2a" stroke-width="0.45" opacity="0.55"/>
+            <rect x="-34" y="-10" width="68" height="7" fill="${trim}" stroke="#2a1e2a" stroke-width="1"/>
             <g class="b-produce">
-                <ellipse cx="-24" cy="-12" rx="3.2" ry="2.2" fill="#c4453a" stroke="#2a1e2a" stroke-width="0.45"/>
-                <ellipse cx="-15" cy="-12" rx="3.2" ry="2.2" fill="#ffd04a" stroke="#2a1e2a" stroke-width="0.45"/>
-                <ellipse cx="-6" cy="-12" rx="3.2" ry="2.2" fill="#6b8e4e" stroke="#2a1e2a" stroke-width="0.45"/>
-                <ellipse cx="5" cy="-12" rx="3.2" ry="2.2" fill="#b59cff" stroke="#2a1e2a" stroke-width="0.45"/>
-                <ellipse cx="16" cy="-12" rx="3.2" ry="2.2" fill="#c4453a" stroke="#2a1e2a" stroke-width="0.45"/>
-                <ellipse cx="26" cy="-12" rx="3.2" ry="2.2" fill="#6b8e4e" stroke="#2a1e2a" stroke-width="0.45"/>
+                <ellipse cx="-24" cy="-10" rx="3.2" ry="2.2" fill="#c4453a" stroke="#2a1e2a" stroke-width="0.45"/>
+                <ellipse cx="-15" cy="-10" rx="3.2" ry="2.2" fill="#ffd04a" stroke="#2a1e2a" stroke-width="0.45"/>
+                <ellipse cx="-6" cy="-10" rx="3.2" ry="2.2" fill="#6b8e4e" stroke="#2a1e2a" stroke-width="0.45"/>
+                <ellipse cx="5" cy="-10" rx="3.2" ry="2.2" fill="#b59cff" stroke="#2a1e2a" stroke-width="0.45"/>
+                <ellipse cx="16" cy="-10" rx="3.2" ry="2.2" fill="#c4453a" stroke="#2a1e2a" stroke-width="0.45"/>
+                <ellipse cx="26" cy="-10" rx="3.2" ry="2.2" fill="#6b8e4e" stroke="#2a1e2a" stroke-width="0.45"/>
             </g>
-            <rect x="-39" y="-53" width="78" height="8" fill="${stripeB}" stroke="#2a1e2a" stroke-width="1.1"/>
-            ${[-35, -23, -11, 1, 13, 25].map(x => `<rect x="${x}" y="-53" width="6" height="8" fill="${stripeA}"/>`).join('')}
-            <!-- swinging market sign tucked under the front eave -->
-            <line x1="-23" y1="-53" x2="-23" y2="-44" stroke="#2a1e2a" stroke-width="0.8"/>
-            <rect x="-30" y="-44" width="14" height="9" fill="#ffd04a" stroke="#2a1e2a" stroke-width="0.8"/>
-            <text x="-23" y="-37.5" text-anchor="middle" font-size="6" fill="#2a1e2a">$</text>
+            <rect x="19" y="-29" width="7" height="19" fill="${trim}" stroke="#2a1e2a" stroke-width="0.7"/>
+            <line x1="-23" y1="-43" x2="-23" y2="-34" stroke="#2a1e2a" stroke-width="0.8"/>
+            <rect x="-30" y="-34" width="14" height="9" fill="#ffd04a" stroke="#2a1e2a" stroke-width="0.8"/>
+            <text x="-23" y="-27.5" text-anchor="middle" font-size="6" fill="#2a1e2a">$</text>
         `;
     },
 
@@ -236,28 +237,32 @@ const Buildings = {
     },
 
     ruleBoard() {
-        const post = '#5a4030', siding = '#795533', sidingSide = '#4b3321';
+        const siding = '#795533', sidingSide = '#4b3321';
+        const roof = '#5a3a2a', roofSide = '#3d2618';
         return `
             ${this.baseShadow(32, 5)}
-            ${this.sideWall({ x: -29, y: -39, w: 58, h: 39, depth: 7, fill: sidingSide })}
-            <polygon points="-34,-39 34,-39 20,-57 -20,-57" fill="#5a4030" stroke="#2a1e2a" stroke-width="1.3"/>
-            <polygon points="34,-39 41,-44 27,-62 20,-57" fill="#3d2a1e" stroke="#2a1e2a" stroke-width="1"/>
-            <rect x="-29" y="-39" width="58" height="39" fill="${siding}" stroke="#2a1e2a" stroke-width="1.4"/>
-            <line x1="-18" y1="-39" x2="-18" y2="0" stroke="#5a4030" stroke-width="0.6"/>
-            <line x1="-6" y1="-39" x2="-6" y2="0" stroke="#5a4030" stroke-width="0.6"/>
-            <line x1="6" y1="-39" x2="6" y2="0" stroke="#5a4030" stroke-width="0.6"/>
-            <line x1="18" y1="-39" x2="18" y2="0" stroke="#5a4030" stroke-width="0.6"/>
-            <rect x="-25" y="-39" width="4" height="39" fill="${post}" stroke="#2a1e2a" stroke-width="0.6"/>
-            <rect x="21" y="-39" width="4" height="39" fill="${post}" stroke="#2a1e2a" stroke-width="0.6"/>
-            <!-- framed chalk board inset into a small rule kiosk -->
-            <polygon points="25,-32 31,-36 31,-8 25,-4" fill="#242424" stroke="#2a1e2a" stroke-width="0.9"/>
-            <rect x="-25" y="-32" width="50" height="28" fill="#3a3a3a" stroke="#2a1e2a" stroke-width="1.4"/>
-            <rect x="-21" y="-28" width="42" height="20" fill="#1a1a1a" stroke="#5a4a3a" stroke-width="1"/>
+            ${this.sideWall({ x: -28, y: -38, w: 56, h: 38, depth: 8, fill: sidingSide })}
+            ${this.roofSide({
+                apex: { x: 0, y: -62 },
+                eaveLeft: { x: -34, y: -38 },
+                eaveRight: { x: 34, y: -38 },
+                depth: 8,
+                fill: roofSide,
+            })}
+            <rect x="-28" y="-38" width="56" height="38" fill="${siding}" stroke="#2a1e2a" stroke-width="1.4"/>
+            <polygon points="-34,-38 34,-38 0,-62" fill="${roof}" stroke="#2a1e2a" stroke-width="1.4"/>
+            <line x1="-23" y1="-38" x2="-23" y2="0" stroke="#5a4030" stroke-width="0.6"/>
+            <line x1="23" y1="-38" x2="23" y2="0" stroke="#5a4030" stroke-width="0.6"/>
+            <line x1="-17" y1="-47" x2="17" y2="-47" stroke="#3d2618" stroke-width="1" opacity="0.6"/>
+            <!-- framed chalk board inset into a complete rule hut -->
+            <polygon points="22,-31 28,-35 28,-8 22,-4" fill="#242424" stroke="#2a1e2a" stroke-width="0.9"/>
+            <rect x="-22" y="-31" width="44" height="27" fill="#3a3a3a" stroke="#2a1e2a" stroke-width="1.4"/>
+            <rect x="-18" y="-27" width="36" height="19" fill="#1a1a1a" stroke="#5a4a3a" stroke-width="1"/>
             <line x1="-16" y1="-23" x2="16" y2="-23" stroke="#fff4d6" stroke-width="0.7" opacity="0.85"/>
-            <line x1="-16" y1="-17" x2="7" y2="-17" stroke="#fff4d6" stroke-width="0.7" opacity="0.85"/>
-            <line x1="-16" y1="-11" x2="12" y2="-11" stroke="#fff4d6" stroke-width="0.7" opacity="0.85"/>
+            <line x1="-14" y1="-17" x2="7" y2="-17" stroke="#fff4d6" stroke-width="0.7" opacity="0.85"/>
+            <line x1="-14" y1="-11" x2="12" y2="-11" stroke="#fff4d6" stroke-width="0.7" opacity="0.85"/>
             <!-- chalk piece on a ledge -->
-            <rect x="-28" y="-5" width="56" height="5" fill="#4b3321" stroke="#2a1e2a" stroke-width="0.7"/>
+            <rect x="-24" y="-5" width="48" height="5" fill="#4b3321" stroke="#2a1e2a" stroke-width="0.7"/>
             <rect x="-2" y="-7" width="7" height="2" fill="#fff4d6" stroke="#2a1e2a" stroke-width="0.4"/>
         `;
     },

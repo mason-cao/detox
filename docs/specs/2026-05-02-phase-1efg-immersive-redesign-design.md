@@ -6,9 +6,9 @@ Owner: Mason Cao
 Supersedes: portions of `docs/specs/2026-04-17-detox-redesign-design.md` §3.1, §4
 
 2026-05-17 launch amendment: the walking sprite direction is retired.
-Residents are now programmatic SVG markers with eased requestAnimationFrame
+Residents are now simple programmatic SVG villagers with eased requestAnimationFrame
 movement and frontmost glow. No sprite atlas or low-frame-rate walk cycle
-should ship in the main Isle. The compact compass remains available on
+should ship in the main Isle. The visual compass map remains available on
 the Isle while clickable buildings stay the primary navigation surface.
 Monitor refreshes must update Isle data in place instead of tearing down
 and remounting the world.
@@ -41,9 +41,9 @@ The work splits into three plans (1e Foundation, 1f Living world, 1g Tab polish)
 
 ## 3. What changes, conceptually
 
-The Isle becomes a place, not a grid. Eight buildings sit at fixed coordinates on an isometric tile field. Residents are quiet markers assigned an archetype style based on their app's category. They glide through small open-ground routes instead of running on sprite frames. The frontmost application's marker has a glowing aura and rises above the other markers. At night, the world dims and lanterns above each building glow.
+The Isle becomes a place, not a grid. Eight buildings sit at fixed coordinates on an isometric tile field. Residents are simple villagers assigned an archetype style based on their app's category. They glide through small open-ground routes instead of running on sprite frames. The frontmost application's villager has a glowing aura and rises above the other villagers. At night, the world dims and lanterns above each building glow.
 
-Navigation is the world. Clicking a building deep-links to the section it represents. A small compass card on the Isle lists the eight destinations when needed, while sub-tabs keep their own uncluttered page controls. The bottom ribbon disappears. Keyboard `1`–`8` continues to work as a power-user shortcut.
+Navigation is the world. Clicking a building deep-links to the section it represents. A small visual compass map on the Isle shows the eight destinations as pins when needed, while sub-tabs keep their own uncluttered page controls. The bottom ribbon disappears. Keyboard `1`–`8` continues to work as a power-user shortcut.
 
 The seven sub-tabs keep their current data and routes. What changes is one signature interaction per tab: chalk write/erase on the Rule Board, parchment page-turn on the Registry, wax seal stamps on the Charter, coin float on Market, postcard slide on Postcards, and so on. Each is a small CSS keyframe + JS hook; nothing structural moves.
 
@@ -58,7 +58,7 @@ One `<svg>` element with five top-level `<g>` groups, painted in order:
 <g id="weather">   clouds, rain, sunbeams (above sky, below world)
 <g id="ground">    iso diamond tile grid, painted once on render
 <g id="buildings"> 8 buildings at fixed iso coords
-<g id="residents"> N eased resident markers with frontmost glow
+<g id="residents"> N eased villager residents with frontmost glow
 <g id="effects">   currency floats, glow auras, dust particles
 ```
 
@@ -71,9 +71,9 @@ HUD overlays (date bar, weather badge, signboards) stay as absolutely-positioned
 - `iso.js` — projection helpers. `tileToScreen(tx, ty) → {x, y}`, `screenToTile(x, y) → {tx, ty}`, plus tile-grid constants (tile width / height, world tile bounds).
 - `world.js` — SVG scaffold, layer mounting, ground-tile painting, building placement, sky / celestial / day-night logic (refactored from `isle.js`).
 - `buildings.js` — programmatic SVG generators, one function per building (`townHall`, `registry`, `market`, `charter`, `ruleBoard`, `chronicle`, `postcards`, `study`).
-- `residents.js` — programmatic resident markers, eased route movement, archetype assignment, frontmost-glow binding.
+- `residents.js` — programmatic villager residents, eased route movement, archetype assignment, frontmost-glow binding.
 - `effects.js` — reusable visual primitives (wax seal, chalk dust burst, currency float, glow halo).
-- `compass.js` — compass HUD: 8 destinations, current-room highlight, click to teleport, collapsible at <760 px.
+- `compass.js` — visual compass HUD: 8 pinned destinations, current-room highlight, click to teleport, collapsible at <760 px.
 
 Existing modules unchanged in 1e: `app.js`, `apps.js`, `blocker.js`, `cards.js`, `dashboard.js`, `goals.js`, `market.js`, `settings.js`, `stats.js`. (`hud.js` loses its bottom-ribbon code; the rest stays.)
 
@@ -95,11 +95,11 @@ Implementation: read the latest row from `usage_log` ordered by timestamp. Cache
 
 ## 5. Sprite system
 
-### 5.1 Residents - programmatic markers
+### 5.1 Residents - programmatic villagers
 
-Residents are SVG markers generated in `residents.js`. They do not use
-PNG atlases or frame-based walk cycles. Each marker has an eased open-ground
-route, category-colored ring, app initials, app name, optional minutes label
+Residents are SVG villagers generated in `residents.js`. They do not use
+PNG atlases or frame-based walk cycles. Each villager has an eased open-ground
+route, category-colored tunic, straw hat, app name, optional minutes label
 on hover/focus, and a frontmost glow when the live agent reports that app.
 
 Eight archetypes; each tracked app maps to one based on its category in `agent/config.py`:

@@ -3,7 +3,7 @@
    stays alive without the old low-frame-rate sprite run cycle. */
 
 const Residents = {
-    // Eight archetypes. These map categories to marker styling, not sprite art.
+    // Eight archetypes. These map categories to villager styling.
     archetypes: ['scribe', 'builder', 'jester', 'banished', 'farmer', 'musician', 'wanderer', 'sheriff'],
 
     // Map an app's category (from agent/config.py) to an archetype.
@@ -76,22 +76,9 @@ const Residents = {
     _state: new Map(),
     _mountedSignature: '',
 
-    // Open ground row at ty=4 plus two corners.
-    _initialSlots: [
-        { tx: 0, ty: 4 }, { tx: 2, ty: 4 }, { tx: 4, ty: 4 },
-        { tx: 6, ty: 4 }, { tx: 8, ty: 4 }, { tx: 10, ty: 4 },
-        { tx: 1, ty: 7 }, { tx: 11, ty: 7 },
-    ],
-
-    _routes: [
-        [{ tx: 0, ty: 4 }, { tx: 1, ty: 5 }, { tx: 2, ty: 4 }, { tx: 1, ty: 4 }],
-        [{ tx: 2, ty: 4 }, { tx: 3, ty: 5 }, { tx: 4, ty: 4 }, { tx: 3, ty: 4 }],
-        [{ tx: 4, ty: 4 }, { tx: 4, ty: 6 }, { tx: 3, ty: 7 }, { tx: 2, ty: 7 }],
-        [{ tx: 6, ty: 4 }, { tx: 7, ty: 5 }, { tx: 7, ty: 7 }, { tx: 5, ty: 7 }],
-        [{ tx: 8, ty: 4 }, { tx: 9, ty: 4 }, { tx: 9, ty: 7 }, { tx: 8, ty: 6 }],
-        [{ tx: 10, ty: 4 }, { tx: 11, ty: 4 }, { tx: 11, ty: 7 }, { tx: 10, ty: 6 }],
-        [{ tx: 1, ty: 7 }, { tx: 2, ty: 6 }, { tx: 4, ty: 7 }, { tx: 2, ty: 7 }],
-        [{ tx: 11, ty: 7 }, { tx: 10, ty: 6 }, { tx: 8, ty: 7 }, { tx: 10, ty: 7 }],
+    _spreadAnchors: [
+        { tx: 0, ty: 1 }, { tx: 4, ty: 1 }, { tx: 8, ty: 1 }, { tx: 11, ty: 3 },
+        { tx: 0, ty: 6 }, { tx: 4, ty: 7 }, { tx: 7, ty: 7 }, { tx: 11, ty: 7 },
     ],
 
     // Mount resident markers into the world's #worldResidents <g>.
@@ -100,8 +87,12 @@ const Residents = {
         const layer = document.getElementById('worldResidents');
         if (!layer) return;
 
-        const built = this.build(apps).map((r, i) => {
-            const route = this._routes[i] || [this._initialSlots[i] || { tx: 5, ty: 4 }];
+        const openTiles = this._walkableTiles(this._openTiles());
+        const claimed = new Set();
+        const residents = this.build(apps);
+        const built = residents.map((r, i) => {
+            const route = this._routeFor(r.appName, i, residents.length, openTiles, claimed);
+            route.forEach(tile => claimed.add(this._tileKey(tile)));
             return {
                 ...r,
                 tile: route[0],
@@ -120,6 +111,149 @@ const Residents = {
         });
 
         this.startTicker();
+    },
+
+    _routeFor(appName, index, total, openTiles, claimed) {
+        const fallback = openTiles[0] || { tx: 0, ty: 0 };
+        const start = this._pickStartTile(appName, index, total, openTiles, claimed) || fallback;
+        const route = [start];
+        const local = new Set([this._tileKey(start)]);
+
+        for (let step = 0; step < 4; step++) {
+            const current = route[route.length - 1];
+            const candidates = openTiles
+                .filter(tile => {
+                    const key = this._tileKey(tile);
+                    const distance = this._distance(tile, current);
+                    return !local.has(key)
+                        && !claimed.has(key)
+                        && distance >= 1
+                        && distance <= 2.4;
+                })
+                .sort((a, b) => this._routeScore(b, current, appName, index, step, claimed)
+                    - this._routeScore(a, current, appName, index, step, claimed));
+
+            const next = candidates[0] || openTiles
+                .filter(tile => {
+                    const key = this._tileKey(tile);
+                    const distance = this._distance(tile, current);
+                    return !local.has(key) && distance >= 1 && distance <= 2.4;
+                })
+                .sort((a, b) => this._routeScore(b, current, appName, index, step, claimed)
+                    - this._routeScore(a, current, appName, index, step, claimed))[0];
+            if (!next) break;
+            route.push(next);
+            local.add(this._tileKey(next));
+        }
+
+        if (route.length < 2) {
+            const neighbor = openTiles
+                .filter(tile => this._tileKey(tile) !== this._tileKey(start)
+                    && this._distance(tile, start) >= 1
+                    && this._distance(tile, start) <= 2.4)
+                .sort((a, b) => this._distance(a, start) - this._distance(b, start))[0];
+            if (neighbor) route.push(neighbor);
+        }
+
+        return route;
+    },
+
+    _pickStartTile(appName, index, total, openTiles, claimed) {
+        const anchor = this._anchorFor(index, total);
+        return openTiles
+            .filter(tile => !claimed.has(this._tileKey(tile)))
+            .sort((a, b) => this._startScore(b, anchor, appName, index, claimed)
+                - this._startScore(a, anchor, appName, index, claimed))[0] || null;
+    },
+
+    _anchorFor(index, total) {
+        const presets = total <= 4
+            ? [0, 2, 4, 7]
+            : total <= 6
+                ? [0, 2, 3, 4, 5, 7]
+                : [0, 1, 2, 3, 4, 5, 6, 7];
+        return this._spreadAnchors[presets[index % presets.length]];
+    },
+
+    _startScore(tile, anchor, appName, index, claimed) {
+        const anchorDistance = this._distance(tile, anchor);
+        const spread = this._minClaimDistance(tile, claimed);
+        const stableRandom = this._stableRandom(appName, tile.tx, tile.ty, index);
+        return spread * 1.15 - anchorDistance * 1.4 + stableRandom * 2.6;
+    },
+
+    _routeScore(tile, current, appName, index, step, claimed) {
+        const routeDistance = this._distance(tile, current);
+        const spread = this._minClaimDistance(tile, claimed);
+        const stableRandom = this._stableRandom(appName, tile.tx, tile.ty, index + step + 31);
+        return stableRandom * 2.4 + spread * 0.28 - Math.abs(routeDistance - 1.5) * 0.9;
+    },
+
+    _blockedTiles() {
+        const blocked = new Set();
+        if (!window.Buildings || !Buildings.catalog) return blocked;
+
+        Buildings.catalog.forEach(b => {
+            const span = b.size === 'major' ? 1 : 0;
+            for (let dx = 0; dx <= span; dx++) {
+                for (let dy = 0; dy <= span; dy++) {
+                    const tx = b.tx + dx;
+                    const ty = b.ty + dy;
+                    if (tx < 0 || ty < 0 || tx >= Iso.WORLD_TX || ty >= Iso.WORLD_TY) continue;
+                    blocked.add(`${tx},${ty}`);
+                }
+            }
+        });
+        return blocked;
+    },
+
+    _openTiles() {
+        const blocked = this._blockedTiles();
+        const tiles = [];
+        for (let ty = 0; ty < Iso.WORLD_TY; ty++) {
+            for (let tx = 0; tx < Iso.WORLD_TX; tx++) {
+                if (blocked.has(`${tx},${ty}`)) continue;
+                tiles.push({ tx, ty });
+            }
+        }
+        return tiles.length ? tiles : [{ tx: 0, ty: 0 }];
+    },
+
+    _walkableTiles(openTiles) {
+        const walkable = openTiles.filter(tile => openTiles.some(other => {
+            if (this._tileKey(other) === this._tileKey(tile)) return false;
+            const distance = this._distance(tile, other);
+            return distance >= 1 && distance <= 2.4;
+        }));
+        return walkable.length ? walkable : openTiles;
+    },
+
+    _tileKey(tile) {
+        return `${tile.tx},${tile.ty}`;
+    },
+
+    _distance(a, b) {
+        return Math.hypot(a.tx - b.tx, a.ty - b.ty);
+    },
+
+    _minClaimDistance(tile, claimed) {
+        if (!claimed.size) return 8;
+        let min = 99;
+        claimed.forEach(key => {
+            const [tx, ty] = key.split(',').map(Number);
+            min = Math.min(min, Math.hypot(tile.tx - tx, tile.ty - ty));
+        });
+        return min;
+    },
+
+    _stableRandom(...parts) {
+        const str = parts.join('|');
+        let h = 2166136261;
+        for (let i = 0; i < str.length; i++) {
+            h ^= str.charCodeAt(i);
+            h = Math.imul(h, 16777619);
+        }
+        return (h >>> 0) / 4294967295;
     },
 
     update(apps) {
@@ -147,7 +281,7 @@ const Residents = {
         });
     },
 
-    // Render one resident as an SVG marker. No sprite atlas or walk cycle.
+    // Render one resident as a simple villager. No sprite atlas or walk cycle.
     _render(r) {
         const { x, y } = Iso.tileToScreen(r.tile.tx, r.tile.ty);
         const cy = y + Iso.TILE_H / 2 + 80; // sky headroom + tile-center
@@ -160,12 +294,17 @@ const Residents = {
                data-active="false"
                style="--tint: ${r.tint};">
                 <title>${App.escapeHtml(r.appName)}${r.preview ? ' preview' : ''} - ${App.escapeHtml(App.formatTime(r.minutes))}</title>
-                <circle class="effect-halo" cx="0" cy="-16" r="22" style="display: none;"></circle>
-                <ellipse class="world__resident-shadow" cx="0" cy="1" rx="18" ry="5"></ellipse>
-                <g class="world__resident-token">
-                    <circle class="world__resident-ring" cx="0" cy="-18" r="16"></circle>
-                    <circle class="world__resident-core" cx="0" cy="-18" r="11"></circle>
-                    <text class="world__resident-initial" text-anchor="middle" x="0" y="-14">${App.escapeHtml(r.initials)}</text>
+                <circle class="effect-halo" cx="0" cy="-17" r="22" style="display: none;"></circle>
+                <ellipse class="world__resident-shadow" cx="0" cy="2" rx="13" ry="4"></ellipse>
+                <g class="world__resident-villager">
+                    <path class="world__resident-legs" d="M-4,-5 L-7,1 M4,-5 L7,1"></path>
+                    <path class="world__resident-arms" d="M-8,-15 L-13,-9 M8,-15 L13,-9"></path>
+                    <path class="world__resident-tunic" d="M-9,-18 Q0,-23 9,-18 L7,-6 L-7,-6 Z"></path>
+                    <circle class="world__resident-head" cx="0" cy="-27" r="7"></circle>
+                    <path class="world__resident-hat" d="M-12,-29 Q0,-40 12,-29 Z"></path>
+                    <path class="world__resident-brim" d="M-14,-29 H14"></path>
+                    <circle class="world__resident-eye" cx="-2.4" cy="-27" r="0.7"></circle>
+                    <circle class="world__resident-eye" cx="2.4" cy="-27" r="0.7"></circle>
                 </g>
                 <text class="world__resident-name" text-anchor="middle" y="14">${App.escapeHtml(r.appName)}</text>
                 <text class="world__resident-minutes" text-anchor="middle" y="27">${App.escapeHtml(App.formatTime(r.minutes))}</text>
