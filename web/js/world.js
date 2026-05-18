@@ -16,6 +16,8 @@ const World = {
         const w = Iso.worldW();
         const h = Iso.worldH() + 80; // +80px sky headroom above the ground
         const view = this.viewBox(w, h);
+        this._pan.x = 0;
+        this._pan.y = 0;
         // How far the camera can drift before the island runs off-stage.
         // Roughly one third of the world dimensions in each axis.
         this._pan.max = { x: Math.round(w * 0.32), y: Math.round(h * 0.22) };
@@ -89,9 +91,11 @@ const World = {
         return `
             <g id="worldSea" aria-hidden="true">
                 <rect class="world__sea" x="${view.x}" y="${horizon}" width="${view.width}" height="${view.height - horizon}"></rect>
-                <path class="world__sea-line world__sea-line--a" d="M${view.x + 16} ${horizon + 52} C118 ${horizon + 36}, 182 ${horizon + 70}, 280 ${horizon + 50} S470 ${horizon + 46}, ${view.x + view.width - 18} ${horizon + 66}"></path>
-                <path class="world__sea-line world__sea-line--b" d="M${view.x - 10} ${horizon + 108} C94 ${horizon + 88}, 194 ${horizon + 128}, 318 ${horizon + 106} S520 ${horizon + 92}, ${view.x + view.width + 26} ${horizon + 124}"></path>
-                <path class="world__sea-line world__sea-line--c" d="M${view.x + 42} ${horizon + 158} C144 ${horizon + 142}, 246 ${horizon + 170}, 358 ${horizon + 150} S574 ${horizon + 138}, ${view.x + view.width - 48} ${horizon + 166}"></path>
+                <path class="world__sea-current world__sea-current--a" d="M${view.x - 52} ${horizon + 112} C104 ${horizon + 64}, 250 ${horizon + 126}, 402 ${horizon + 88} S624 ${horizon + 72}, ${view.x + view.width + 72} ${horizon + 130}"></path>
+                <path class="world__sea-current world__sea-current--b" d="M${view.x - 70} ${horizon + 190} C126 ${horizon + 152}, 266 ${horizon + 214}, 434 ${horizon + 176} S636 ${horizon + 160}, ${view.x + view.width + 88} ${horizon + 212}"></path>
+                <path class="world__sea-line world__sea-line--a" d="M${view.x + 28} ${horizon + 52} C118 ${horizon + 38}, 196 ${horizon + 70}, 286 ${horizon + 52} S476 ${horizon + 48}, ${view.x + view.width - 44} ${horizon + 66}"></path>
+                <path class="world__sea-line world__sea-line--b" d="M${view.x + 18} ${horizon + 108} C110 ${horizon + 90}, 206 ${horizon + 126}, 326 ${horizon + 106} S526 ${horizon + 94}, ${view.x + view.width - 26} ${horizon + 124}"></path>
+                <path class="world__sea-line world__sea-line--c" d="M${view.x + 58} ${horizon + 158} C152 ${horizon + 144}, 254 ${horizon + 170}, 366 ${horizon + 152} S580 ${horizon + 140}, ${view.x + view.width - 66} ${horizon + 166}"></path>
                 <ellipse class="world__island-aura" cx="${w / 2}" cy="${horizon + 76}" rx="${w * 0.46}" ry="92"></ellipse>
             </g>
         `;
@@ -114,6 +118,7 @@ const World = {
     // 1:1 with the cursor regardless of the SVG's responsive scale.
     bindPan(parent, svg) {
         const panGroup = svg.querySelector('#worldPan');
+        const seaGroup = svg.querySelector('#worldSea');
         if (!panGroup) return;
         parent.classList.add('isle__stage--pannable');
 
@@ -127,6 +132,12 @@ const World = {
                 'transform',
                 `translate(${this._pan.x.toFixed(1)} ${this._pan.y.toFixed(1)})`,
             );
+            if (seaGroup) {
+                seaGroup.setAttribute(
+                    'transform',
+                    `translate(${(this._pan.x * 0.32).toFixed(1)} ${(this._pan.y * 0.14).toFixed(1)})`,
+                );
+            }
         };
 
         const onPointerDown = (e) => {
@@ -441,6 +452,135 @@ const World = {
             lantern.setAttribute('r', '6');
             layer.appendChild(lantern);
         });
+    },
+
+    applyMarketInventory(inventory = []) {
+        const root = document.querySelector('.isle');
+        const layer = document.getElementById('worldEffects');
+        if (!root || !layer) return;
+
+        [...root.classList].forEach(cls => {
+            if (cls === 'market-has-inventory' || cls.startsWith('market-owned-') || cls.startsWith('market-category-')) {
+                root.classList.remove(cls);
+            }
+        });
+
+        const owned = (Array.isArray(inventory) ? inventory : [])
+            .filter(item => !item.refunded)
+            .filter(item => item.item_key || item.key)
+            .slice(0, 48);
+
+        root.classList.toggle('market-has-inventory', owned.length > 0);
+        owned.forEach(item => {
+            const key = this.safeClass(item.item_key || item.key);
+            const category = this.safeClass(item.category || 'decor');
+            if (key) root.classList.add(`market-owned-${key}`);
+            if (category) root.classList.add(`market-category-${category}`);
+        });
+
+        layer.innerHTML = this.marketProps(owned);
+    },
+
+    marketProps(owned) {
+        if (!owned.length) return '';
+        const tiles = this.marketPropTiles();
+        if (!tiles.length) return '';
+
+        return owned.map((item, index) => {
+            const key = String(item.item_key || item.key || item.name || index);
+            const tile = tiles[index % tiles.length];
+            const { x, y } = Iso.tileToScreen(tile.tx, tile.ty);
+            const jx = (Iso.tileHash(tile.tx, tile.ty, index + 41) - 0.5) * 18;
+            const jy = (Iso.tileHash(tile.tx, tile.ty, index + 59) - 0.5) * 8;
+            const px = x + jx;
+            const py = y + Iso.TILE_H + 76 + jy;
+            const cat = this.safeClass(item.category || 'decor');
+            return `
+                <g class="world__market-prop world__market-prop--${cat}" data-key="${App.escapeAttr(key)}"
+                   transform="translate(${px.toFixed(1)} ${py.toFixed(1)})">
+                    <title>${App.escapeHtml(item.name || key)}</title>
+                    ${this.marketPropSprite(item, index)}
+                </g>
+            `;
+        }).join('');
+    },
+
+    marketPropTiles() {
+        const blocked = new Set();
+        Buildings.catalog.forEach(b => {
+            const span = b.size === 'major' ? 1 : 0;
+            for (let dx = 0; dx <= span; dx++) {
+                for (let dy = 0; dy <= span; dy++) {
+                    blocked.add(`${b.tx + dx},${b.ty + dy}`);
+                }
+            }
+        });
+
+        const preferred = [
+            { tx: 0, ty: 0 }, { tx: 2, ty: 0 }, { tx: 6, ty: 0 }, { tx: 8, ty: 0 }, { tx: 11, ty: 0 },
+            { tx: 0, ty: 2 }, { tx: 3, ty: 2 }, { tx: 7, ty: 2 }, { tx: 11, ty: 2 },
+            { tx: 1, ty: 4 }, { tx: 4, ty: 4 }, { tx: 7, ty: 4 }, { tx: 10, ty: 4 },
+            { tx: 0, ty: 7 }, { tx: 3, ty: 7 }, { tx: 6, ty: 7 }, { tx: 9, ty: 7 }, { tx: 11, ty: 7 },
+        ].filter(tile => this.inWorld(tile) && !blocked.has(`${tile.tx},${tile.ty}`));
+
+        const rest = [];
+        for (let ty = 0; ty < Iso.WORLD_TY; ty++) {
+            for (let tx = 0; tx < Iso.WORLD_TX; tx++) {
+                if (!blocked.has(`${tx},${ty}`)) rest.push({ tx, ty });
+            }
+        }
+        rest.sort((a, b) => Iso.tileHash(a.tx, a.ty, 31) - Iso.tileHash(b.tx, b.ty, 31));
+        return [...preferred, ...rest];
+    },
+
+    marketPropSprite(item, index) {
+        const category = String(item.category || 'decor').toLowerCase();
+        const hue = Math.floor(Iso.tileHash(index + 1, String(item.item_key || item.key || '').length, 83) * 360);
+        const accent = `hsl(${hue}, 54%, 62%)`;
+
+        if (category === 'outfit') {
+            return `
+                <ellipse class="market-prop__shadow" cx="0" cy="2" rx="9" ry="3"></ellipse>
+                <path class="market-prop__cloth" d="M-8,-5 Q0,-12 8,-5 L6,5 H-6 Z" style="fill:${accent}"></path>
+                <path class="market-prop__line" d="M-10,-8 H10"></path>
+            `;
+        }
+        if (category === 'weather') {
+            return `
+                <ellipse class="market-prop__shadow" cx="0" cy="3" rx="10" ry="3"></ellipse>
+                <circle class="market-prop__sun" cx="-4" cy="-6" r="5"></circle>
+                <path class="market-prop__cloud" d="M-5,0 C-2,-6 7,-6 9,0 C13,0 15,3 15,6 H-12 C-12,2 -10,0 -5,0 Z"></path>
+            `;
+        }
+        if (category === 'building') {
+            return `
+                <ellipse class="market-prop__shadow" cx="0" cy="3" rx="10" ry="3"></ellipse>
+                <rect class="market-prop__crate" x="-8" y="-8" width="16" height="11"></rect>
+                <path class="market-prop__roof" d="M-10,-8 L0,-15 L10,-8 Z" style="fill:${accent}"></path>
+            `;
+        }
+        if (category === 'map') {
+            return `
+                <ellipse class="market-prop__shadow" cx="0" cy="3" rx="10" ry="3"></ellipse>
+                <path class="market-prop__flagpole" d="M-5,3 V-14"></path>
+                <path class="market-prop__flag" d="M-5,-14 H10 L6,-8 H-5 Z" style="fill:${accent}"></path>
+                <path class="market-prop__path" d="M-13,4 C-6,0 4,8 13,2"></path>
+            `;
+        }
+        return `
+            <ellipse class="market-prop__shadow" cx="0" cy="3" rx="10" ry="3"></ellipse>
+            <path class="market-prop__lantern" d="M-5,-10 H5 L7,0 L0,5 L-7,0 Z" style="fill:${accent}"></path>
+            <path class="market-prop__line" d="M0,-10 V-16"></path>
+            <circle class="market-prop__glow" cx="0" cy="-2" r="4"></circle>
+        `;
+    },
+
+    inWorld(tile) {
+        return tile.tx >= 0 && tile.ty >= 0 && tile.tx < Iso.WORLD_TX && tile.ty < Iso.WORLD_TY;
+    },
+
+    safeClass(value) {
+        return String(value || '').toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
     },
 
 };

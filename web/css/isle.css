@@ -56,31 +56,46 @@
 .world__sea {
     fill: url(#seaGradient);
 }
+.world__sea-current {
+    fill: none;
+    stroke: rgba(255, 244, 214, 0.08);
+    stroke-width: 24;
+    stroke-linecap: round;
+    opacity: 0.75;
+    animation: sea-current 12s ease-in-out infinite alternate;
+}
+.world__sea-current--b {
+    stroke-width: 18;
+    opacity: 0.42;
+    animation-duration: 16s;
+    animation-delay: -5s;
+}
 .world__sea-line {
     fill: none;
-    stroke: rgba(255, 244, 214, 0.46);
-    stroke-width: 2.8;
+    stroke: rgba(255, 244, 214, 0.20);
+    stroke-width: 1.5;
     stroke-linecap: round;
-    stroke-dasharray: 24 18;
-    animation: sea-drift 5.8s linear infinite;
+    animation: sea-drift 6.8s ease-in-out infinite alternate;
     transform-box: fill-box;
 }
 .world__sea-line--b {
-    stroke: rgba(255, 244, 214, 0.30);
-    stroke-width: 2.1;
-    animation-duration: 7.4s;
-    animation-direction: reverse;
+    stroke: rgba(255, 244, 214, 0.15);
+    stroke-width: 1.3;
+    animation-duration: 8.2s;
+    animation-delay: -2s;
 }
 .world__sea-line--c {
-    stroke: rgba(255, 244, 214, 0.24);
-    stroke-width: 2;
-    animation-duration: 8.8s;
+    stroke: rgba(255, 244, 214, 0.12);
+    stroke-width: 1.2;
+    animation-duration: 10.2s;
+    animation-delay: -4s;
 }
 .world__island-aura { fill: url(#islandAura); }
 .world__island-shadow { fill: rgba(42, 30, 42, 0.18); }
 .world__shore--outer { fill: #f6d39b; opacity: 0.84; }
 .world__shore--inner { fill: rgba(255, 244, 214, 0.15); }
 .is-night .world__sea-line { stroke: rgba(232, 221, 240, 0.16); }
+.is-night .world__sea-current { stroke: rgba(232, 221, 240, 0.08); }
 .is-night .world__shore--outer { fill: #59405f; opacity: 0.72; }
 .is-night .world__shore--inner { fill: rgba(232, 221, 240, 0.08); }
 
@@ -133,14 +148,68 @@
 
 @keyframes sunbeam-spin { to { transform: rotate(1turn); } }
 @keyframes sea-drift {
-    0% { stroke-dashoffset: 0; transform: translateX(0); }
-    50% { transform: translateX(10px); }
-    100% { stroke-dashoffset: -126; transform: translateX(0); }
+    0% { transform: translate(-10px, 0); opacity: 0.42; }
+    100% { transform: translate(14px, -3px); opacity: 0.72; }
+}
+@keyframes sea-current {
+    0% { transform: translate(-18px, 0) scaleX(1); }
+    100% { transform: translate(24px, -5px) scaleX(1.03); }
 }
 @keyframes cloud-drift { to { transform: translateX(14px); } }
 @keyframes star-twinkle {
     0%, 100% { opacity: 0.42; }
     50% { opacity: 0.95; }
+}
+
+/* ── Market purchase props ──────────────────────────────────────────── */
+.world__market-prop {
+    pointer-events: none;
+    animation: market-prop-bob 3.8s ease-in-out infinite;
+    transform-box: fill-box;
+}
+.world__market-prop:nth-child(2n) { animation-delay: -1.4s; }
+.world__market-prop:nth-child(3n) { animation-delay: -2.6s; }
+.market-prop__shadow { fill: rgba(42, 30, 42, 0.24); }
+.market-prop__line,
+.market-prop__flagpole,
+.market-prop__path {
+    fill: none;
+    stroke: var(--dc-ink);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.market-prop__cloth,
+.market-prop__crate,
+.market-prop__roof,
+.market-prop__flag,
+.market-prop__lantern {
+    stroke: var(--dc-ink);
+    stroke-width: 1.2;
+}
+.market-prop__crate { fill: #9a643d; }
+.market-prop__sun { fill: var(--dc-coin); stroke: var(--dc-ink); stroke-width: 1.2; }
+.market-prop__cloud { fill: var(--dc-parchment); stroke: var(--dc-ink); stroke-width: 1.2; }
+.market-prop__flagpole { stroke-width: 1.8; }
+.market-prop__path { stroke: var(--dc-sand); stroke-width: 2.4; }
+.market-prop__glow {
+    fill: rgba(255, 208, 74, 0.58);
+    animation: market-glow 1.8s ease-in-out infinite;
+}
+.market-owned-market_bunting .world__building[data-tab="market"] .world__building-shape,
+.market-owned-market_roof_tiles .world__building[data-tab="market"] .world__building-shape,
+.market-owned-roof_moss .world__building-shape,
+.market-owned-rule_board_lanterns .world__building[data-tab="blocker"] .world__building-shape {
+    filter: drop-shadow(0 0 4px rgba(255, 208, 74, 0.36));
+}
+
+@keyframes market-prop-bob {
+    0%, 100% { opacity: 0.92; }
+    50% { opacity: 1; }
+}
+@keyframes market-glow {
+    0%, 100% { opacity: 0.32; }
+    50% { opacity: 0.76; }
 }
 
 /* ── HUD overlays (HTML on top of SVG) ───────────────────────────────── */
@@ -253,6 +322,8 @@
 
 @media (prefers-reduced-motion: reduce) {
     .weather-sunbeam { animation: none; opacity: 0.12; }
+    .world__market-prop,
+    .market-prop__glow { animation: none; }
 }
 
 @media (max-width: 760px) {
