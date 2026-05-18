@@ -485,10 +485,105 @@
     line-height: 1.4;
 }
 
-.stall-grid,
+.market-shelves,
 .market-list {
     display: flex;
     flex-direction: column;
+    gap: var(--sp-4);
+}
+
+.market-shelf {
+    padding: var(--sp-3);
+    background: rgba(255, 244, 214, 0.62);
+    box-shadow: 0 0 0 2px var(--dc-ink), inset 0 -8px 0 rgba(42, 30, 42, 0.05);
+}
+
+.market-shelf__header {
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: var(--sp-3);
+    border: 0;
+    background: transparent;
+    padding-bottom: var(--sp-3);
+    margin-bottom: var(--sp-3);
+    border-bottom: 1px solid rgba(42, 30, 42, 0.16);
+    color: inherit;
+    cursor: pointer;
+    text-align: left;
+}
+
+.market-shelf.is-collapsed .market-shelf__header {
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-bottom: 0;
+}
+
+.market-shelf__header:hover .market-shelf__glyph,
+.market-shelf__header:focus-visible .market-shelf__glyph {
+    background: var(--dc-noon);
+}
+
+.market-shelf__header:focus-visible {
+    outline: 2px solid var(--dc-ink);
+    outline-offset: 3px;
+}
+
+.market-shelf__glyph {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    background: var(--dc-coin);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    font-family: var(--font-display);
+    font-size: 12px;
+    color: var(--dc-ink);
+}
+
+.market-shelf__header h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 13px;
+    line-height: 1.3;
+    color: var(--dc-ink);
+}
+
+.market-shelf__header p,
+.market-shelf__header span {
+    margin: 2px 0 0;
+    font-family: var(--font-game);
+    font-size: var(--fs-md);
+    color: var(--dc-ink-soft);
+}
+
+.market-shelf__count {
+    margin: 0;
+    white-space: nowrap;
+}
+
+.market-shelf__chevron {
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    background: var(--dc-parchment);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    font-family: var(--font-display);
+    font-size: 10px;
+    color: var(--dc-ink);
+    transition: transform 120ms steps(3);
+}
+
+.market-shelf.is-collapsed .market-shelf__chevron {
+    transform: rotate(-90deg);
+}
+
+.stall-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: var(--sp-2);
 }
 
@@ -501,8 +596,45 @@
     gap: var(--sp-3);
 }
 
+.stall-row {
+    min-height: 232px;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+    align-items: stretch;
+    padding: var(--sp-3);
+    background: var(--dc-parchment);
+    box-shadow: 0 0 0 2px rgba(42, 30, 42, 0.82), inset 0 -6px 0 rgba(42, 30, 42, 0.06);
+}
+
+.stall-row__preview {
+    min-height: 76px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(180deg, rgba(246, 211, 155, 0.45), rgba(255, 244, 214, 0.72));
+    box-shadow: inset 0 0 0 2px rgba(42, 30, 42, 0.34);
+}
+
+.stall-preview {
+    width: 92px;
+    height: 78px;
+    image-rendering: pixelated;
+}
+
+.stall-row__content {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: var(--sp-2);
+    min-width: 0;
+}
+
+.stall-row__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2);
+}
+
 .stall-row__category {
-    min-width: 86px;
     padding: var(--sp-1) var(--sp-2);
     background: var(--dc-sand);
     box-shadow: 0 0 0 2px var(--dc-ink);
@@ -515,7 +647,7 @@
 }
 
 .stall-row__body,
-.inventory-row > div:first-child,
+.inventory-row > div:nth-child(2),
 .honor-row > div:first-child {
     min-width: 0;
 }
@@ -529,7 +661,7 @@
     color: var(--dc-ink);
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .stall-row__desc,
@@ -542,6 +674,10 @@
     margin-top: 2px;
 }
 
+.stall-row__desc {
+    line-height: 1.35;
+}
+
 .stall-row__price,
 .inventory-row__refund,
 .honor-row__amount {
@@ -551,8 +687,26 @@
     white-space: nowrap;
 }
 
+.stall-row .pixel-button {
+    justify-self: stretch;
+}
+
 .inventory-row {
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
+.inventory-row__preview {
+    width: 48px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    background: var(--dc-sand);
+    box-shadow: inset 0 0 0 2px rgba(42, 30, 42, 0.32);
+}
+
+.inventory-row__preview .stall-preview {
+    width: 46px;
+    height: 38px;
 }
 
 .inventory-row__refund {
@@ -624,18 +778,34 @@
         text-align: left;
     }
 
-    .stall-row,
     .inventory-row,
     .honor-row {
         grid-template-columns: 1fr;
         align-items: stretch;
     }
 
+    .market-shelf__header {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+
+    .market-shelf__count {
+        grid-column: 2;
+        justify-self: start;
+    }
+
+    .market-shelf__chevron {
+        grid-column: 3;
+        grid-row: 1 / span 2;
+    }
+
+    .stall-grid {
+        grid-template-columns: 1fr;
+    }
+
     .stall-row__category {
         width: fit-content;
     }
 
-    .stall-row__price,
     .inventory-row__refund,
     .honor-row__amount,
     .honor-row__date {
@@ -644,7 +814,6 @@
         text-align: left;
     }
 
-    .stall-row .pixel-button,
     .inventory-row .pixel-button {
         width: 100%;
     }
@@ -832,18 +1001,110 @@
 
 /* ── Postcards (share cards) ─────────────────────────────────────────── */
 .postcard-intro {
-    padding: var(--sp-5);
-    background: var(--dc-parchment);
-    box-shadow: 0 0 0 2px var(--dc-ink);
-    text-align: center;
+    position: relative;
+    padding: var(--sp-3);
+    background: linear-gradient(180deg, rgba(255, 244, 214, 0.96), rgba(246, 211, 155, 0.84));
+    box-shadow: 0 0 0 2px var(--dc-ink), inset 0 -10px 0 rgba(42, 30, 42, 0.06);
     margin-bottom: var(--sp-4);
 }
-.postcard-intro__copy {
+.postcard-compose {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(220px, 0.9fr) minmax(260px, 1.1fr);
+    gap: var(--sp-4);
+    align-items: center;
+    min-height: 220px;
+    padding: var(--sp-4);
+    background:
+        linear-gradient(90deg, rgba(42, 30, 42, 0.12) 1px, transparent 1px) 0 0 / 18px 18px,
+        linear-gradient(180deg, #fff4d6 0%, #f6d39b 100%);
+    box-shadow: inset 0 0 0 2px rgba(42, 30, 42, 0.82);
+}
+.postcard-compose__art {
+    min-height: 180px;
+    display: grid;
+    place-items: center;
+}
+.postcard-compose__art svg {
+    width: min(100%, 360px);
+    height: auto;
+    filter: drop-shadow(6px 8px 0 rgba(42, 30, 42, 0.14));
+}
+.postcard-compose__art rect {
+    fill: #fff4d6;
+    stroke: var(--dc-ink);
+    stroke-width: 4;
+}
+.postcard-compose__sea,
+.postcard-compose__path {
+    fill: none;
+    stroke: #3f8fba;
+    stroke-width: 5;
+    stroke-linecap: round;
+}
+.postcard-compose__sand {
+    fill: #f6d39b;
+    stroke: var(--dc-ink);
+    stroke-width: 3;
+}
+.postcard-compose__grass {
+    fill: var(--dc-moss);
+    stroke: var(--dc-ink);
+    stroke-width: 2;
+}
+.postcard-compose__path { stroke: #fff4d6; stroke-width: 4; }
+.postcard-compose__sun {
+    fill: var(--dc-coin);
+    stroke: var(--dc-ink);
+    stroke-width: 3;
+}
+.postcard-compose__stamp {
+    fill: none;
+    stroke: var(--dc-danger);
+    stroke-width: 3;
+    stroke-dasharray: 4 3;
+}
+.postcard-compose__copy {
+    max-width: 420px;
+}
+.postcard-compose__eyebrow {
+    display: inline-block;
+    margin-bottom: var(--sp-2);
+    padding: var(--sp-1) var(--sp-2);
+    background: var(--dc-sand);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+    font-family: var(--font-display);
+    font-size: 9px;
+    color: var(--dc-ink);
+}
+.postcard-compose__copy h2 {
+    margin: 0 0 var(--sp-2);
+    font-family: var(--font-display);
+    font-size: 16px;
+    line-height: 1.45;
+    color: var(--dc-ink);
+}
+.postcard-compose__copy p {
     font-family: var(--font-game);
     font-size: var(--fs-lg);
-    color: var(--dc-ink);
+    color: var(--dc-ink-soft);
     margin-bottom: var(--sp-4);
     line-height: 1.4;
+}
+.postcard-compose__seal {
+    position: absolute;
+    top: var(--sp-4);
+    right: var(--sp-4);
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--dc-danger);
+    color: #fff4d6;
+    box-shadow: 0 0 0 2px var(--dc-ink), inset 0 -6px 0 rgba(42, 30, 42, 0.18);
+    font-family: var(--font-display);
+    font-size: 13px;
 }
 .postcard-date-nav {
     display: inline-flex;
@@ -856,8 +1117,8 @@
 
 .postcard-preview {
     padding: var(--sp-5);
-    background: var(--dc-parchment);
-    box-shadow: 0 0 0 2px var(--dc-ink);
+    background: linear-gradient(180deg, rgba(255, 244, 214, 0.96), rgba(246, 211, 155, 0.78));
+    box-shadow: 0 0 0 2px var(--dc-ink), inset 0 -10px 0 rgba(42, 30, 42, 0.06);
     text-align: center;
 }
 .postcard-preview__frame {
@@ -879,6 +1140,21 @@
     justify-content: center;
     gap: var(--sp-3);
     flex-wrap: wrap;
+}
+
+@media (max-width: 720px) {
+    .postcard-compose {
+        grid-template-columns: 1fr;
+        padding: var(--sp-3);
+    }
+    .postcard-compose__copy {
+        max-width: none;
+    }
+    .postcard-compose__seal {
+        width: 34px;
+        height: 34px;
+        font-size: 11px;
+    }
 }
 
 /* ── Mayor's Study (settings) ────────────────────────────────────────── */

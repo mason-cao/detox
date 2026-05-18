@@ -20,12 +20,28 @@ const Cards = {
                 </div>
 
                 <div class="postcard-intro">
-                    <div class="postcard-intro__copy">
-                        Stamp a postcard for today's island and send it to a friend. No one sees your data but you.
+                    <div class="postcard-compose">
+                        <div class="postcard-compose__art" aria-hidden="true">
+                            <svg viewBox="0 0 190 132" role="presentation">
+                                <rect x="5" y="6" width="180" height="120"></rect>
+                                <path class="postcard-compose__sea" d="M10 84 C38 75 58 96 86 85 S138 76 180 92"></path>
+                                <path class="postcard-compose__sand" d="M30 82 C40 48 88 34 128 48 C162 60 166 88 132 104 C92 122 18 106 30 82 Z"></path>
+                                <path class="postcard-compose__grass" d="M58 82 L92 56 L132 76 L98 102 Z"></path>
+                                <path class="postcard-compose__path" d="M70 84 L96 70 L120 80"></path>
+                                <circle class="postcard-compose__sun" cx="148" cy="30" r="11"></circle>
+                                <path class="postcard-compose__stamp" d="M22 24 H52 V50 H22 Z"></path>
+                            </svg>
+                        </div>
+                        <div class="postcard-compose__copy">
+                            <span class="postcard-compose__eyebrow">Detox Isle Post</span>
+                            <h2>Greetings from the Isle</h2>
+                            <p>Stamp today's screen-time report as a warm island postcard.</p>
+                            <button class="pixel-button pixel-button--primary" onclick="Cards.generate('${date}')" id="generateBtn">
+                                STAMP POSTCARD
+                            </button>
+                        </div>
+                        <div class="postcard-compose__seal" aria-hidden="true">D</div>
                     </div>
-                    <button class="pixel-button pixel-button--primary" onclick="Cards.generate('${date}')" id="generateBtn">
-                        STAMP POSTCARD
-                    </button>
                 </div>
 
                 <div id="cardPreview"></div>
