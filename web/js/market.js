@@ -1,6 +1,8 @@
 /* ── The Market ─────────────────────────────────────────────────────── */
 
 const Market = {
+    COLLAPSE_KEY: 'detox.market.collapsedSections',
+
     async render(container) {
         destroyCharts();
         const [balance, catalog, inventory, awards] = await Promise.all([
@@ -23,8 +25,8 @@ const Market = {
                     <div class="charter-section__header">
                         <h2 class="charter-section__title">STALLS</h2>
                     </div>
-                    <div class="stall-grid">
-                        ${catalog.map(item => this.renderStall(item, balance, ownedKeys)).join('')}
+                    <div class="market-shelves">
+                        ${this.renderCatalogSections(catalog, balance, ownedKeys)}
                     </div>
                 </div>
                 <div class="market-section">
@@ -47,6 +49,127 @@ const Market = {
                 </div>
             </div>
         `;
+    },
+
+    sectionMeta(category) {
+        const map = {
+            decor: {
+                title: 'Decor',
+                detail: 'Paths, lights, shore pieces, and village dressing.',
+                glyph: '✦',
+            },
+            outfit: {
+                title: 'Villagers',
+                detail: 'Simple clothes and details for resident villagers.',
+                glyph: '♙',
+            },
+            weather: {
+                title: 'Weather',
+                detail: 'Sky, ocean, light, and atmosphere upgrades.',
+                glyph: '☼',
+            },
+            building: {
+                title: 'Buildings',
+                detail: 'Roof, facade, and town structure upgrades.',
+                glyph: '⌂',
+            },
+            map: {
+                title: 'Map',
+                detail: 'New paths, shore features, and future annex markers.',
+                glyph: '◇',
+            },
+        };
+        return map[category] || {
+            title: category ? category.charAt(0).toUpperCase() + category.slice(1) : 'Other',
+            detail: 'Miscellaneous market goods.',
+            glyph: '•',
+        };
+    },
+
+    renderCatalogSections(catalog, balance, ownedKeys) {
+        const order = ['decor', 'outfit', 'weather', 'building', 'map'];
+        const groups = new Map();
+        catalog.forEach(item => {
+            const key = item.category || 'other';
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key).push(item);
+        });
+
+        const sortedKeys = [
+            ...order.filter(key => groups.has(key)),
+            ...[...groups.keys()].filter(key => !order.includes(key)).sort(),
+        ];
+        const collapsed = this.collapsedSections(sortedKeys);
+
+        return sortedKeys.map(category => {
+            const items = groups.get(category) || [];
+            const meta = this.sectionMeta(category);
+            const panelId = `market-section-${this.domId(category)}`;
+            const isCollapsed = collapsed.has(category);
+            return `
+                <section class="market-shelf ${isCollapsed ? 'is-collapsed' : ''}" data-category="${App.escapeAttr(category)}">
+                    <button class="market-shelf__header" type="button"
+                        aria-expanded="${isCollapsed ? 'false' : 'true'}"
+                        aria-controls="${App.escapeAttr(panelId)}"
+                        onclick="Market.toggleSection(${App.inlineArg(category)})">
+                        <div class="market-shelf__glyph" aria-hidden="true">${App.escapeHtml(meta.glyph)}</div>
+                        <div>
+                            <h3>${App.escapeHtml(meta.title)}</h3>
+                            <p>${App.escapeHtml(meta.detail)}</p>
+                        </div>
+                        <span class="market-shelf__count">${items.length} items</span>
+                        <span class="market-shelf__chevron" aria-hidden="true">⌄</span>
+                    </button>
+                    <div class="stall-grid" id="${App.escapeAttr(panelId)}" ${isCollapsed ? 'hidden' : ''}>
+                        ${items.map(item => this.renderStall(item, balance, ownedKeys)).join('')}
+                    </div>
+                </section>
+            `;
+        }).join('');
+    },
+
+    collapsedSections(categories) {
+        const saved = this.readCollapsedSections();
+        if (saved) return saved;
+        return new Set(categories.filter((category, index) => index > 0 && category !== 'decor'));
+    },
+
+    readCollapsedSections() {
+        try {
+            const raw = localStorage.getItem(this.COLLAPSE_KEY);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? new Set(parsed) : null;
+        } catch (_) {
+            return null;
+        }
+    },
+
+    persistCollapsedSections(collapsed) {
+        try {
+            localStorage.setItem(this.COLLAPSE_KEY, JSON.stringify([...collapsed]));
+        } catch (_) { /* localStorage unavailable */ }
+    },
+
+    toggleSection(category) {
+        const shelves = [...document.querySelectorAll('.market-shelf[data-category]')];
+        const categories = shelves.map(node => node.dataset.category).filter(Boolean);
+        const collapsed = this.collapsedSections(categories);
+        const shelf = shelves.find(node => node.dataset.category === category);
+        const currentlyCollapsed = shelf?.classList.contains('is-collapsed');
+
+        if (currentlyCollapsed) collapsed.delete(category);
+        else collapsed.add(category);
+
+        this.persistCollapsedSections(collapsed);
+        if (!shelf) return;
+
+        const isCollapsed = collapsed.has(category);
+        const panel = shelf.querySelector('.stall-grid');
+        const button = shelf.querySelector('.market-shelf__header');
+        shelf.classList.toggle('is-collapsed', isCollapsed);
+        if (panel) panel.hidden = isCollapsed;
+        if (button) button.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
     },
 
     renderBalance(balance) {
@@ -79,13 +202,18 @@ const Market = {
                 : `Buy ${item.name}`;
 
         return `
-            <div class="stall-row pixel-panel" data-item-key="${App.escapeAttr(item.key)}" data-currency="${App.escapeAttr(item.currency)}">
-                <div class="stall-row__category">${App.escapeHtml(item.category)}</div>
-                <div class="stall-row__body">
-                    <div class="stall-row__name">${App.escapeHtml(item.name)}</div>
-                    <div class="stall-row__desc">${App.escapeHtml(item.description)}</div>
+            <div class="stall-row" data-item-key="${App.escapeAttr(item.key)}" data-currency="${App.escapeAttr(item.currency)}">
+                <div class="stall-row__preview" aria-hidden="true">${this.previewSvg(item)}</div>
+                <div class="stall-row__content">
+                    <div class="stall-row__top">
+                        <span class="stall-row__category">${App.escapeHtml(item.category)}</span>
+                        <span class="stall-row__price">${this.price(item)}</span>
+                    </div>
+                    <div class="stall-row__body">
+                        <div class="stall-row__name">${App.escapeHtml(item.name)}</div>
+                        <div class="stall-row__desc">${App.escapeHtml(item.description)}</div>
+                    </div>
                 </div>
-                <div class="stall-row__price">${this.price(item)}</div>
                 <button class="pixel-button pixel-button--primary"
                     ${disabled ? 'disabled' : ''}
                     title="${App.escapeAttr(title)}"
@@ -96,6 +224,72 @@ const Market = {
         `;
     },
 
+    previewSvg(item) {
+        const category = String(item.category || 'decor').toLowerCase();
+        const key = String(item.key || item.item_key || item.name || category);
+        const hue = Math.floor(this.hash(key) * 360);
+        const accent = `hsl(${hue}, 54%, 62%)`;
+        const ink = '#2a1e2a';
+        const sand = '#f6d39b';
+        const parchment = '#fff4d6';
+        const moss = '#6b8e4e';
+
+        if (category === 'outfit') {
+            return `
+                <svg class="stall-preview" viewBox="0 0 64 54" role="presentation">
+                    <ellipse cx="32" cy="45" rx="22" ry="6" fill="rgba(42,30,42,.22)"/>
+                    <path d="M23 28 Q32 20 41 28 L38 44 H26 Z" fill="${accent}" stroke="${ink}" stroke-width="2"/>
+                    <circle cx="32" cy="19" r="8" fill="#d8a56e" stroke="${ink}" stroke-width="2"/>
+                    <path d="M18 17 Q32 4 46 17 Z" fill="#d6bd72" stroke="${ink}" stroke-width="2"/>
+                    <path d="M17 18 H47" stroke="${ink}" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+            `;
+        }
+        if (category === 'weather') {
+            return `
+                <svg class="stall-preview" viewBox="0 0 64 54" role="presentation">
+                    <rect x="4" y="7" width="56" height="40" fill="#7fc8df" stroke="${ink}" stroke-width="2"/>
+                    <circle cx="19" cy="20" r="9" fill="#ffd04a" stroke="${ink}" stroke-width="2"/>
+                    <path d="M24 32 C31 24 43 25 48 33 C53 33 57 36 57 41 H18 C18 35 20 32 24 32 Z" fill="${parchment}" stroke="${ink}" stroke-width="2"/>
+                    <path d="M7 43 C17 39 27 47 37 43 S54 41 60 44" fill="none" stroke="${accent}" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+            `;
+        }
+        if (category === 'building') {
+            return `
+                <svg class="stall-preview" viewBox="0 0 64 54" role="presentation">
+                    <ellipse cx="32" cy="45" rx="24" ry="6" fill="rgba(42,30,42,.22)"/>
+                    <rect x="18" y="22" width="28" height="21" fill="${sand}" stroke="${ink}" stroke-width="2"/>
+                    <polygon points="14,23 50,23 32,8" fill="${accent}" stroke="${ink}" stroke-width="2"/>
+                    <rect x="28" y="31" width="8" height="12" fill="${ink}"/>
+                    <rect x="21" y="28" width="6" height="6" fill="${parchment}" stroke="${ink}" stroke-width="1.4"/>
+                    <rect x="37" y="28" width="6" height="6" fill="${parchment}" stroke="${ink}" stroke-width="1.4"/>
+                </svg>
+            `;
+        }
+        if (category === 'map') {
+            return `
+                <svg class="stall-preview" viewBox="0 0 64 54" role="presentation">
+                    <path d="M8 36 C13 18 32 10 49 20 C59 27 53 41 36 45 C21 49 4 43 8 36 Z" fill="${sand}" stroke="${ink}" stroke-width="2"/>
+                    <path d="M22 33 L33 21 L45 32 L34 41 Z" fill="${moss}" stroke="${ink}" stroke-width="1.6"/>
+                    <path d="M17 37 C26 31 35 36 47 31" fill="none" stroke="${accent}" stroke-width="3" stroke-linecap="round"/>
+                    <circle cx="48" cy="14" r="7" fill="${parchment}" stroke="${ink}" stroke-width="1.6"/>
+                    <path d="M48 9 L51 14 L48 19 L45 14 Z" fill="#ffd04a" stroke="${ink}" stroke-width="1"/>
+                </svg>
+            `;
+        }
+        return `
+            <svg class="stall-preview" viewBox="0 0 64 54" role="presentation">
+                <ellipse cx="32" cy="45" rx="24" ry="6" fill="rgba(42,30,42,.22)"/>
+                <path d="M12 36 C16 21 32 15 48 24 C55 29 50 40 35 43 C22 46 8 42 12 36 Z" fill="${moss}" stroke="${ink}" stroke-width="2"/>
+                <path d="M18 38 C27 31 38 34 47 28" fill="none" stroke="${sand}" stroke-width="4" stroke-linecap="round"/>
+                <circle cx="24" cy="28" r="4" fill="${accent}" stroke="${ink}" stroke-width="1.4"/>
+                <path d="M44 23 V13 M39 17 H49" stroke="${ink}" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="44" cy="12" r="3" fill="#ffd04a" stroke="${ink}" stroke-width="1.2"/>
+            </svg>
+        `;
+    },
+
     renderInventoryItem(item) {
         const fullRefund = item.refund_pct === 100;
         const title = `Refund: ${this.currency(item.refund_amount, item.currency)} ${fullRefund ? '(within 24h)' : '(50%)'}`;
@@ -103,6 +297,7 @@ const Market = {
         const purchasedAt = item.purchased_at ?? item.acquired_at;
         return `
             <div class="inventory-row pixel-panel">
+                <div class="inventory-row__preview" aria-hidden="true">${this.previewSvg(item)}</div>
                 <div>
                     <div class="inventory-row__name">${App.escapeHtml(item.name)}</div>
                     <div class="inventory-row__meta">Purchased ${this.formatDateTime(purchasedAt)}</div>
@@ -210,6 +405,20 @@ const Market = {
 
     price(item) {
         return this.currency(item.price, item.currency);
+    },
+
+    hash(value) {
+        let h = 2166136261;
+        const str = String(value || '');
+        for (let i = 0; i < str.length; i++) {
+            h ^= str.charCodeAt(i);
+            h = Math.imul(h, 16777619);
+        }
+        return (h >>> 0) / 4294967295;
+    },
+
+    domId(value) {
+        return String(value || 'other').replace(/[^a-z0-9_-]+/gi, '-').toLowerCase();
     },
 
     currency(amount, currency) {
