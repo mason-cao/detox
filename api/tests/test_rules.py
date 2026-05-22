@@ -64,11 +64,19 @@ def _device_headers(claim: dict) -> dict:
     return {"Authorization": f"Bearer {claim['api_token']}"}
 
 
+def _set_user_scope(conn, user_id: str) -> None:
+    conn.execute(
+        text("SELECT set_config('app.current_user_id', :user_id, true)"),
+        {"user_id": user_id},
+    )
+
+
 def _seed_block(user_id: str, app_name: str = "Slack") -> None:
     import os
 
     engine = create_engine(os.environ["DETOX_TEST_DATABASE_URL"], future=True)
     with engine.begin() as conn:
+        _set_user_scope(conn, user_id)
         conn.execute(
             text(
                 "INSERT INTO app_blocks (user_id, app_name, block_type) "
@@ -86,6 +94,7 @@ def _delete_block(user_id: str, app_name: str = "Slack") -> None:
 
     engine = create_engine(os.environ["DETOX_TEST_DATABASE_URL"], future=True)
     with engine.begin() as conn:
+        _set_user_scope(conn, user_id)
         conn.execute(
             text(
                 "DELETE FROM app_blocks WHERE user_id = :u AND app_name = :a"
@@ -163,6 +172,7 @@ def test_rules_isolated_per_user(pg_client, monkeypatch):
             ),
             {"id": other_user, "email": f"{other_user}@example.com"},
         )
+        _set_user_scope(conn, other_user)
         conn.execute(
             text(
                 "INSERT INTO app_blocks (user_id, app_name, block_type) "

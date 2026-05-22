@@ -78,6 +78,13 @@ def test_refund_amount_half_after_24h():
 # ── Integration ─────────────────────────────────────────────────────────
 
 
+def _set_user_scope(conn, user_id: str) -> None:
+    conn.execute(
+        text("SELECT set_config('app.current_user_id', :user_id, true)"),
+        {"user_id": user_id},
+    )
+
+
 def _user_headers(client) -> dict:
     return {"Authorization": f"Bearer {client.bearer}"}
 
@@ -85,6 +92,7 @@ def _user_headers(client) -> dict:
 def _seed_daily_goal(user_id: str, target_minutes: int = 60) -> None:
     engine = create_engine(os.environ["DETOX_TEST_DATABASE_URL"], future=True)
     with engine.begin() as conn:
+        _set_user_scope(conn, user_id)
         conn.execute(
             text(
                 "INSERT INTO goals (user_id, type, target_minutes, active) "
@@ -102,6 +110,7 @@ def _seed_app_usage(
     base = datetime.strptime(day + " 09:00:00", "%Y-%m-%d %H:%M:%S").timestamp()
     engine = create_engine(os.environ["DETOX_TEST_DATABASE_URL"], future=True)
     with engine.begin() as conn:
+        _set_user_scope(conn, user_id)
         for i in range(samples):
             conn.execute(
                 text(
@@ -116,6 +125,7 @@ def _seed_app_usage(
 def _delete_user_state(user_id: str) -> None:
     engine = create_engine(os.environ["DETOX_TEST_DATABASE_URL"], future=True)
     with engine.begin() as conn:
+        _set_user_scope(conn, user_id)
         for table in (
             "rewards_balances",
             "inventory",
@@ -271,6 +281,7 @@ def test_refund_after_24h_returns_half(pg_client):
             os.environ["DETOX_TEST_DATABASE_URL"], future=True
         )
         with engine.begin() as conn:
+            _set_user_scope(conn, pg_client.user_id)
             conn.execute(
                 text(
                     "UPDATE inventory SET acquired_at = now() - interval '2 days' "

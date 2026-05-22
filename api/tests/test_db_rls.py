@@ -17,6 +17,13 @@ from api.app.db import set_user_guc
 from api.app.errors import ApiError
 
 
+def _set_conn_user(conn, user_id: str) -> None:
+    conn.execute(
+        text("SELECT set_config('app.current_user_id', :user_id, true)"),
+        {"user_id": user_id},
+    )
+
+
 def test_set_user_guc_rejects_non_uuid():
     engine = create_engine("sqlite+pysqlite:///:memory:", future=True)
     with Session(engine, future=True) as session:
@@ -63,6 +70,7 @@ def test_rls_isolates_tenants_on_postgres():
                 ),
                 {"id": uid, "email": f"{uid}@example.com"},
             )
+        _set_conn_user(conn, user_a)
         conn.execute(
             text(
                 "INSERT INTO app_blocks (user_id, app_name, block_type) "
@@ -71,6 +79,7 @@ def test_rls_isolates_tenants_on_postgres():
             ),
             {"uid": user_a},
         )
+        _set_conn_user(conn, user_b)
         conn.execute(
             text(
                 "INSERT INTO app_blocks (user_id, app_name, block_type) "

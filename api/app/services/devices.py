@@ -152,9 +152,11 @@ def list_devices(session: Session, *, user_id: str) -> list[dict]:
             """
             SELECT id, device_name, agent_version, last_sync_at
             FROM devices
+            WHERE user_id = :user_id
             ORDER BY last_sync_at DESC NULLS LAST, device_name
             """
-        )
+        ),
+        {"user_id": user_id},
     ).all()
     return [
         {

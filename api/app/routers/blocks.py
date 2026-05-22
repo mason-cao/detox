@@ -26,8 +26,11 @@ _BLOCK_TYPES = {"blocked", "whitelisted"}
 
 
 @router.get("/blocks", summary="List active app blocks")
-async def list_blocks(session: Session = Depends(db_session)) -> list[dict]:
-    return blocks_service.list_blocks(session)
+async def list_blocks(
+    request: Request,
+    session: Session = Depends(db_session),
+) -> list[dict]:
+    return blocks_service.list_blocks(session, user_id=request.state.user_id)
 
 
 @router.post("/blocks", status_code=201, summary="Add or update an app block")
@@ -64,14 +67,19 @@ async def remove_block(
     request: Request,
     session: Session = Depends(db_session),
 ) -> dict[str, bool]:
-    blocks_service.remove_block(session, app_name=app_name)
+    blocks_service.remove_block(
+        session, user_id=request.state.user_id, app_name=app_name
+    )
     rules_service.bust_for_request(request)
     return {"ok": True}
 
 
 @router.get("/category-blocks", summary="List active category blocks")
-async def list_category_blocks(session: Session = Depends(db_session)) -> list[dict]:
-    return blocks_service.list_category_blocks(session)
+async def list_category_blocks(
+    request: Request,
+    session: Session = Depends(db_session),
+) -> list[dict]:
+    return blocks_service.list_category_blocks(session, user_id=request.state.user_id)
 
 
 @router.post("/category-blocks", status_code=201, summary="Add a category block")
@@ -103,6 +111,10 @@ async def remove_category_block(
     request: Request,
     session: Session = Depends(db_session),
 ) -> dict[str, bool]:
-    blocks_service.remove_category_block(session, category_name=category_name)
+    blocks_service.remove_category_block(
+        session,
+        user_id=request.state.user_id,
+        category_name=category_name,
+    )
     rules_service.bust_for_request(request)
     return {"ok": True}

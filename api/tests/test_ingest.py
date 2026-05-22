@@ -38,6 +38,13 @@ def _device_headers(claim: dict) -> dict:
     return {"Authorization": f"Bearer {claim['api_token']}"}
 
 
+def _set_user_scope(conn, user_id: str) -> None:
+    conn.execute(
+        text("SELECT set_config('app.current_user_id', :user_id, true)"),
+        {"user_id": user_id},
+    )
+
+
 def _build_sessions(device_offset: float = 0.0, count: int = 100) -> list[dict]:
     base = time.time() - 86400 + device_offset
     return [
@@ -152,7 +159,8 @@ def test_ingest_replay_is_idempotent(pg_client):
     engine = create_engine(
         __import__("os").environ["DETOX_TEST_DATABASE_URL"], future=True
     )
-    with engine.connect() as conn:
+    with engine.begin() as conn:
+        _set_user_scope(conn, pg_client.user_id)
         count = conn.execute(
             text(
                 "SELECT COUNT(*) FROM sessions WHERE user_id = :u AND device_id = :d"

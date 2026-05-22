@@ -6,8 +6,9 @@ honor the spec §10 privacy commitment: "GDPR- and CCPA-clean."
 
 Implementation notes:
 
-- Export reads every user-data table directly. RLS on ``app.current_user_id``
-  scopes the SELECTs without explicit ``WHERE user_id = …`` clauses.
+- Export reads every user-data table directly with explicit ``user_id``
+  predicates. RLS on ``app.current_user_id`` remains enabled as a second
+  tenant boundary.
 - Delete cascades from ``users`` — the FK constraints in migration 0002
   set ``ON DELETE CASCADE`` for every per-user table, so a single row
   removal in ``users`` empties the user's footprint. Deleting ``users``
@@ -79,7 +80,10 @@ async def export_full(
     }
     for table in _EXPORT_TABLES:
         try:
-            rows = session.execute(text(f"SELECT * FROM {table}")).all()
+            rows = session.execute(
+                text(f"SELECT * FROM {table} WHERE user_id = :uid"),
+                {"uid": request.state.user_id},
+            ).all()
         except Exception:  # pragma: no cover - table may not exist yet on older deployments
             continue
         payload["tables"][table] = [_row_to_jsonable(row) for row in rows]

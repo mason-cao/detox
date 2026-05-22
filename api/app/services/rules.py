@@ -30,9 +30,9 @@ def etag_cache_key(user_id: str) -> str:
 def get_rules_payload(session: Session, *, user_id: str) -> dict[str, Any]:
     """Return the user's blocks, category blocks, goals, and settings.
 
-    Assumes the session has had ``app.current_user_id`` set so RLS scopes
-    every query — the user_id parameter is informational, used only for
-    callers that want to log who they read for.
+    RLS is still enabled at the database layer, but the application also
+    carries explicit ``user_id`` predicates so development and test roles
+    cannot accidentally bypass tenant isolation.
     """
     blocks = [
         {
@@ -43,8 +43,9 @@ def get_rules_payload(session: Session, *, user_id: str) -> dict[str, Any]:
         for row in session.execute(
             text(
                 "SELECT app_name, block_type, daily_limit_minutes "
-                "FROM app_blocks ORDER BY app_name"
-            )
+                "FROM app_blocks WHERE user_id = :user_id ORDER BY app_name"
+            ),
+            {"user_id": user_id},
         ).all()
     ]
 
@@ -53,8 +54,9 @@ def get_rules_payload(session: Session, *, user_id: str) -> dict[str, Any]:
         for row in session.execute(
             text(
                 "SELECT category_name, active FROM category_blocks "
-                "WHERE active = 1 ORDER BY category_name"
-            )
+                "WHERE user_id = :user_id AND active = 1 ORDER BY category_name"
+            ),
+            {"user_id": user_id},
         ).all()
     ]
 
@@ -72,15 +74,17 @@ def get_rules_payload(session: Session, *, user_id: str) -> dict[str, Any]:
             text(
                 "SELECT id, type, target_minutes, app_name, "
                 "bedtime_hour, bedtime_minute, active "
-                "FROM goals ORDER BY id"
-            )
+                "FROM goals WHERE user_id = :user_id ORDER BY id"
+            ),
+            {"user_id": user_id},
         ).all()
     ]
 
     settings_dict = {
         row[0]: row[1]
         for row in session.execute(
-            text("SELECT key, value FROM settings ORDER BY key")
+            text("SELECT key, value FROM settings WHERE user_id = :user_id ORDER BY key"),
+            {"user_id": user_id},
         ).all()
     }
 
