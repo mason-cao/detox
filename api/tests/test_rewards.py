@@ -372,28 +372,43 @@ def test_concurrent_spend_only_one_succeeds(pg_client):
     index together guarantee only one transaction wins.
     """
     import threading
+    from queue import Queue
+
+    from fastapi.testclient import TestClient
+
+    from api.app.main import create_app
 
     _seed_daily_goal(pg_client.user_id, target_minutes=600)
     try:
-        results: list[int] = []
+        outcomes: Queue[tuple[str, object]] = Queue()
         barrier = threading.Barrier(2)
 
         def attempt() -> None:
-            barrier.wait()
-            resp = pg_client.post(
-                "/v1/rewards/spend",
-                json={"item_key": "lantern_path"},
-                headers=_user_headers(pg_client),
-            )
-            results.append(resp.status_code)
+            try:
+                with TestClient(
+                    create_app(), raise_server_exceptions=False
+                ) as client:
+                    barrier.wait(timeout=5)
+                    resp = client.post(
+                        "/v1/rewards/spend",
+                        json={"item_key": "lantern_path"},
+                        headers=_user_headers(pg_client),
+                    )
+                    outcomes.put(("status", resp.status_code))
+            except Exception as exc:  # pragma: no cover - surfaced in assertion
+                outcomes.put(("error", repr(exc)))
 
         threads = [threading.Thread(target=attempt) for _ in range(2)]
         for t in threads:
             t.start()
         for t in threads:
-            t.join()
+            t.join(timeout=10)
 
-        assert sorted(results) == [200, 409], results
+        assert all(not t.is_alive() for t in threads)
+
+        results = [outcomes.get_nowait() for _ in range(outcomes.qsize())]
+        assert all(kind == "status" for kind, _value in results), results
+        assert sorted(value for _kind, value in results) == [200, 409], results
     finally:
         _delete_user_state(pg_client.user_id)
 
