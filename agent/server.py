@@ -25,6 +25,7 @@ from agent import database as db
 app = Flask(__name__, static_folder=None)
 
 DATE_RE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+_monitor_status_provider = None
 
 
 class ApiError(Exception):
@@ -32,6 +33,39 @@ class ApiError(Exception):
         super().__init__(message)
         self.message = message
         self.status_code = status_code
+
+
+def set_monitor_status_provider(provider):
+    """Override PID-file status for in-process monitor owners."""
+    global _monitor_status_provider
+    _monitor_status_provider = provider
+
+
+def _pid_command(pid):
+    try:
+        result = subprocess.run(
+            ["ps", "-p", str(pid), "-o", "command="],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return ""
+    if result.returncode != 0:
+        return ""
+    return result.stdout.strip()
+
+
+def _pid_file_monitor_running():
+    if not os.path.exists(PID_FILE):
+        return False
+    try:
+        with open(PID_FILE) as f:
+            pid = int(f.read().strip())
+        os.kill(pid, 0)
+    except (ProcessLookupError, ValueError, PermissionError, OSError):
+        return False
+    return "agent.monitor" in _pid_command(pid)
 
 
 def validate_date(value, field_name="date"):
@@ -645,15 +679,13 @@ def api_focus_mode_disable():
 @app.route("/api/status")
 @api_route
 def api_status():
-    monitor_running = False
-    if os.path.exists(PID_FILE):
+    if _monitor_status_provider is not None:
         try:
-            with open(PID_FILE) as f:
-                pid = int(f.read().strip())
-            os.kill(pid, 0)  # Check if process exists
-            monitor_running = True
-        except (ProcessLookupError, ValueError, PermissionError):
-            pass
+            monitor_running = bool(_monitor_status_provider())
+        except Exception:
+            monitor_running = False
+    else:
+        monitor_running = _pid_file_monitor_running()
     return jsonify({"monitor_running": monitor_running})
 
 

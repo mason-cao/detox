@@ -11,7 +11,7 @@ from datetime import datetime
 import rumps
 
 from agent import cloud, database as db, keychain, rules, sync
-from agent.config import APP_VERSION, LOG_PATH, PID_FILE, SERVER_PORT
+from agent.config import APP_VERSION, LOG_PATH, SERVER_PORT
 from agent.monitor import Monitor
 
 
@@ -120,7 +120,6 @@ class DetoxApp(rumps.App):
 
         self.launch_at_login_item.state = 1 if is_installed() else 0
 
-        self._write_pid()
         self._start_monitor()
         self._start_flask()
         self._start_cloud_pullers()
@@ -128,10 +127,6 @@ class DetoxApp(rumps.App):
         self.status_timer = rumps.Timer(self.tick, 5)
         self.status_timer.start()
         self.tick(None)
-
-    def _write_pid(self):
-        with open(PID_FILE, "w") as f:
-            f.write(str(os.getpid()))
 
     def _start_monitor(self):
         db.init_db()
@@ -147,7 +142,10 @@ class DetoxApp(rumps.App):
         self._monitor_thread = None
 
     def _start_flask(self):
-        from agent.server import app as flask_app
+        from agent import server as server_module
+
+        server_module.set_monitor_status_provider(self._monitor_is_running)
+        flask_app = server_module.app
 
         def serve():
             flask_app.run(
@@ -163,6 +161,14 @@ class DetoxApp(rumps.App):
             name="detox-flask",
         )
         self._flask_thread.start()
+
+    def _monitor_is_running(self):
+        return (
+            self._monitor is not None
+            and self._monitor_thread is not None
+            and self._monitor_thread.is_alive()
+            and not self._paused
+        )
 
     def _start_cloud_pullers(self):
         """Start the rules puller + sync pusher unconditionally.
@@ -261,16 +267,14 @@ class DetoxApp(rumps.App):
             rumps.notification("Detox", "Updates", f"Update check failed: {exc}")
 
     def on_quit(self, _sender):
+        from agent import server as server_module
+
+        server_module.set_monitor_status_provider(None)
         self._stop_monitor()
         if self._rules_puller:
             self._rules_puller.stop()
         if self._sync_pusher:
             self._sync_pusher.stop()
-        if os.path.exists(PID_FILE):
-            try:
-                os.remove(PID_FILE)
-            except OSError:
-                pass
         rumps.quit_application()
 
     def _refresh_cloud_labels(self):
