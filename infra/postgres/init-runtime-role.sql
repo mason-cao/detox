@@ -1,0 +1,16 @@
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'detox') THEN
+        CREATE ROLE detox LOGIN PASSWORD 'detox'
+            NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS;
+    END IF;
+END
+$$;
+
+ALTER DATABASE detox OWNER TO detox;
+GRANT ALL PRIVILEGES ON DATABASE detox TO detox;
+
+\connect detox
+
+ALTER SCHEMA public OWNER TO detox;
+GRANT ALL ON SCHEMA public TO detox;

@@ -27,18 +27,25 @@ _VALID_PERIODS = {"week", "month"}
 
 
 @router.get("/apps", summary="List tracked apps")
-async def list_apps(session: Session = Depends(db_session)) -> list[dict]:
-    return apps_service.list_apps(session)
+async def list_apps(
+    request: Request,
+    session: Session = Depends(db_session),
+) -> list[dict]:
+    return apps_service.list_apps(session, user_id=request.state.user_id)
 
 
 @router.get("/app-suggestions", summary="Suggest app names for autocomplete")
-async def app_suggestions(session: Session = Depends(db_session)) -> list[str]:
-    return apps_service.app_suggestions(session)
+async def app_suggestions(
+    request: Request,
+    session: Session = Depends(db_session),
+) -> list[str]:
+    return apps_service.app_suggestions(session, user_id=request.state.user_id)
 
 
 @router.get("/apps/{app_name}", summary="App usage detail")
 async def app_detail(
     app_name: str,
+    request: Request,
     date: str | None = Query(default=None),
     period: str = Query(default="week"),
     session: Session = Depends(db_session),
@@ -47,13 +54,20 @@ async def app_detail(
         raise ApiError("Invalid period. Use week or month")
     selected_date = validate_date(date or datetime.now().strftime("%Y-%m-%d"))
     return apps_service.app_detail(
-        session, app_name=app_name, date=selected_date, period=period
+        session,
+        user_id=request.state.user_id,
+        app_name=app_name,
+        date=selected_date,
+        period=period,
     )
 
 
 @router.get("/categories", summary="List app categories")
-async def list_categories(session: Session = Depends(db_session)) -> list[dict]:
-    return apps_service.list_categories(session)
+async def list_categories(
+    request: Request,
+    session: Session = Depends(db_session),
+) -> list[dict]:
+    return apps_service.list_categories(session, user_id=request.state.user_id)
 
 
 @router.post("/categories", summary="Set an app's category")

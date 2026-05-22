@@ -26,8 +26,11 @@ _GOAL_TYPES = {"daily_total", "app_limit", "bedtime"}
 
 
 @router.get("/goals", summary="List active goals")
-async def list_goals(session: Session = Depends(db_session)) -> list[dict]:
-    return goals_service.list_goals(session)
+async def list_goals(
+    request: Request,
+    session: Session = Depends(db_session),
+) -> list[dict]:
+    return goals_service.list_goals(session, user_id=request.state.user_id)
 
 
 @router.post("/goals", status_code=201, summary="Create a goal")
@@ -82,6 +85,8 @@ async def delete_goal(
     request: Request,
     session: Session = Depends(db_session),
 ) -> dict[str, bool]:
-    goals_service.delete_goal(session, goal_id=goal_id)
+    goals_service.delete_goal(
+        session, user_id=request.state.user_id, goal_id=goal_id
+    )
     rules_service.bust_for_request(request)
     return {"ok": True}

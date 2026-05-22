@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 
 from ..db import db_session
@@ -21,15 +21,19 @@ router = APIRouter(
 
 @router.get("/dashboard", summary="Daily dashboard")
 async def dashboard(
+    request: Request,
     date: str | None = Query(default=None),
     session: Session = Depends(db_session),
 ) -> dict[str, object]:
     selected = validate_date(date or datetime.now().strftime("%Y-%m-%d"))
-    return dashboard_service.get_dashboard(session, date=selected)
+    return dashboard_service.get_dashboard(
+        session, user_id=request.state.user_id, date=selected
+    )
 
 
 @router.get("/dashboard/weekly", summary="Weekly dashboard")
 async def dashboard_weekly(
+    request: Request,
     week_start: str | None = Query(default=None),
     session: Session = Depends(db_session),
 ) -> dict[str, object]:
@@ -39,4 +43,8 @@ async def dashboard_weekly(
         selected_week_start = monday.strftime("%Y-%m-%d")
     else:
         selected_week_start = validate_date(week_start, "week_start")
-    return dashboard_service.get_weekly_dashboard(session, week_start=selected_week_start)
+    return dashboard_service.get_weekly_dashboard(
+        session,
+        user_id=request.state.user_id,
+        week_start=selected_week_start,
+    )

@@ -1,8 +1,8 @@
 """Settings service — Postgres-backed.
 
 Defaults come from ``agent/config.py``; writes go to the user-scoped
-``settings`` row table. RLS scopes everything to ``app.current_user_id``
-so the SQL doesn't carry an explicit ``user_id`` clause.
+``settings`` row table. RLS remains enabled, and the service also carries
+explicit ``user_id`` predicates.
 """
 
 from __future__ import annotations
@@ -16,7 +16,10 @@ from ..errors import ApiError
 
 
 def get_settings(session: Session, *, user_id: str) -> dict[str, str]:
-    rows = session.execute(text("SELECT key, value FROM settings")).all()
+    rows = session.execute(
+        text("SELECT key, value FROM settings WHERE user_id = :user_id"),
+        {"user_id": user_id},
+    ).all()
     overrides = {r[0]: r[1] for r in rows}
     return {**DEFAULT_SETTINGS, **overrides}
 

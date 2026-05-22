@@ -6,12 +6,13 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 
-def list_blocks(session: Session) -> list[dict]:
+def list_blocks(session: Session, *, user_id: str) -> list[dict]:
     rows = session.execute(
         text(
             "SELECT app_name, block_type, daily_limit_minutes "
-            "FROM app_blocks ORDER BY app_name"
-        )
+            "FROM app_blocks WHERE user_id = :user_id ORDER BY app_name"
+        ),
+        {"user_id": user_id},
     ).all()
     return [
         {
@@ -50,19 +51,21 @@ def add_block(
     )
 
 
-def remove_block(session: Session, *, app_name: str) -> None:
+def remove_block(session: Session, *, user_id: str, app_name: str) -> None:
     session.execute(
-        text("DELETE FROM app_blocks WHERE app_name = :app"),
-        {"app": app_name},
+        text("DELETE FROM app_blocks WHERE user_id = :user_id AND app_name = :app"),
+        {"user_id": user_id, "app": app_name},
     )
 
 
-def list_category_blocks(session: Session) -> list[dict]:
+def list_category_blocks(session: Session, *, user_id: str) -> list[dict]:
     rows = session.execute(
         text(
             "SELECT id, category_name, active "
-            "FROM category_blocks WHERE active = 1 ORDER BY category_name"
-        )
+            "FROM category_blocks "
+            "WHERE user_id = :user_id AND active = 1 ORDER BY category_name"
+        ),
+        {"user_id": user_id},
     ).all()
     return [
         {"id": r.id, "category_name": r.category_name, "active": int(r.active or 0)}
@@ -83,10 +86,11 @@ def add_category_block(session: Session, *, user_id: str, category_name: str) ->
     )
 
 
-def remove_category_block(session: Session, *, category_name: str) -> None:
+def remove_category_block(session: Session, *, user_id: str, category_name: str) -> None:
     session.execute(
         text(
-            "UPDATE category_blocks SET active = 0 WHERE category_name = :name"
+            "UPDATE category_blocks SET active = 0 "
+            "WHERE user_id = :user_id AND category_name = :name"
         ),
-        {"name": category_name},
+        {"user_id": user_id, "name": category_name},
     )

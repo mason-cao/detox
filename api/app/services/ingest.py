@@ -194,7 +194,10 @@ def ingest_batch(
     # Touch last_sync_at so the dashboard's "monitor online" check has a
     # fresh signal — the agent's sync.flush is the canonical heartbeat.
     session.execute(
-        text("UPDATE devices SET last_sync_at = now() WHERE id = :id"),
-        {"id": device_id},
+        text(
+            "UPDATE devices SET last_sync_at = now() "
+            "WHERE id = :id AND user_id = :user_id"
+        ),
+        {"id": device_id, "user_id": user_id},
     )
     return counts

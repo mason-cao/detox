@@ -6,12 +6,13 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 
-def list_goals(session: Session) -> list[dict]:
+def list_goals(session: Session, *, user_id: str) -> list[dict]:
     rows = session.execute(
         text(
             "SELECT id, type, target_minutes, app_name, bedtime_hour, bedtime_minute, active "
-            "FROM goals WHERE active = 1"
-        )
+            "FROM goals WHERE user_id = :user_id AND active = 1"
+        ),
+        {"user_id": user_id},
     ).all()
     return [
         {
@@ -39,19 +40,28 @@ def create_goal(
 ) -> int:
     if goal_type == "daily_total":
         session.execute(
-            text("UPDATE goals SET active = 0 WHERE active = 1 AND type = 'daily_total'")
+            text(
+                "UPDATE goals SET active = 0 "
+                "WHERE user_id = :user_id AND active = 1 AND type = 'daily_total'"
+            ),
+            {"user_id": user_id},
         )
     elif goal_type == "app_limit" and app_name:
         session.execute(
             text(
                 "UPDATE goals SET active = 0 "
-                "WHERE active = 1 AND type = 'app_limit' AND app_name = :app"
+                "WHERE user_id = :user_id AND active = 1 "
+                "AND type = 'app_limit' AND app_name = :app"
             ),
-            {"app": app_name},
+            {"user_id": user_id, "app": app_name},
         )
     elif goal_type == "bedtime":
         session.execute(
-            text("UPDATE goals SET active = 0 WHERE active = 1 AND type = 'bedtime'")
+            text(
+                "UPDATE goals SET active = 0 "
+                "WHERE user_id = :user_id AND active = 1 AND type = 'bedtime'"
+            ),
+            {"user_id": user_id},
         )
 
     row = session.execute(
@@ -76,8 +86,8 @@ def create_goal(
     return int(row[0])
 
 
-def delete_goal(session: Session, *, goal_id: int) -> None:
+def delete_goal(session: Session, *, user_id: str, goal_id: int) -> None:
     session.execute(
-        text("UPDATE goals SET active = 0 WHERE id = :id"),
-        {"id": goal_id},
+        text("UPDATE goals SET active = 0 WHERE user_id = :user_id AND id = :id"),
+        {"user_id": user_id, "id": goal_id},
     )

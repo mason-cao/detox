@@ -93,40 +93,46 @@ def _date_range(start: str, end: str) -> Iterable[str]:
         current += timedelta(days=1)
 
 
-def _active_daily_total_goal(session: Session) -> int | None:
+def _active_daily_total_goal(session: Session, *, user_id: str) -> int | None:
     row = session.execute(
         text(
             "SELECT target_minutes FROM goals "
-            "WHERE active = 1 AND type = 'daily_total' "
+            "WHERE user_id = :user_id AND active = 1 AND type = 'daily_total' "
             "AND target_minutes IS NOT NULL "
             "ORDER BY id DESC LIMIT 1"
-        )
+        ),
+        {"user_id": user_id},
     ).first()
     return int(row[0]) if row else None
 
 
-def _active_app_limits(session: Session) -> dict[str, int]:
+def _active_app_limits(session: Session, *, user_id: str) -> dict[str, int]:
     rows = session.execute(
         text(
             "SELECT app_name, MIN(target_minutes) AS target_minutes "
             "FROM goals "
-            "WHERE active = 1 AND type = 'app_limit' "
+            "WHERE user_id = :user_id AND active = 1 AND type = 'app_limit' "
             "AND app_name IS NOT NULL AND target_minutes IS NOT NULL "
             "GROUP BY app_name"
-        )
+        ),
+        {"user_id": user_id},
     ).all()
     return {row[0]: int(row[1]) for row in rows}
 
 
-def _daily_usage_totals(session: Session) -> dict[str, float]:
+def _daily_usage_totals(session: Session, *, user_id: str) -> dict[str, float]:
     rows = session.execute(
-        text(f"SELECT date, {USAGE_MINUTES_EXPR} AS minutes FROM app_usage GROUP BY date")
+        text(
+            f"SELECT date, {USAGE_MINUTES_EXPR} AS minutes "
+            "FROM app_usage WHERE user_id = :user_id GROUP BY date"
+        ),
+        {"user_id": user_id},
     ).all()
     return {row[0]: float(row[1] or 0) for row in rows}
 
 
 def _app_usage_totals(
-    session: Session, app_names: Iterable[str]
+    session: Session, *, user_id: str, app_names: Iterable[str]
 ) -> dict[str, dict[str, float]]:
     names = list(app_names)
     if not names:
@@ -134,10 +140,10 @@ def _app_usage_totals(
     rows = session.execute(
         text(
             f"SELECT date, app_name, {USAGE_MINUTES_EXPR} AS minutes "
-            "FROM app_usage WHERE app_name = ANY(:names) "
+            "FROM app_usage WHERE user_id = :user_id AND app_name = ANY(:names) "
             "GROUP BY date, app_name"
         ),
-        {"names": names},
+        {"user_id": user_id, "names": names},
     ).all()
     out: dict[str, dict[str, float]] = {}
     for row in rows:
@@ -145,9 +151,13 @@ def _app_usage_totals(
     return out
 
 
-def _usage_bounds(session: Session) -> tuple[str | None, str | None]:
+def _usage_bounds(session: Session, *, user_id: str) -> tuple[str | None, str | None]:
     row = session.execute(
-        text("SELECT MIN(date) AS first_date, MAX(date) AS last_date FROM app_usage")
+        text(
+            "SELECT MIN(date) AS first_date, MAX(date) AS last_date "
+            "FROM app_usage WHERE user_id = :user_id"
+        ),
+        {"user_id": user_id},
     ).first()
     return (row[0], row[1]) if row else (None, None)
 
@@ -168,20 +178,22 @@ def _sunlight_for_date(
     return min(earned, DAILY_CAP_SUNLIGHT)
 
 
-def _sunlight_earnings(session: Session) -> tuple[int, int]:
-    daily_goal = _active_daily_total_goal(session)
-    app_limits = _active_app_limits(session)
+def _sunlight_earnings(session: Session, *, user_id: str) -> tuple[int, int]:
+    daily_goal = _active_daily_total_goal(session, user_id=user_id)
+    app_limits = _active_app_limits(session, user_id=user_id)
     if daily_goal is None and not app_limits:
         return 0, 0
 
     today = _today()
-    first_usage_date, _ = _usage_bounds(session)
+    first_usage_date, _ = _usage_bounds(session, user_id=user_id)
     start = first_usage_date or today
     if start > today:
         start = today
 
-    daily_usage = _daily_usage_totals(session)
-    app_usage = _app_usage_totals(session, app_limits.keys())
+    daily_usage = _daily_usage_totals(session, user_id=user_id)
+    app_usage = _app_usage_totals(
+        session, user_id=user_id, app_names=app_limits.keys()
+    )
     earned_total = sum(
         _sunlight_for_date(day, daily_goal, app_limits, daily_usage, app_usage)
         for day in _date_range(start, today)
@@ -201,9 +213,13 @@ def _is_streak_day(day: str, daily_goal: int | None, daily_usage: dict[str, floa
     return daily_usage.get(day, 0) <= daily_goal
 
 
-def _existing_milestone_keys(session: Session) -> set[str]:
+def _existing_milestone_keys(session: Session, *, user_id: str) -> set[str]:
     rows = session.execute(
-        text("SELECT kind, detail, awarded_for_date FROM milestones")
+        text(
+            "SELECT kind, detail, awarded_for_date "
+            "FROM milestones WHERE user_id = :user_id"
+        ),
+        {"user_id": user_id},
     ).all()
     return {f"{r[0]}|{r[1]}|{r[2]}" for r in rows}
 
@@ -264,17 +280,17 @@ def run_milestone_rollup(session: Session, *, user_id: str) -> int:
     ``(user_id, kind, detail, awarded_for_date)`` constraint.
     """
     yesterday = (datetime.now(tz=timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
-    daily_goal = _active_daily_total_goal(session)
+    daily_goal = _active_daily_total_goal(session, user_id=user_id)
     if daily_goal is None:
         return 0
-    first_usage_date, _ = _usage_bounds(session)
+    first_usage_date, _ = _usage_bounds(session, user_id=user_id)
     if not first_usage_date:
         return 0
     if first_usage_date > yesterday:
         return 0
 
-    daily_usage = _daily_usage_totals(session)
-    existing = _existing_milestone_keys(session)
+    daily_usage = _daily_usage_totals(session, user_id=user_id)
+    existing = _existing_milestone_keys(session, user_id=user_id)
     streak_dates: set[str] = {
         key.split("|", 2)[1]  # detail field doubles as the date for streak_day
         for key in existing
@@ -348,7 +364,7 @@ def run_milestone_rollup(session: Session, *, user_id: str) -> int:
 # ── Ledger / balance rollup ──────────────────────────────────────────────
 
 
-def _ledger_totals(session: Session) -> dict[tuple[str, str], int]:
+def _ledger_totals(session: Session, *, user_id: str) -> dict[tuple[str, str], int]:
     totals = {
         ("spend", "sunlight"): 0,
         ("refund", "sunlight"): 0,
@@ -358,20 +374,22 @@ def _ledger_totals(session: Session) -> dict[tuple[str, str], int]:
     rows = session.execute(
         text(
             "SELECT kind, currency, COALESCE(SUM(amount), 0) AS amount "
-            "FROM rewards_ledger GROUP BY kind, currency"
-        )
+            "FROM rewards_ledger WHERE user_id = :user_id GROUP BY kind, currency"
+        ),
+        {"user_id": user_id},
     ).all()
     for row in rows:
         totals[(row[0], row[1])] = int(row[2] or 0)
     return totals
 
 
-def _starshards_earned(session: Session) -> int:
+def _starshards_earned(session: Session, *, user_id: str) -> int:
     row = session.execute(
         text(
             "SELECT COALESCE(SUM(amount), 0) FROM milestones "
-            "WHERE currency = 'starshard'"
-        )
+            "WHERE user_id = :user_id AND currency = 'starshard'"
+        ),
+        {"user_id": user_id},
     ).first()
     return int(row[0] or 0) if row else 0
 
@@ -383,9 +401,9 @@ def recompute_balances(session: Session, *, user_id: str) -> Balance:
     by ``/v1/rewards/balances``. Holds a row lock on ``rewards_balances`` so
     a concurrent spend can't race the recompute.
     """
-    sunlight_today, sunlight_lifetime = _sunlight_earnings(session)
-    ledger = _ledger_totals(session)
-    starshards_earned = _starshards_earned(session)
+    sunlight_today, sunlight_lifetime = _sunlight_earnings(session, user_id=user_id)
+    ledger = _ledger_totals(session, user_id=user_id)
+    starshards_earned = _starshards_earned(session, user_id=user_id)
 
     sunlight_balance = max(
         0,
@@ -615,8 +633,10 @@ def list_milestones(session: Session, *, user_id: str) -> list[dict]:
     rows = session.execute(
         text(
             "SELECT id, kind, detail, currency, amount, awarded_for_date, awarded_at "
-            "FROM milestones ORDER BY awarded_at DESC, id DESC"
-        )
+            "FROM milestones WHERE user_id = :user_id "
+            "ORDER BY awarded_at DESC, id DESC"
+        ),
+        {"user_id": user_id},
     ).all()
     return [
         {

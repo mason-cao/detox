@@ -35,6 +35,14 @@ _INGEST_TABLES = ("app_usage", "sessions", "pickups")
 
 
 def upgrade() -> None:
+    op.alter_column(
+        "alembic_version",
+        "version_num",
+        type_=sa.String(length=255),
+        existing_type=sa.String(length=32),
+        existing_nullable=False,
+    )
+
     op.create_table(
         "device_pairings",
         sa.Column("code_hash", sa.Text, primary_key=True),

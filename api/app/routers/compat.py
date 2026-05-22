@@ -45,12 +45,17 @@ router = APIRouter(
 
 
 @router.get("/dashboard/now", summary="Latest tracked app for the user")
-async def dashboard_now(session: Session = Depends(db_session)) -> dict[str, object]:
+async def dashboard_now(
+    request: Request,
+    session: Session = Depends(db_session),
+) -> dict[str, object]:
     row = session.execute(
         text(
             "SELECT app_name, timestamp FROM app_usage "
+            "WHERE user_id = :user_id "
             "ORDER BY timestamp DESC LIMIT 1"
-        )
+        ),
+        {"user_id": request.state.user_id},
     ).one_or_none()
     if row is None:
         return {"app_name": None, "since_unix": None}
@@ -66,15 +71,20 @@ _MONITOR_FRESH_SECONDS = 15 * 60  # one /v1/ingest cycle is 5 min, allow 3×
 
 
 @router.get("/status", summary="Aggregate monitor status across the user's devices")
-async def status(session: Session = Depends(db_session)) -> dict[str, object]:
+async def status(
+    request: Request,
+    session: Session = Depends(db_session),
+) -> dict[str, object]:
     """Returns ``monitor_running`` based on whether any paired device has
     posted to ``/v1/ingest`` recently. The agent flushes every 5 min, so
     a 15-min freshness window covers a missed cycle without false alarms.
     """
     row = session.execute(
         text(
-            "SELECT MAX(last_sync_at) AS last_sync FROM devices"
-        )
+            "SELECT MAX(last_sync_at) AS last_sync "
+            "FROM devices WHERE user_id = :user_id"
+        ),
+        {"user_id": request.state.user_id},
     ).one_or_none()
 
     last_sync = row.last_sync if row and row.last_sync else None
@@ -94,27 +104,31 @@ async def status(session: Session = Depends(db_session)) -> dict[str, object]:
 # ── Statistics ───────────────────────────────────────────────────────
 
 
-def _daily_total(session: Session, date: str) -> float:
+def _daily_total(session: Session, *, user_id: str, date: str) -> float:
     row = session.execute(
         text(
             f"SELECT COUNT(*) * {float(POLL_INTERVAL)} / 60.0 AS minutes "
-            "FROM app_usage WHERE date = :d"
+            "FROM app_usage WHERE user_id = :user_id AND date = :d"
         ),
-        {"d": date},
+        {"user_id": user_id, "d": date},
     ).one()
     return round(float(row[0] or 0), 1)
 
 
 @router.get("/stats/daily", summary="Daily statistics")
 async def stats_daily(
+    request: Request,
     date: str | None = Query(default=None),
     session: Session = Depends(db_session),
 ) -> dict[str, object]:
     selected = validate_date(date or datetime.now().strftime("%Y-%m-%d"))
 
     pickup_rows = session.execute(
-        text("SELECT timestamp FROM pickups WHERE date = :d ORDER BY timestamp"),
-        {"d": selected},
+        text(
+            "SELECT timestamp FROM pickups "
+            "WHERE user_id = :user_id AND date = :d ORDER BY timestamp"
+        ),
+        {"user_id": request.state.user_id, "d": selected},
     ).all()
     pickups = len(pickup_rows)
     first_pickup = (
@@ -128,7 +142,9 @@ async def stats_daily(
         else None
     )
 
-    total_minutes = _daily_total(session, selected)
+    total_minutes = _daily_total(
+        session, user_id=request.state.user_id, date=selected
+    )
     checking_every = (
         round(total_minutes / pickups, 0) if pickups and total_minutes else 0
     )
@@ -136,9 +152,9 @@ async def stats_daily(
     usage_rows = session.execute(
         text(
             "SELECT timestamp, app_name FROM app_usage "
-            "WHERE date = :d ORDER BY timestamp"
+            "WHERE user_id = :user_id AND date = :d ORDER BY timestamp"
         ),
-        {"d": selected},
+        {"user_id": request.state.user_id, "d": selected},
     ).all()
 
     longest_session = 0.0
@@ -188,6 +204,7 @@ async def stats_daily(
 
 @router.get("/stats/weekly", summary="Weekly statistics")
 async def stats_weekly(
+    request: Request,
     week_start: str | None = Query(default=None),
     session: Session = Depends(db_session),
 ) -> dict[str, object]:
@@ -204,7 +221,14 @@ async def stats_weekly(
     days = []
     for i in range(7):
         d = (start + timedelta(days=i)).strftime("%Y-%m-%d")
-        days.append({"date": d, "minutes": _daily_total(session, d)})
+        days.append(
+            {
+                "date": d,
+                "minutes": _daily_total(
+                    session, user_id=request.state.user_id, date=d
+                ),
+            }
+        )
     totals = [d["minutes"] for d in days]
     return {
         "days": days,
