@@ -40,3 +40,11 @@ def test_check_updates_notifies_when_sparkle_framework_is_missing(monkeypatch):
     assert notifications
     assert notifications[0][0:2] == ("Detox", "Updates")
     assert "Update check failed:" in notifications[0][2]
+
+
+def test_menubar_does_not_claim_cli_monitor_pid_file():
+    source = Path(__file__).resolve().parents[2].joinpath("agent/menubar.py").read_text()
+
+    assert "PID_FILE" not in source
+    assert "_write_pid" not in source
+    assert "set_monitor_status_provider" in source
