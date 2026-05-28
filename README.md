@@ -75,19 +75,15 @@ This preview is unsigned. macOS will say the developer cannot be verified until 
 The agent + Flask dashboard can still run entirely from source. Data lives in `data/screentime.db` and never leaves the machine unless you pair the optional hosted dashboard.
 
 ```bash
+git clone https://github.com/mason-cao/detox.git
+cd detox
+python3 -m venv .venv
+. .venv/bin/activate
 python3 -m pip install -r requirements.txt
-./start.sh
-```
-
-`start.sh` initializes the database, spawns the monitor in the background, starts the Flask server, and opens `http://localhost:5050` in your browser. Use `./stop.sh` to shut everything down.
-
-You can also run the menu-bar app instead of the headless launcher:
-
-```bash
 python3 -m agent
 ```
 
-This adds the Detox lantern (🔆) to your menu bar with **Pause tracking**, **Open Dashboard**, **Open Logs**, **Launch at Login**, **Pair this device**, **Sync now**, and **Sign out** items.
+This adds the Detox lantern (🔆) to your menu bar with **Pause tracking**, **Open Dashboard**, **Open Logs**, **Launch at Login**, **Pair this device**, **Sync now**, and **Sign out** items. If the menu-bar app does not start, `./start.sh` runs the headless local dashboard instead. Full source-install notes live in [`docs/source-install.md`](docs/source-install.md).
 
 ### C. Local agent + hosted dashboard (optional)
 

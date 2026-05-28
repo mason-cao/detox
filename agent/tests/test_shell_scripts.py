@@ -73,3 +73,18 @@ def test_build_readme_documents_preview_release_command():
     assert "Detox-preview-0.1.0.dmg" in readme
     assert "Detox-preview-0.1.0.app.zip" in readme
     assert "infra/preview-release-template.md" in readme
+
+
+def test_source_install_fallback_doc_has_complete_user_path():
+    readme = _read("README.md")
+    source_install = _read("docs/source-install.md")
+
+    assert "docs/source-install.md" in readme
+    assert "git clone https://github.com/mason-cao/detox.git" in source_install
+    assert "python3 -m venv .venv" in source_install
+    assert "python3 -m pip install -r requirements.txt" in source_install
+    assert "python3 -m agent" in source_install
+    assert "./start.sh" in source_install
+    assert "./stop.sh" in source_install
+    assert "Accessibility" in source_install
+    assert "data/monitor.log" in source_install
