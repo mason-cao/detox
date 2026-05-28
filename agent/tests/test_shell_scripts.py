@@ -40,3 +40,15 @@ def test_readme_documents_github_preview_install_surface():
     assert "`Detox-preview-<version>.app.zip`" in readme
     assert "right-click `Detox.app`, choose **Open**" in readme
     assert "This preview is unsigned" in readme
+
+
+def test_preview_release_smoke_covers_unsigned_app_launch_path():
+    smoke = _read("infra/preview-release-smoke.md")
+
+    assert "./preview.sh <version>" in smoke
+    assert "Detox-preview-<version>.dmg" in smoke
+    assert "Detox-preview-<version>.app.zip" in smoke
+    assert "right-click `Detox.app`" in smoke
+    assert "Accessibility" in smoke
+    assert "Open Dashboard" in smoke
+    assert "data/monitor.pid" in smoke
