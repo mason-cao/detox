@@ -115,3 +115,16 @@ def test_preview_and_release_build_scripts_prune_agent_tests_from_bundle():
     for script in (preview, release):
         assert "prune_bundle_dev_artifacts" in script
         assert 'rm -rf "$APP/Contents/Resources/lib/python3.11/agent/tests"' in script
+
+
+def test_preview_and_release_build_scripts_render_versioned_info_plist():
+    template = _read("infra/build/Info.plist.tmpl")
+    preview = _read("infra/build/preview.sh")
+    release = _read("infra/build/build.sh")
+
+    assert "<string>__VERSION__</string>" in template
+    assert "<string>__BUILD__</string>" in template
+    for script in (preview, release):
+        assert "render_info_plist" in script
+        assert "__VERSION__" in script
+        assert "__BUILD__" in script
