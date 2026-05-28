@@ -16,3 +16,17 @@ def test_start_and_stop_validate_monitor_pid_owner_before_trusting_pid_file():
     assert 'agent.monitor' in start
     assert "monitor_pid_is_running" in stop
     assert 'agent.monitor' in stop
+
+
+def test_preview_build_packages_unsigned_dmg_and_zip_without_notarization():
+    script = _read("infra/build/preview.sh")
+
+    assert "python3 setup.py py2app" in script
+    assert 'Detox-preview-${VERSION}.dmg' in script
+    assert 'Detox-preview-${VERSION}.app.zip' in script
+    assert "hdiutil create" in script
+    assert "ditto -c -k --keepParent" in script
+    assert "shasum -a 256" in script
+    assert "codesign" not in script
+    assert "notarytool" not in script
+    assert "spctl" not in script
