@@ -45,6 +45,23 @@ dist/Detox.app/Contents/MacOS/Detox
 
 Launch that bundle for a local smoke test, then quit Detox and confirm `data/monitor.pid` is removed.
 
+## Preview Release Build
+
+Use this path for GitHub preview releases while Developer ID signing is not available:
+
+```bash
+./preview.sh 0.1.0
+```
+
+The preview build creates an unsigned app bundle and two release assets:
+
+```text
+dist/Detox-preview-0.1.0.dmg
+dist/Detox-preview-0.1.0.app.zip
+```
+
+The script prints SHA256 values for both files. Copy those values into the release notes using `infra/preview-release-template.md`, then run `infra/preview-release-smoke.md` before publishing.
+
 ## Release Build
 
 Run the signed release entrypoint:

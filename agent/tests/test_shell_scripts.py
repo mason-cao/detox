@@ -52,3 +52,24 @@ def test_preview_release_smoke_covers_unsigned_app_launch_path():
     assert "Accessibility" in smoke
     assert "Open Dashboard" in smoke
     assert "data/monitor.pid" in smoke
+
+
+def test_preview_release_template_requires_assets_checksums_and_warning():
+    template = _read("infra/preview-release-template.md")
+
+    assert "Detox Preview <version>" in template
+    assert "Detox-preview-<version>.dmg" in template
+    assert "Detox-preview-<version>.app.zip" in template
+    assert "SHA256" in template
+    assert "This preview build is unsigned" in template
+    assert "right-click `Detox.app`, choose **Open**" in template
+    assert "infra/preview-release-smoke.md" in template
+
+
+def test_build_readme_documents_preview_release_command():
+    readme = _read("infra/build/README.md")
+
+    assert "./preview.sh 0.1.0" in readme
+    assert "Detox-preview-0.1.0.dmg" in readme
+    assert "Detox-preview-0.1.0.app.zip" in readme
+    assert "infra/preview-release-template.md" in readme
