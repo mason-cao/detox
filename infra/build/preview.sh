@@ -6,6 +6,10 @@ VERSION="${1:?version required, e.g. ./preview.sh 0.1.0}"
 DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$DIR"
 
+prune_bundle_dev_artifacts() {
+  rm -rf "$APP/Contents/Resources/lib/python3.11/agent/tests"
+}
+
 echo "[1/4] py2app preview build"
 rm -rf build dist
 mkdir -p build
@@ -21,6 +25,8 @@ DETOX_INFO_PLIST="build/Info.plist" python3 setup.py py2app
 APP="dist/Detox.app"
 DMG="dist/Detox-preview-${VERSION}.dmg"
 ZIP="dist/Detox-preview-${VERSION}.app.zip"
+
+prune_bundle_dev_artifacts
 
 echo "[2/4] DMG"
 hdiutil create -volname "Detox Preview" -srcfolder "$APP" \
