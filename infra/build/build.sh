@@ -20,6 +20,10 @@ EOF
   fi
 }
 
+prune_bundle_dev_artifacts() {
+  rm -rf "$APP/Contents/Resources/lib/python3.11/agent/tests"
+}
+
 echo "[1/6] py2app build"
 rm -rf build dist
 mkdir -p build
@@ -34,6 +38,8 @@ DETOX_INFO_PLIST="build/Info.plist" python3 setup.py py2app
 
 APP="dist/Detox.app"
 DMG="dist/Detox-${VERSION}.dmg"
+
+prune_bundle_dev_artifacts
 
 echo "[2/6] codesign (hardened runtime)"
 require_codesign_identity

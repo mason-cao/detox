@@ -15,6 +15,21 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 BUILD_DIR = pathlib.Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+
+def _disable_py2app_tkinter_recipe():
+    """Detox does not use Tk; py2app's Tk probe aborts on some macOS builds."""
+    try:
+        from py2app.recipes import tkinter as py2app_tkinter
+    except Exception:
+        return
+
+    py2app_tkinter.check = lambda _cmd, _mf: None
+
+
+_disable_py2app_tkinter_recipe()
+
+
 APP = [str(BUILD_DIR / "launcher.py")]
 INFO_PLIST = pathlib.Path(
     os.environ.get("DETOX_INFO_PLIST", BUILD_DIR / "Info.plist.tmpl")
@@ -31,6 +46,15 @@ OPTIONS = {
     "plist": str(INFO_PLIST),
     "packages": ["agent", "flask", "rumps", "keyring", "requests"],
     "includes": ["pkg_resources"],
+    "excludes": [
+        "tkinter",
+        "_tkinter",
+        "PIL.ImageTk",
+        "PIL._tkinter_finder",
+        "agent.tests",
+        "pytest",
+        "_pytest",
+    ],
     "frameworks": [str(SPARKLE_FRAMEWORK)] if (SPARKLE_FRAMEWORK / "Sparkle").exists() else [],
     "resources": [],
     "strip": True,

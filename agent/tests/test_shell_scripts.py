@@ -88,3 +88,30 @@ def test_source_install_fallback_doc_has_complete_user_path():
     assert "./stop.sh" in source_install
     assert "Accessibility" in source_install
     assert "data/monitor.log" in source_install
+
+
+def test_py2app_setup_disables_unused_tk_recipe_for_preview_builds():
+    setup = _read("infra/build/setup.py")
+
+    assert "_disable_py2app_tkinter_recipe()" in setup
+    assert '"tkinter"' in setup
+    assert '"_tkinter"' in setup
+    assert '"PIL.ImageTk"' in setup
+    assert '"PIL._tkinter_finder"' in setup
+
+
+def test_py2app_setup_excludes_test_modules_from_preview_bundle():
+    setup = _read("infra/build/setup.py")
+
+    assert '"agent.tests"' in setup
+    assert '"pytest"' in setup
+    assert '"_pytest"' in setup
+
+
+def test_preview_and_release_build_scripts_prune_agent_tests_from_bundle():
+    preview = _read("infra/build/preview.sh")
+    release = _read("infra/build/build.sh")
+
+    for script in (preview, release):
+        assert "prune_bundle_dev_artifacts" in script
+        assert 'rm -rf "$APP/Contents/Resources/lib/python3.11/agent/tests"' in script
