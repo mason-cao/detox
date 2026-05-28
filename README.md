@@ -56,11 +56,23 @@ Detox is a macOS screen-time tracker that polls your frontmost app every 2 secon
 
 ---
 
-## Two ways to run it
+## Install
 
-### A. Local-only (default)
+### A. GitHub preview app (recommended)
 
-The agent + Flask dashboard run entirely on your Mac. Data lives in `data/screentime.db` and never leaves the machine. This is the privacy-first default and is enough on its own.
+Detox is available as a public GitHub preview while signed Developer ID builds are still pending.
+
+1. Download `Detox-preview-<version>.dmg` from [GitHub Releases](https://github.com/mason-cao/detox/releases). This is the primary preview package.
+2. Open the DMG and drag `Detox.app` into `/Applications`.
+3. First launch: right-click `Detox.app`, choose **Open**, then confirm the macOS warning.
+4. Grant Accessibility when macOS asks: **System Settings -> Privacy & Security -> Accessibility -> Detox**.
+5. Click the Detox lantern in the menu bar and choose **Open Dashboard**.
+
+This preview is unsigned. macOS will say the developer cannot be verified until Detox has an Apple Developer ID. If the DMG gives you trouble, download `Detox-preview-<version>.app.zip`, unzip it, move `Detox.app` into `/Applications`, then use the same right-click **Open** flow.
+
+### B. Source install (fallback)
+
+The agent + Flask dashboard can still run entirely from source. Data lives in `data/screentime.db` and never leaves the machine unless you pair the optional hosted dashboard.
 
 ```bash
 python3 -m pip install -r requirements.txt
@@ -77,7 +89,7 @@ python3 -m agent
 
 This adds the Detox lantern (🔆) to your menu bar with **Pause tracking**, **Open Dashboard**, **Open Logs**, **Launch at Login**, **Pair this device**, **Sync now**, and **Sign out** items.
 
-### B. Local agent + hosted dashboard (optional)
+### C. Local agent + hosted dashboard (optional)
 
 You can also pair the local agent to a hosted FastAPI service so any browser signed into your Supabase account sees the same data. The Mac still does all collection — the cloud is the storage + dashboard layer for **your** devices, not a multi-user product.
 
@@ -92,11 +104,11 @@ To stand up your own cloud instance, see [`infra/railway/README.md`](infra/railw
 
 The agent's pairing CLI tells you the pair page URL based on the `DETOX_CLOUD_API_BASE` env var. The launcher script defaults to the bundled URL — edit it for your own deployment.
 
-### First-run permissions (both modes)
+### First-run permissions
 
 The monitor reads the frontmost app via `osascript`. macOS prompts on first run:
 
-**System Settings → Privacy & Security → Accessibility → enable Terminal** (or whichever terminal app spawns the agent).
+**System Settings -> Privacy & Security -> Accessibility -> enable Detox** for the app preview, or enable Terminal (or whichever terminal app spawns the agent) for the source install.
 
 Without this, the agent runs but records nothing, and the menu-bar icon flips to 🚫.
 
@@ -279,9 +291,9 @@ detox/
 | 3 | py2app `.app` bundle + menu-bar + local sync queue + Sparkle/DMG scaffolding | ✅ shipped (signed release cert-gated) |
 | 4 | Auth + cloud — Supabase, RLS, ingest, rules puller, server-authoritative rewards, Railway deploy | ✅ shipped |
 | 5 | Privacy — Ghost Mode (hashed app names), full archive export, one-click delete, in-repo privacy/TOS docs | ✅ shipped |
-| 5+ | Public launch — landing page, signed DMG, Homebrew cask, announcement | 🚧 queued |
+| 5+ | Public launch — GitHub preview DMG/zip now, signed DMG later | 🚧 in progress |
 
-**Until the signed DMG ships**, install is developer-only — clone the repo, `pip3 install -r requirements.txt`, then `python3 -m agent` (menu-bar) or `./start.sh` (headless). The py2app config in `infra/build/` produces a working `.app` from a checkout (`cd infra/build && python3 setup.py py2app -A`); codesign + notarize + Homebrew cask wait on an Apple Developer ID and Sparkle EdDSA keys.
+The GitHub preview ships an unsigned `Detox.app` inside a DMG, with a zip fallback. Signed/notarized builds, Sparkle updates, and a Homebrew cask still wait on an Apple Developer ID and release signing keys.
 
 **Cloud is single-tenant per deployment** — anyone signing in with a Supabase magic link gets routed to their own user row. There's no invite gate in the launch plan; if you stand up an instance and someone has the URL + a Supabase email, they get a separate account.
 

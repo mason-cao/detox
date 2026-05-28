@@ -30,3 +30,13 @@ def test_preview_build_packages_unsigned_dmg_and_zip_without_notarization():
     assert "codesign" not in script
     assert "notarytool" not in script
     assert "spctl" not in script
+
+
+def test_readme_documents_github_preview_install_surface():
+    readme = _read("README.md")
+
+    assert "### A. GitHub preview app (recommended)" in readme
+    assert "`Detox-preview-<version>.dmg`" in readme
+    assert "`Detox-preview-<version>.app.zip`" in readme
+    assert "right-click `Detox.app`, choose **Open**" in readme
+    assert "This preview is unsigned" in readme
