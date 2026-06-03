@@ -9,9 +9,9 @@ Detox means you agree to them. If you don't, don't use Detox.
 ## 1. Release status
 
 Detox is on the public launch track. Until signed DMG distribution is
-available, install from source and treat the local SQLite file as the
-source of truth. Export it (Mayor's Study → Download Archive) before
-major upgrades.
+available, install from the GitHub file release and treat the local
+SQLite file as the source of truth. Export it (Mayor's Study → Download
+Archive) before major upgrades.
 
 ## 2. Personal use
 

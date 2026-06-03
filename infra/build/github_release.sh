@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-VERSION="${1:?version required, e.g. ./preview.sh 0.1.0}"
+VERSION="${1:?version required, e.g. ./github_release.sh 0.1.0}"
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$DIR"
@@ -38,27 +38,30 @@ render_info_plist() {
     Info.plist.tmpl > build/Info.plist
 }
 
-echo "[1/5] py2app preview build"
+echo "[1/6] py2app GitHub release build"
 rm -rf build dist
 mkdir -p build
 render_info_plist
 DETOX_INCLUDE_SPARKLE=0 DETOX_INFO_PLIST="build/Info.plist" python3 setup.py py2app
 
 APP="dist/Detox.app"
-DMG="dist/Detox-preview-${VERSION}.dmg"
-ZIP="dist/Detox-preview-${VERSION}.app.zip"
+DMG="dist/Detox-${VERSION}.dmg"
+ZIP="dist/Detox-${VERSION}.app.zip"
 
 prune_bundle_dev_artifacts
 
-echo "[2/5] ad-hoc sign"
+echo "[2/6] ad-hoc sign"
 adhoc_sign_bundle
 
-echo "[3/5] DMG"
-hdiutil create -volname "Detox Preview" -srcfolder "$APP" \
+echo "[3/6] verify bundle seal"
+codesign --verify --deep --strict --verbose=2 "$APP"
+
+echo "[4/6] DMG"
+hdiutil create -volname "Detox" -srcfolder "$APP" \
   -ov -format UDZO "$DMG"
 
-echo "[4/5] zip"
+echo "[5/6] zip"
 ditto -c -k --keepParent "$APP" "$ZIP"
 
-echo "[5/5] checksums"
+echo "[6/6] checksums"
 shasum -a 256 "$DMG" "$ZIP"

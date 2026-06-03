@@ -1,6 +1,6 @@
 # Source Install
 
-Use this fallback if the GitHub preview DMG or zip does not work on your Mac, or if you want to run Detox directly from the repository.
+Use this fallback if the GitHub release DMG or zip does not work on your Mac, or if you want to run Detox directly from the repository.
 
 ## Requirements
 

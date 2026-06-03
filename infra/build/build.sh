@@ -52,7 +52,7 @@ echo "[1/6] py2app build"
 rm -rf build dist
 mkdir -p build
 render_info_plist
-DETOX_INFO_PLIST="build/Info.plist" python3 setup.py py2app
+DETOX_INCLUDE_SPARKLE=1 DETOX_INFO_PLIST="build/Info.plist" python3 setup.py py2app
 
 APP="dist/Detox.app"
 DMG="dist/Detox-${VERSION}.dmg"
