@@ -337,6 +337,10 @@ const App = {
             'Communication': '#b59cff',
             'Social': '#d16a8f',
             'Entertainment': '#ffd04a',
+            'Development': '#7b8fbf',
+            'Media': '#d6a44e',
+            'Design': '#c783b7',
+            'Enforcement': '#c4453a',
             'Utilities': '#6b8e4e',
             'Uncategorized': '#aeaeb2',
         };

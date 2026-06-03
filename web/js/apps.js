@@ -80,18 +80,22 @@ const Apps = {
         const maxMin = apps[0].total_minutes;
         return filtered.map(app => {
             const appName = App.escapeHtml(app.app_name);
-            const category = App.escapeHtml(app.category);
-            const firstLetter = App.escapeHtml(app.app_name.charAt(0).toUpperCase());
+            const categoryLabel = window.AppSymbols ? AppSymbols.inferCategory(app) : (app.category || 'Uncategorized');
+            const category = App.escapeHtml(categoryLabel);
+            const categorySource = app.category && app.category !== 'Uncategorized' ? 'saved' : 'inferred';
+            const symbol = window.AppSymbols
+                ? AppSymbols.badge(app)
+                : App.escapeHtml(app.app_name.charAt(0).toUpperCase());
             const appArg = App.inlineArg(app.app_name);
             const hasLimit = this.appLimitNames.has(app.app_name);
             const isBlocked = this.blockedNames.has(app.app_name);
             const isWhitelisted = this.whitelistedNames.has(app.app_name);
             return `
             <li class="resident" onclick="Apps.showDetail(${appArg})">
-                <div class="resident__portrait" style="background: ${App.appColor(app.app_name)}">${firstLetter}</div>
+                <div class="resident__portrait" style="background: ${App.categoryColor(categoryLabel)}">${symbol}</div>
                 <div class="resident__info">
                     <div class="resident__name">${appName}</div>
-                    <div class="resident__category">${category}</div>
+                    <div class="resident__category" data-category-source="${App.escapeAttr(categorySource)}">${category}</div>
                 </div>
                 <div class="resident__bar">
                     <div class="resident__bar-fill" style="width: ${(app.total_minutes / maxMin * 100)}%; background: ${App.appColor(app.app_name)}"></div>
@@ -158,7 +162,12 @@ const Apps = {
             this.loadActionState(),
         ]);
         const appNameEsc = App.escapeHtml(appName);
-        const firstLetter = App.escapeHtml(appName.charAt(0).toUpperCase());
+        const categoryLabel = window.AppSymbols
+            ? AppSymbols.inferCategory({ app_name: appName, category: data.category })
+            : (data.category || 'Uncategorized');
+        const symbol = window.AppSymbols
+            ? AppSymbols.badge({ app_name: appName, category: data.category })
+            : App.escapeHtml(appName.charAt(0).toUpperCase());
         const appArg = App.inlineArg(appName);
         const selectedTotal = data.selected_total ?? data.today_total ?? 0;
         const hasLimit = this.appLimitNames.has(appName);
@@ -169,7 +178,7 @@ const Apps = {
             <div class="fade-in">
                 <div class="resident-detail__header">
                     <a class="resident-detail__back" onclick="Apps.detailApp=null; Apps.searchQuery=''; App.showTab('apps')">← BACK</a>
-                    <span class="resident-detail__portrait" style="background: ${App.appColor(appName)}">${firstLetter}</span>
+                    <span class="resident-detail__portrait" style="background: ${App.categoryColor(categoryLabel)}">${symbol}</span>
                     <h1 class="resident-detail__title">${appNameEsc}</h1>
                     <div class="resident-detail__date-nav">
                         <button class="pixel-button" onclick="App.prevDate(); Apps.showDetail(${appArg})">&#8249;</button>

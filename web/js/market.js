@@ -262,9 +262,9 @@ const Market = {
         const itemKey = String(item.key || item.item_key || item.name || 'reward').toLowerCase();
         const itemName = item.name || category;
         return `
-            <div class="market-asset-preview market-asset-preview--${App.escapeAttr(asset.kind)} ${rare ? 'market-asset-preview--rare' : ''}" data-item-key="${App.escapeAttr(itemKey)}">
+            <div class="market-asset-preview market-asset-preview--${App.escapeAttr(category)} market-asset-preview--kind-${App.escapeAttr(asset.kind)} ${rare ? 'market-asset-preview--rare' : ''}" data-item-key="${App.escapeAttr(itemKey)}">
                 <div class="market-asset-preview__frame">
-                    <img src="${App.escapeAttr(asset.src)}" alt="${App.escapeAttr(itemName)}" loading="lazy">
+                    ${this.vectorPreviewSvg({ ...item, key: item.key || item.item_key || itemName })}
                 </div>
                 <span class="market-asset-preview__coin">${rare ? '✦' : '☀'}</span>
                 <span class="market-asset-preview__category">${App.escapeHtml(category)}</span>
@@ -368,16 +368,14 @@ const Market = {
     },
 
     previewScene(category, key, accent, p) {
-        const asset = this.assetForItem({ category, key });
-        const rim = key.includes('star') || key.includes('moon') || key.includes('aurora') || key.includes('comet')
-            ? '#b59cff'
-            : accent;
-        return `
-            <rect x="12" y="8" width="72" height="58" rx="6" fill="#fff8ef" stroke="${rim}" stroke-width="4"/>
-            <rect x="16" y="12" width="64" height="50" rx="4" fill="#ffffff" stroke="rgba(42,30,42,.24)" stroke-width="1.4"/>
-            <image href="${App.escapeAttr(asset.src)}" x="19" y="15" width="58" height="44" preserveAspectRatio="xMidYMid meet"></image>
-            <ellipse cx="48" cy="67" rx="30" ry="5" fill="rgba(42,30,42,.18)"/>
-        `;
+        const normalizedCategory = String(category || '').toLowerCase();
+        const normalizedKey = String(key || '').toLowerCase();
+        if (normalizedCategory === 'decor') return this.decorPreview(normalizedKey, accent, p);
+        if (normalizedCategory === 'outfit') return this.outfitPreview(normalizedKey, accent, p);
+        if (normalizedCategory === 'weather') return this.weatherPreview(normalizedKey, accent, p);
+        if (normalizedCategory === 'building') return this.buildingPreview(normalizedKey, accent, p);
+        if (normalizedCategory === 'map') return this.mapPreview(normalizedKey, accent, p);
+        return this.decorPreview(normalizedKey, accent, p);
     },
 
     decorPreview(key, accent, p) {
