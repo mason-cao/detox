@@ -53,14 +53,14 @@
     };
 
     const RULES = [
-        ['Development', /\b(code|codex|visual studio code|xcode|terminal|iterm|sublime|vim|emacs|github|docker|postman|fig|cursor|zed|electron|script editor)\b/i],
+        ['Development', /\b(code|visual studio code|xcode|terminal|iterm|sublime|vim|emacs|github|docker|postman|fig|cursor|zed|electron|script editor)\b/i],
         ['Communication', /\b(mail|messages|slack|teams|zoom|facetime|signal|telegram|whatsapp|outlook|gmail)\b/i],
         ['Social', /\b(discord|instagram|twitter|x\.app|facebook|tiktok|reddit|snapchat|mastodon|threads)\b/i],
         ['Media', /\b(spotify|music|podcasts|garageband|logic|audacity)\b/i],
         ['Entertainment', /\b(youtube|netflix|twitch|tv|prime video|hulu|disney|steam|epic games|minecraft|roblox|robloxplayer|lunar client|java)\b/i],
         ['Design', /\b(figma|sketch|photoshop|illustrator|indesign|canva|affinity|blender)\b/i],
         ['Utilities', /\b(system settings|settings|activity monitor|finder|preview|calculator|keychain|textedit|notes|reminders|calendar|numbers|pages|keynote)\b/i],
-        ['Productivity', /\b(safari|chrome|firefox|arc|brave|edge|notion|obsidian|word|excel|powerpoint|sheets|docs|claude|lockdown browser)\b/i],
+        ['Productivity', /\b(safari|chrome|firefox|arc|brave|edge|notion|obsidian|word|excel|powerpoint|sheets|docs|lockdown browser)\b/i],
     ];
 
     function cleanCategory(category) {
