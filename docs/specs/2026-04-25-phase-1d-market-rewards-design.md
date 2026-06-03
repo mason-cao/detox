@@ -219,7 +219,7 @@ Reuse `pixel-panel`, `pixel-button`, `pixel-button--primary`, `pixel-button--dan
 
 ## 9. Testing & verification
 
-There is no pytest yet (per CLAUDE.md). Verification is the existing manual smoke path plus:
+There is no pytest yet. Verification is the existing manual smoke path plus:
 
 1. **Earning math:** open dashboard with a `daily_total` goal of 60 min, no `app_limit` goals, and current usage of 20 min — HUD should show `☀ 40 / 120`. Bump the goal to 90 — refresh — HUD should now show `☀ 70 / 120` (retroactive within today).
 2. **Cap enforcement:** with a generous goal, confirm `☀` does not exceed 120 even if the math would.

@@ -410,7 +410,7 @@ The frontend needs to know which app is frontmost in near-real-time.
 - Per-request osascript fork: ground-truth fresh, but adds ~50ms latency
   and a process spawn. Rejected.
 - WebSocket / SSE push from monitor: simplest model is HTTP polling;
-  WebSockets exceed the "stay vanilla" constraint of CLAUDE.md.
+  WebSockets exceed the project's "stay vanilla" constraint.
 ```
 
 - [ ] **Step 5: Commit**

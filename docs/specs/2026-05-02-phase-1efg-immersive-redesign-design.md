@@ -28,7 +28,7 @@ The work splits into three plans (1e Foundation, 1f Living world, 1g Tab polish)
 - Make the world react to the live agent — the frontmost app's resident has a visible glow and "working" state, not just historical totals.
 - Retire the bottom ribbon. Navigation happens by clicking buildings on the Isle, plus a small compass HUD that prevents sub-tabs from feeling stranded. Keyboard `1`–`8` is preserved.
 - Give each of the seven non-Isle tabs one signature animation tied to its primary action, so the whole app feels built rather than styled.
-- Stay vanilla. No bundler, no Node, no framework (per `CLAUDE.md`).
+- Stay vanilla. No bundler, no Node, no framework.
 - Honor `prefers-reduced-motion` for every new motion.
 
 **Non-goals:**
