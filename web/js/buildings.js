@@ -10,7 +10,7 @@
 
 const Buildings = {
     /* ── Configuration ───────────────────────────────────────────────── */
-    catalog: [
+    defaultCatalog: [
         { id: 'townHall',  tab: 'dashboard', label: 'Town Hall',   tx: 5, ty: 1, size: 'major' },
         { id: 'registry',  tab: 'apps',      label: 'Registry',    tx: 1, ty: 2, size: 'major' },
         { id: 'market',    tab: 'market',    label: 'Market',      tx: 9, ty: 2, size: 'major' },
@@ -20,6 +20,21 @@ const Buildings = {
         { id: 'postcards', tab: 'cards',     label: 'Postcards',   tx: 2, ty: 6, size: 'minor' },
         { id: 'study',     tab: 'settings',  label: 'Mayor Study', tx: 10, ty: 0, size: 'minor' },
     ],
+    catalog: [],
+
+    setCatalog(buildings) {
+        const source = Array.isArray(buildings) && buildings.length ? buildings : this.defaultCatalog;
+        this.catalog = source.map(building => ({
+            ...building,
+            footprint: building.footprint || (building.size === 'major' ? { w: 2, h: 2 } : { w: 1, h: 1 }),
+        }));
+        return this.catalog;
+    },
+
+    resetCatalog() {
+        const source = window.IslandState?.coreBuildings || this.defaultCatalog;
+        return this.setCatalog(source);
+    },
 
     /* ── Helpers ─────────────────────────────────────────────────────── */
 
@@ -333,4 +348,5 @@ const Buildings = {
     },
 };
 
+Buildings.resetCatalog();
 window.Buildings = Buildings;
