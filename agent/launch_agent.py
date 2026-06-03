@@ -7,12 +7,29 @@ import sys
 
 from agent.config import BUNDLE_IDENTIFIER, LAUNCH_AGENT_PATH, LOG_PATH
 
+APP_EXECUTABLE_NAME = "Detox"
+
+
+def _bundle_executable_path(executable_path=None):
+    executable_path = os.path.abspath(executable_path or sys.executable)
+    executable_dir = os.path.dirname(executable_path)
+    candidates = [
+        executable_path,
+        os.path.join(executable_dir, APP_EXECUTABLE_NAME),
+    ]
+    for candidate in candidates:
+        if os.path.basename(candidate) == APP_EXECUTABLE_NAME and os.path.exists(candidate):
+            return candidate
+    return executable_path
+
 
 def _program_arguments():
     """Resolve the executable the LaunchAgent should invoke."""
     bundle_exe = os.environ.get("DETOX_BUNDLE_EXEC")
     if bundle_exe and os.path.exists(bundle_exe):
         return [bundle_exe]
+    if getattr(sys, "frozen", False):
+        return [_bundle_executable_path()]
     return [sys.executable, "-m", "agent"]
 
 

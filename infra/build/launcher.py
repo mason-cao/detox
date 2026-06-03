@@ -18,7 +18,19 @@ _REPO_ROOT = os.path.abspath(os.path.join(_HERE, "..", ".."))
 if os.path.isdir(os.path.join(_REPO_ROOT, "agent")) and _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
-from agent.menubar import main  # noqa: E402
+def _run_pair_cli():
+    from agent.cli.pair import main
+
+    return main()
+
+
+def _run_menubar():
+    from agent.menubar import main
+
+    main()
+
 
 if __name__ == "__main__":
-    main()
+    if "--pair" in sys.argv[1:]:
+        sys.exit(_run_pair_cli())
+    _run_menubar()
