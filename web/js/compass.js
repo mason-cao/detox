@@ -171,7 +171,7 @@ const Compass = {
     },
 
     renderList() {
-        return Buildings.catalog.map(b => {
+        return Buildings.catalog.filter(b => b.tab).map(b => {
             const cur = App.currentTab === b.tab ? 'is-current' : '';
             const abbr = b.label.split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase();
             return `

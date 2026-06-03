@@ -26,6 +26,7 @@ const Buildings = {
         const source = Array.isArray(buildings) && buildings.length ? buildings : this.defaultCatalog;
         this.catalog = source.map(building => ({
             ...building,
+            kind: building.kind || building.id,
             footprint: building.footprint || (building.size === 'major' ? { w: 2, h: 2 } : { w: 1, h: 1 }),
         }));
         return this.catalog;
@@ -333,17 +334,173 @@ const Buildings = {
         `;
     },
 
+    marketBuilding(building = {}) {
+        const key = String(building.itemKey || building.id || '');
+        const wall = key.includes('tea') ? '#b78352'
+            : key.includes('inn') ? '#9f7a55'
+                : key.includes('school') ? '#b98f56'
+                    : '#8d6848';
+        const wallSide = key.includes('tea') ? '#765436'
+            : key.includes('inn') ? '#6c5036'
+                : key.includes('school') ? '#735438'
+                    : '#5f4630';
+        const roof = key.includes('bath') ? '#4e86a0'
+            : key.includes('bakery') ? '#c4453a'
+                : key.includes('apothecary') ? '#4a6b3a'
+                    : '#7b3f31';
+        const roofSide = key.includes('bath') ? '#356272'
+            : key.includes('bakery') ? '#862f29'
+                : key.includes('apothecary') ? '#314821'
+                    : '#512a24';
+        return `
+            ${this.baseShadow(27, 4)}
+            ${this.sideWall({ x: -24, y: -36, w: 48, h: 36, depth: 7, fill: wallSide })}
+            ${this.roofSide({
+                apex: { x: 0, y: -60 },
+                eaveLeft: { x: -29, y: -36 },
+                eaveRight: { x: 29, y: -36 },
+                depth: 7,
+                fill: roofSide,
+            })}
+            <rect x="-24" y="-36" width="48" height="36" fill="${wall}" stroke="#2a1e2a" stroke-width="1.5"/>
+            <polygon points="-29,-36 29,-36 0,-60" fill="${roof}" stroke="#2a1e2a" stroke-width="1.5"/>
+            <rect x="-22" y="-34" width="44" height="8" fill="#fff4d6" stroke="#2a1e2a" stroke-width="1"/>
+            <path d="M-19,-34 V-26 M-9,-34 V-26 M1,-34 V-26 M11,-34 V-26 M21,-34 V-26" stroke="${roof}" stroke-width="3"/>
+            ${this.window(-17, -22, 9, 10)}
+            ${this.window(8, -22, 9, 10)}
+            ${this.door(-5, -14, 10, 14)}
+            <rect x="-10" y="-47" width="20" height="9" fill="#fff4d6" stroke="#2a1e2a" stroke-width="1"/>
+            <line x1="-6" y1="-43" x2="6" y2="-43" stroke="#2a1e2a" stroke-width="0.7"/>
+        `;
+    },
+
+    dock(building = {}) {
+        void building;
+        return `
+            ${this.baseShadow(26, 4)}
+            <path d="M-30,-4 L-10,-16 L32,5 L12,17 Z" fill="#7b5635" stroke="#2a1e2a" stroke-width="1.6"/>
+            <path d="M-22,-4 L-2,-15 M-12,1 L8,-10 M-2,6 L18,-5 M8,11 L28,0" stroke="#4b3321" stroke-width="1.1"/>
+            <path d="M-20,-12 V-27 M8,-7 V-25 M25,1 V-17" stroke="#2a1e2a" stroke-width="2"/>
+            <path d="M8,-25 H25 L21,-17 H8 Z" fill="#c4453a" stroke="#2a1e2a" stroke-width="1.2"/>
+        `;
+    },
+
+    bridge(building = {}) {
+        void building;
+        return `
+            ${this.baseShadow(30, 4)}
+            <path d="M-34,-2 C-16,-20 16,-20 34,-2 L25,10 C12,-4 -12,-4 -25,10 Z" fill="#8d6848" stroke="#2a1e2a" stroke-width="1.6"/>
+            <path d="M-28,-4 C-13,-15 13,-15 28,-4" fill="none" stroke="#fff4d6" stroke-width="2"/>
+            <path d="M-22,1 V-11 M0,-7 V-20 M22,1 V-11" stroke="#2a1e2a" stroke-width="1.4"/>
+        `;
+    },
+
+    lighthouse(building = {}) {
+        void building;
+        return `
+            ${this.baseShadow(20, 4)}
+            <path d="M-14,0 L-9,-50 H9 L14,0 Z" fill="#fff4d6" stroke="#2a1e2a" stroke-width="1.5"/>
+            <path d="M-10,-31 H10 M-12,-15 H12" stroke="#c4453a" stroke-width="5"/>
+            <rect x="-12" y="-60" width="24" height="12" fill="#5b8fb9" stroke="#2a1e2a" stroke-width="1.4"/>
+            <polygon points="-16,-60 16,-60 0,-72" fill="#c4453a" stroke="#2a1e2a" stroke-width="1.4"/>
+            <path d="M12,-54 L38,-63 M-12,-54 L-38,-63" stroke="#ffd04a" stroke-width="3" opacity="0.78"/>
+            ${this.door(-5, -12, 10, 12)}
+        `;
+    },
+
+    greenhouse(building = {}) {
+        void building;
+        return `
+            ${this.baseShadow(30, 4)}
+            <path d="M-28,0 H28 V-30 Q0,-58 -28,-30 Z" fill="rgba(127,200,223,.58)" stroke="#2a1e2a" stroke-width="1.6"/>
+            <path d="M-16,0 V-41 M0,0 V-54 M16,0 V-41 M-24,-22 H24" stroke="#2a1e2a" stroke-width="1.1"/>
+            <path d="M-18,-4 Q0,-20 18,-4" fill="#6b8e4e" stroke="#2a1e2a" stroke-width="1.2"/>
+            <circle cx="-7" cy="-14" r="3" fill="#ffd04a" stroke="#2a1e2a" stroke-width="0.8"/>
+            <circle cx="10" cy="-16" r="3" fill="#c4453a" stroke="#2a1e2a" stroke-width="0.8"/>
+        `;
+    },
+
+    grove(building = {}) {
+        void building;
+        return `
+            ${this.baseShadow(24, 4)}
+            <g stroke="#2a1e2a" stroke-width="1.2">
+                <rect x="-2" y="-24" width="5" height="24" fill="#7b5635"/>
+                <circle cx="0" cy="-28" r="15" fill="#4a6b3a"/>
+                <circle cx="-13" cy="-19" r="9" fill="#6b8e4e"/>
+                <circle cx="13" cy="-19" r="9" fill="#6b8e4e"/>
+                <circle cx="6" cy="-31" r="3" fill="#ffd04a"/>
+                <circle cx="-8" cy="-24" r="3" fill="#c4453a"/>
+            </g>
+        `;
+    },
+
+    lookout(building = {}) {
+        void building;
+        return `
+            ${this.baseShadow(24, 4)}
+            <path d="M-18,0 L-11,-46 H11 L18,0 Z" fill="#7b5635" stroke="#2a1e2a" stroke-width="1.5"/>
+            <rect x="-18" y="-52" width="36" height="12" fill="#b98f56" stroke="#2a1e2a" stroke-width="1.5"/>
+            <path d="M-16,-44 H16 M-12,-34 H12" stroke="#fff4d6" stroke-width="1.4"/>
+            <path d="M-24,-50 H24" stroke="#2a1e2a" stroke-width="2"/>
+        `;
+    },
+
+    shore(building = {}) {
+        void building;
+        return `
+            ${this.baseShadow(26, 4)}
+            <path d="M-28,-4 C-12,-22 12,-23 28,-4 C15,10 -16,10 -28,-4 Z" fill="#f6d39b" stroke="#2a1e2a" stroke-width="1.5"/>
+            <ellipse cx="0" cy="-3" rx="18" ry="7" fill="#5b8fb9" stroke="#2a1e2a" stroke-width="1.2"/>
+            <path d="M-12,-3 C-4,-8 7,-8 14,-2" fill="none" stroke="#fff4d6" stroke-width="2"/>
+            <circle cx="18" cy="-12" r="4" fill="#ffd04a" stroke="#2a1e2a" stroke-width="1"/>
+        `;
+    },
+
+    mapFeature(building = {}) {
+        const key = String(building.itemKey || '');
+        if (key.includes('dock') || key.includes('pier')) return this.dock(building);
+        if (key.includes('bridge')) return this.bridge(building);
+        if (key.includes('lighthouse')) return this.lighthouse(building);
+        if (key.includes('grove') || key.includes('orchard') || key.includes('garden')) return this.grove(building);
+        if (key.includes('spring') || key.includes('beach') || key.includes('reef')) return this.shore(building);
+        if (key.includes('tower') || key.includes('overlook') || key.includes('plateau')) return this.lookout(building);
+        return `
+            ${this.baseShadow(20, 4)}
+            <path d="M-20,-4 L0,-22 L20,-4 L0,12 Z" fill="#6b8e4e" stroke="#2a1e2a" stroke-width="1.5"/>
+            <path d="M-8,-4 C-2,-12 8,-12 14,-5" fill="none" stroke="#f6d39b" stroke-width="4" stroke-linecap="round"/>
+            <path d="M3,-16 V-34" stroke="#2a1e2a" stroke-width="2"/>
+            <path d="M3,-34 H20 L16,-25 H3 Z" fill="#ffd04a" stroke="#2a1e2a" stroke-width="1.3"/>
+        `;
+    },
+
+    bakery(building) { return this.marketBuilding(building); },
+    bathhouse(building) { return this.marketBuilding(building); },
+    workshop(building) { return this.marketBuilding(building); },
+    inn(building) { return this.marketBuilding(building); },
+    schoolhouse(building) { return this.marketBuilding(building); },
+    teaShop(building) { return this.marketBuilding(building); },
+    apothecary(building) { return this.marketBuilding(building); },
+    observatory(building) { return this.marketBuilding(building); },
+    cave(building) { return this.mapFeature(building); },
+
     /* ── Plumbing ────────────────────────────────────────────────────── */
 
-    markup(id) {
-        const fn = this[id];
+    markup(id, building = {}) {
+        const fn = this[id] || this[building.kind] || this.marketBuilding;
         if (typeof fn !== 'function') return '';
-        return fn.call(this);
+        return fn.call(this, building);
     },
 
     anchor(tx, ty, size) {
         const span = size === 'major' ? 1 : 0;
         const { x, y } = Iso.tileToScreen(tx + span, ty + span);
+        return { x, y: y + Iso.TILE_H / 2 + 80 };
+    },
+
+    anchorFor(building) {
+        const footprint = building.footprint || (building.size === 'major' ? { w: 2, h: 2 } : { w: 1, h: 1 });
+        const { x, y } = Iso.tileToScreen(building.tx + footprint.w - 1, building.ty + footprint.h - 1);
         return { x, y: y + Iso.TILE_H / 2 + 80 };
     },
 };

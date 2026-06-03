@@ -1,6 +1,6 @@
 /* Residents - calm app markers + frontmost-glow binding.
-   Residents glide along eased routes with requestAnimationFrame so the Isle
-   stays alive without the old low-frame-rate sprite run cycle. */
+   Residents walk tile routes with stepped timing so the Isle reads like a
+   small pixel-game village instead of a smooth marker animation. */
 
 const Residents = {
     // Eight archetypes. These map categories to villager styling.
@@ -190,13 +190,16 @@ const Residents = {
     },
 
     _blockedTiles() {
+        if (window.IslandState && window.Buildings?.catalog) {
+            return IslandState.occupiedCells(Buildings.catalog);
+        }
         const blocked = new Set();
         if (!window.Buildings || !Buildings.catalog) return blocked;
 
         Buildings.catalog.forEach(b => {
-            const span = b.size === 'major' ? 1 : 0;
-            for (let dx = 0; dx <= span; dx++) {
-                for (let dy = 0; dy <= span; dy++) {
+            const footprint = b.footprint || (b.size === 'major' ? { w: 2, h: 2 } : { w: 1, h: 1 });
+            for (let dx = 0; dx < footprint.w; dx++) {
+                for (let dy = 0; dy < footprint.h; dy++) {
                     const tx = b.tx + dx;
                     const ty = b.ty + dy;
                     if (tx < 0 || ty < 0 || tx >= Iso.WORLD_TX || ty >= Iso.WORLD_TY) continue;
@@ -210,21 +213,26 @@ const Residents = {
     _openTiles() {
         const blocked = this._blockedTiles();
         const buildingBoxes = this._buildingBoxes();
-        const tiles = [];
-        for (let ty = 0; ty < Iso.WORLD_TY; ty++) {
-            for (let tx = 0; tx < Iso.WORLD_TX; tx++) {
-                if (blocked.has(`${tx},${ty}`)) continue;
-                if (this._tileOverlapsBuilding({ tx, ty }, buildingBoxes)) continue;
-                tiles.push({ tx, ty });
+        const source = window.IslandState && window.Buildings?.catalog
+            ? IslandState.walkableTiles(Buildings.catalog)
+            : null;
+        const tiles = source || [];
+        if (!source) {
+            for (let ty = 0; ty < Iso.WORLD_TY; ty++) {
+                for (let tx = 0; tx < Iso.WORLD_TX; tx++) {
+                    if (blocked.has(`${tx},${ty}`)) continue;
+                    tiles.push({ tx, ty });
+                }
             }
         }
-        return tiles.length ? tiles : [{ tx: 0, ty: 0 }];
+        const filtered = tiles.filter(tile => !this._tileOverlapsBuilding(tile, buildingBoxes));
+        return filtered.length ? filtered : [{ tx: 0, ty: 0 }];
     },
 
     _buildingBoxes() {
         if (!window.Buildings || !Buildings.catalog) return [];
         return Buildings.catalog.map(b => {
-            const { x, y } = Buildings.anchor(b.tx, b.ty, b.size);
+            const { x, y } = Buildings.anchorFor ? Buildings.anchorFor(b) : Buildings.anchor(b.tx, b.ty, b.size);
             const major = b.size === 'major';
             return {
                 id: b.id,
@@ -465,13 +473,15 @@ const Residents = {
             const t = ((now + offset) % cycle) / cycle;
             const legFloat = t * r.route.length;
             const leg = Math.floor(legFloat);
-            const progress = this._smoothstep(legFloat - leg);
+            const progressRaw = legFloat - leg;
+            const progress = this._steppedProgress(progressRaw);
             const a = r.route[leg];
             const b = r.route[(leg + 1) % r.route.length];
             const tx = a.tx + (b.tx - a.tx) * progress;
             const ty = a.ty + (b.ty - a.ty) * progress;
-            const bob = Math.sin((now + offset) / 850) * 1.4;
-            this._setPosition(appName, tx, ty, bob);
+            const frame = Math.floor(((now + offset) / 180) % 4);
+            const bob = frame % 2 === 0 ? 0 : -2;
+            this._setPosition(appName, tx, ty, bob, this._directionFor(a, b), frame);
         });
     },
 
@@ -479,12 +489,27 @@ const Residents = {
         return t * t * (3 - 2 * t);
     },
 
-    _setPosition(appName, tx, ty, bob = 0) {
+    _steppedProgress(t) {
+        return Math.max(0, Math.min(1, Math.round(t * 6) / 6));
+    },
+
+    _directionFor(a, b) {
+        const dx = b.tx - a.tx;
+        const dy = b.ty - a.ty;
+        if (Math.abs(dx) > Math.abs(dy)) return dx >= 0 ? 'east' : 'west';
+        if (dy !== 0) return dy >= 0 ? 'south' : 'north';
+        return 'south';
+    },
+
+    _setPosition(appName, tx, ty, bob = 0, direction = 'south', frame = 0) {
         const node = this._nodeFor(appName);
         if (!node) return;
         const { x, y } = Iso.tileToScreen(tx, ty);
         const cy = y + Iso.TILE_H / 2 + 80 + bob;
         node.setAttribute('transform', `translate(${x.toFixed(1)} ${cy.toFixed(1)})`);
+        node.dataset.walking = 'true';
+        node.dataset.direction = direction;
+        node.dataset.walkFrame = String(frame);
     },
 
     _pollInterval: null,
