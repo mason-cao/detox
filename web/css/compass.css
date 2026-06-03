@@ -111,8 +111,12 @@
 .compass-toggle--subtab-hidden { display: none; }
 
 @media (max-width: 760px) {
+    .compass-toggle {
+        top: calc(var(--hud-top-h) + 160px);
+    }
+
     .compass {
-        top: calc(var(--hud-top-h) + 168px);
+        top: calc(var(--hud-top-h) + 208px);
         left: var(--sp-3);
         right: var(--sp-3);
         width: auto;

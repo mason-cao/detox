@@ -332,17 +332,50 @@
 }
 
 @media (max-width: 760px) {
-    .isle { margin: calc(var(--sp-4) * -1); }
-    .isle__stage { min-height: 0; }
-    .isle__datebar { right: var(--sp-4); }
-    .isle__date-label { flex: 1; min-width: 0; }
-    .isle__weather-badge {
-        top: 76px;
-        left: var(--sp-4);
-        right: var(--sp-4);
-        min-width: 0;
+    .isle {
+        grid-template-rows: auto auto auto auto;
+        align-content: start;
+        min-height: calc(100vh - var(--hud-top-h));
+        height: auto;
+        margin: calc(var(--sp-4) * -1);
+        padding: var(--sp-4);
+        overflow: visible;
+        background:
+            linear-gradient(to bottom,
+                var(--sky-top) 0%,
+                var(--sky-bottom) 38%,
+                rgba(91, 143, 185, 0.86) 39%,
+                rgba(46, 124, 166, 0.98) 100%);
     }
-    .isle__signboards { grid-template-columns: 1fr; }
+    .isle__stage {
+        order: 3;
+        min-height: 320px;
+        height: clamp(320px, 72vw, 460px);
+        box-shadow: 0 0 0 2px rgba(42, 30, 42, 0.2), inset 0 -18px 36px rgba(42, 30, 42, 0.16);
+    }
+    .isle__datebar {
+        position: static;
+        order: 1;
+        display: grid;
+        grid-template-columns: 36px minmax(0, 1fr) 36px;
+        align-items: stretch;
+        width: 100%;
+    }
+    .isle__date-button { width: 100%; }
+    .isle__date-label { min-width: 0; }
+    .isle__weather-badge {
+        position: static;
+        order: 2;
+        min-width: 0;
+        width: 100%;
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+    .isle__signboards {
+        position: static;
+        order: 4;
+        grid-template-columns: 1fr;
+    }
+    .isle-signboard { min-height: 72px; }
 }
 
 /* ── Buildings ───────────────────────────────────────────────────────── */
