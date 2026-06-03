@@ -1,6 +1,42 @@
 from pathlib import Path
 
 
+def test_pair_terminal_script_uses_bundle_pair_command_when_frozen(tmp_path):
+    from agent import menubar
+
+    app = tmp_path / "Detox.app"
+    app_exe = app / "Contents" / "MacOS" / "Detox"
+    python_exe = app / "Contents" / "MacOS" / "python"
+    app_exe.parent.mkdir(parents=True)
+    app_exe.write_text("")
+    python_exe.write_text("")
+
+    script = menubar._pair_terminal_script(
+        executable_path=str(python_exe),
+        frozen=True,
+    )
+
+    assert str(app_exe) in script
+    assert "--pair" in script
+    assert "python3 -m agent.cli.pair" not in script
+
+
+def test_pair_terminal_script_uses_source_module_command_in_dev(tmp_path):
+    from agent import menubar
+
+    source_file = tmp_path / "detox" / "agent" / "menubar.py"
+    source_file.parent.mkdir(parents=True)
+    source_file.write_text("")
+
+    script = menubar._pair_terminal_script(
+        source_file=str(source_file),
+        frozen=False,
+    )
+
+    assert f"cd {tmp_path / 'detox'}" in script
+    assert "-m agent.cli.pair" in script
+
+
 def test_sparkle_framework_path_prefers_bundled_framework(tmp_path):
     from agent import menubar
 

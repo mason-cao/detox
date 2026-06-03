@@ -86,12 +86,12 @@
 <body>
     <main class="pixel-panel pair-card" role="main">
         <h1>PAIR THIS MAC</h1>
-        <p>Run the agent CLI on the Mac you want to track. It'll ask for the code below.</p>
+        <p>In the Detox menu bar, choose <strong>Pair this device…</strong>, then paste the code below in the Terminal window.</p>
 
         <div class="pair-code" id="pairCode" data-state="loading">Generating code…</div>
         <div class="pair-meta" id="pairExpires">&nbsp;</div>
 
-        <pre class="pair-cli"><code>python3 -m agent.cli.pair</code></pre>
+        <pre class="pair-cli"><code>Source install: python3 -m agent.cli.pair</code></pre>
 
         <div class="pair-status" id="pairStatus" aria-live="polite">Waiting for the Mac to claim the code.</div>
 

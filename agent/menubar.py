@@ -1,6 +1,7 @@
 """rumps menu-bar app for local Detox monitoring."""
 
 import os
+import shlex
 import subprocess
 import sys
 import threading
@@ -53,6 +54,39 @@ def _sparkle_framework_path(executable_path=None, source_file=None):
         if os.path.exists(candidate):
             return candidate
     return candidates[0]
+
+
+def _source_root(source_file=None):
+    source_file = source_file or __file__
+    return os.path.dirname(os.path.dirname(os.path.abspath(source_file)))
+
+
+def _pair_shell_command(executable_path=None, source_file=None, frozen=None):
+    if frozen is None:
+        frozen = bool(getattr(sys, "frozen", False))
+    if frozen:
+        from agent.launch_agent import _bundle_executable_path
+
+        return " ".join(
+            shlex.quote(part)
+            for part in (_bundle_executable_path(executable_path), "--pair")
+        )
+
+    python_exe = executable_path or sys.executable
+    return (
+        f"cd {shlex.quote(_source_root(source_file))} && "
+        f"{shlex.quote(python_exe)} -m agent.cli.pair"
+    )
+
+
+def _pair_terminal_script(executable_path=None, source_file=None, frozen=None):
+    command = _pair_shell_command(
+        executable_path=executable_path,
+        source_file=source_file,
+        frozen=frozen,
+    )
+    escaped = command.replace("\\", "\\\\").replace('"', '\\"')
+    return f'tell application "Terminal" to do script "{escaped}"'
 
 
 class DetoxApp(rumps.App):
@@ -185,12 +219,7 @@ class DetoxApp(rumps.App):
             self._sync_pusher.start()
 
     def on_pair(self, _sender):
-        script = (
-            "tell application \"Terminal\" to do script "
-            "\"cd " + os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + " && "
-            "python3 -m agent.cli.pair\""
-        )
-        subprocess.run(["osascript", "-e", script], check=False)
+        subprocess.run(["osascript", "-e", _pair_terminal_script()], check=False)
 
     def on_sync_now(self, _sender):
         if not cloud.is_paired():
