@@ -196,9 +196,10 @@ const Market = {
         const key = String(item.key || item.item_key || item.name || category).toLowerCase();
         const rare = item.currency === 'starshard' || key.includes('star') || key.includes('moon') || key.includes('aurora') || key.includes('comet');
         const asset = path => `${this.ASSET_BASE}/${path}`;
-        const itemSprite = name => asset(`items/${name}.jpg`);
-        const stitchSprite = name => asset(`stitch/${name}.png`);
-        const residentSprite = role => asset(`residents/${role}.png`);
+        const itemSprite = () => asset('items.png');
+        const bazaarSprite = () => asset('bazaar.png');
+        const characterSheet = () => asset('characters.png');
+        const residentSprite = role => `/assets/sprites/residents/${role}.png`;
 
         if (category === 'outfit') {
             const roles = {
@@ -226,31 +227,32 @@ const Market = {
             return { src: residentSprite(roles[key] || 'wanderer'), kind: 'outfit' };
         }
 
-        if (category === 'building') return { src: stitchSprite('townhall'), kind: 'building' };
+        if (category === 'building') return { src: bazaarSprite(), kind: 'building' };
         if (key.includes('fence') || key.includes('dock') || key.includes('pier') || key.includes('bridge') || key.includes('booth') || key.includes('point')) {
-            return { src: stitchSprite('fence'), kind: 'building' };
+            return { src: itemSprite(), kind: 'building' };
         }
-        if (rare) return { src: stitchSprite('lantern'), kind: 'gem' };
+        if (rare) return { src: itemSprite(), kind: 'gem' };
         if (key.includes('lantern') || key.includes('light') || key.includes('charm') || key.includes('bell') || key.includes('chime') || category === 'weather') {
-            return { src: stitchSprite('lantern'), kind: 'weather' };
+            return { src: itemSprite(), kind: 'weather' };
         }
         if (key.includes('fence') || key.includes('dock') || key.includes('pier') || key.includes('bridge') || key.includes('lighthouse') || category === 'building') {
-            return { src: stitchSprite('fence'), kind: 'building' };
+            return { src: itemSprite(), kind: 'building' };
         }
         if (key.includes('sapling') || key.includes('plant') || key.includes('garden') || key.includes('grove') || key.includes('orchard') || key.includes('flower') || key.includes('herb') || key.includes('tree')) {
-            return { src: itemSprite('sapling'), kind: 'plant' };
+            return { src: itemSprite(), kind: 'plant' };
         }
         if (key.includes('path') || key.includes('lane') || key.includes('loop') || key.includes('meadow') || key.includes('marsh') || key.includes('steps') || key.includes('spring') || category === 'map') {
-            return { src: itemSprite('sapling'), kind: 'map' };
+            return { src: itemSprite(), kind: 'map' };
         }
 
         const byCategory = {
-            decor: stitchSprite('lantern'),
-            weather: stitchSprite('lantern'),
-            building: stitchSprite('townhall'),
-            map: itemSprite('sapling'),
+            decor: itemSprite(),
+            weather: itemSprite(),
+            building: bazaarSprite(),
+            map: itemSprite(),
+            outfit: characterSheet(),
         };
-        return { src: byCategory[category] || stitchSprite('lantern'), kind: category };
+        return { src: byCategory[category] || itemSprite(), kind: category };
     },
 
     assetPreview(item = {}) {
@@ -272,12 +274,12 @@ const Market = {
 
     sectionIcon(icon) {
         const assets = {
-            decor: `${this.ASSET_BASE}/stitch/lantern.png`,
-            outfit: `${this.ASSET_BASE}/residents/sheriff.png`,
-            weather: `${this.ASSET_BASE}/stitch/lantern.png`,
-            building: `${this.ASSET_BASE}/stitch/townhall.png`,
-            map: `${this.ASSET_BASE}/items/sapling.jpg`,
-            other: `${this.ASSET_BASE}/stitch/lantern.png`,
+            decor: `${this.ASSET_BASE}/items.png`,
+            outfit: '/assets/sprites/residents/sheriff.png',
+            weather: `${this.ASSET_BASE}/items.png`,
+            building: `${this.ASSET_BASE}/bazaar.png`,
+            map: `${this.ASSET_BASE}/items.png`,
+            other: `${this.ASSET_BASE}/items.png`,
         };
         return `<img src="${App.escapeAttr(assets[icon] || assets.other)}" alt="" loading="lazy">`;
     },
