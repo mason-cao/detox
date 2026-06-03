@@ -1,0 +1,45 @@
+# Detox <version>
+
+Public GitHub release for Detox Isle. This build is for Mac users who are comfortable installing an unsigned app from GitHub while signed Developer ID builds are still pending.
+
+## Downloads
+
+- `Detox-<version>.dmg` - primary Mac package
+- `Detox-<version>.app.zip` - fallback package if the DMG path has trouble
+
+## SHA256
+
+```text
+<sha256>  Detox-<version>.dmg
+<sha256>  Detox-<version>.app.zip
+```
+
+## Install
+
+1. Download `Detox-<version>.dmg`.
+2. Open the DMG and drag `Detox.app` into `/Applications`.
+3. Try to open `Detox.app` once. macOS will block it because the app is unsigned.
+4. Open **System Settings -> Privacy & Security**, scroll down to **Security**, then click **Open Anyway** for Detox.
+5. Open `Detox.app` again and confirm the warning.
+6. Grant Accessibility: **System Settings -> Privacy & Security -> Accessibility -> Detox**.
+7. Click the menu-bar lantern and choose **Open Dashboard**.
+
+If the DMG does not work, download `Detox-<version>.app.zip`, unzip it, move `Detox.app` into `/Applications`, then use the same **Open Anyway** flow.
+
+## Unsigned Build Notice
+
+This GitHub release is unsigned. macOS will warn that the developer cannot be verified. Signed and notarized builds are planned once Detox has an Apple Developer ID.
+
+## What's Included
+
+- Menu-bar Detox app with pause/resume, dashboard, logs, launch-at-login, cloud pairing, sync, and sign-out controls.
+- Local-first screen-time tracking using the Mac's frontmost app.
+- Detox Isle dashboard, residents, goals, blocks, market rewards, postcards, privacy controls, export, and delete.
+- Optional hosted dashboard pairing for users running a compatible cloud deployment.
+
+## Known Limitations
+
+- The app is unsigned and must be opened with the documented **Open Anyway** flow.
+- macOS Accessibility permission is required before usage appears.
+- Sparkle auto-update is not active for unsigned GitHub releases.
+- Homebrew cask distribution is deferred until signed builds exist.

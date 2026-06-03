@@ -58,17 +58,19 @@ Detox is a macOS screen-time tracker that polls your frontmost app every 2 secon
 
 ## Install
 
-### A. GitHub preview app (recommended)
+### A. GitHub app release (recommended)
 
-Detox is available as a public GitHub preview while signed Developer ID builds are still pending.
+Detox is available as an unsigned GitHub release while signed Developer ID builds are still pending.
 
-1. Download `Detox-preview-<version>.dmg` from [GitHub Releases](https://github.com/mason-cao/detox/releases). This is the primary preview package.
+1. Download `Detox-<version>.dmg` from [GitHub Releases](https://github.com/mason-cao/detox/releases). This is the primary Mac package.
 2. Open the DMG and drag `Detox.app` into `/Applications`.
-3. First launch: right-click `Detox.app`, choose **Open**, then confirm the macOS warning.
-4. Grant Accessibility when macOS asks: **System Settings -> Privacy & Security -> Accessibility -> Detox**.
-5. Click the Detox lantern in the menu bar and choose **Open Dashboard**.
+3. Try to open `Detox.app` once. macOS will block it because the app is unsigned.
+4. Open **System Settings -> Privacy & Security**, scroll down to **Security**, then click **Open Anyway** for Detox.
+5. Open `Detox.app` again and confirm the warning.
+6. Grant Accessibility when macOS asks: **System Settings -> Privacy & Security -> Accessibility -> Detox**.
+7. Click the Detox lantern in the menu bar and choose **Open Dashboard**.
 
-This preview is unsigned. macOS will say the developer cannot be verified until Detox has an Apple Developer ID. If the DMG gives you trouble, download `Detox-preview-<version>.app.zip`, unzip it, move `Detox.app` into `/Applications`, then use the same right-click **Open** flow.
+This GitHub release is unsigned. macOS will say the developer cannot be verified until Detox has an Apple Developer ID. If the DMG gives you trouble, download `Detox-<version>.app.zip`, unzip it, move `Detox.app` into `/Applications`, then use the same **Open Anyway** flow.
 
 ### B. Source install (fallback)
 
@@ -104,7 +106,7 @@ The agent's pairing CLI tells you the pair page URL based on the `DETOX_CLOUD_AP
 
 The monitor reads the frontmost app via `osascript`. macOS prompts on first run:
 
-**System Settings -> Privacy & Security -> Accessibility -> enable Detox** for the app preview, or enable Terminal (or whichever terminal app spawns the agent) for the source install.
+**System Settings -> Privacy & Security -> Accessibility -> enable Detox** for the GitHub app release, or enable Terminal (or whichever terminal app spawns the agent) for the source install.
 
 Without this, the agent runs but records nothing, and the menu-bar icon flips to 🚫.
 
@@ -287,9 +289,9 @@ detox/
 | 3 | py2app `.app` bundle + menu-bar + local sync queue + Sparkle/DMG scaffolding | ✅ shipped (signed release cert-gated) |
 | 4 | Auth + cloud — Supabase, RLS, ingest, rules puller, server-authoritative rewards, Railway deploy | ✅ shipped |
 | 5 | Privacy — Ghost Mode (hashed app names), full archive export, one-click delete, in-repo privacy/TOS docs | ✅ shipped |
-| 5+ | Public launch — GitHub preview DMG/zip now, signed DMG later | 🚧 in progress |
+| 5+ | Public launch — GitHub DMG/zip now, signed DMG later | 🚧 in progress |
 
-The GitHub preview ships an unsigned `Detox.app` inside a DMG, with a zip fallback. Signed/notarized builds, Sparkle updates, and a Homebrew cask still wait on an Apple Developer ID and release signing keys.
+The GitHub release ships an unsigned `Detox.app` inside a DMG, with a zip fallback. Signed/notarized builds, Sparkle updates, and a Homebrew cask still wait on an Apple Developer ID and release signing keys.
 
 **Cloud is single-tenant per deployment** — anyone signing in with a Supabase magic link gets routed to their own user row. There's no invite gate in the launch plan; if you stand up an instance and someone has the URL + a Supabase email, they get a separate account.
 

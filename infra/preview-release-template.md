@@ -18,11 +18,13 @@ Public GitHub preview for Detox Isle. This release is intended for Mac users who
 
 1. Download `Detox-preview-<version>.dmg`.
 2. Open the DMG and drag `Detox.app` into `/Applications`.
-3. First launch: right-click `Detox.app`, choose **Open**, then confirm the macOS warning.
-4. Grant Accessibility: **System Settings -> Privacy & Security -> Accessibility -> Detox**.
-5. Click the menu-bar lantern and choose **Open Dashboard**.
+3. First launch attempt: double-click `Detox.app` and let macOS show the unsigned-app warning.
+4. Open **System Settings -> Privacy & Security**, scroll down to **Security**, then click **Open Anyway** for Detox.
+5. Confirm the follow-up unsigned-app warning.
+6. Grant Accessibility: **System Settings -> Privacy & Security -> Accessibility -> Detox**.
+7. Click the menu-bar lantern and choose **Open Dashboard**.
 
-If the DMG does not work, download `Detox-preview-<version>.app.zip`, unzip it, move `Detox.app` into `/Applications`, then use the same right-click **Open** flow.
+If the DMG does not work, download `Detox-preview-<version>.app.zip`, unzip it, move `Detox.app` into `/Applications`, then use the same **Open Anyway** flow.
 
 ## Unsigned Build Notice
 
@@ -37,11 +39,7 @@ This preview build is unsigned. macOS will warn that the developer cannot be ver
 
 ## Known Limitations
 
-- The app is unsigned and must be opened with the documented right-click flow.
+- The app is unsigned and must be opened with the documented **Open Anyway** flow.
 - macOS Accessibility permission is required before usage appears.
 - Sparkle auto-update is not active for unsigned preview builds.
 - Homebrew cask distribution is deferred until signed builds exist.
-
-## Verification
-
-Before publishing this release, run `infra/preview-release-smoke.md` and confirm every publish gate passes.

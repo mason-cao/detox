@@ -35,10 +35,34 @@ INFO_PLIST = pathlib.Path(
     os.environ.get("DETOX_INFO_PLIST", BUILD_DIR / "Info.plist.tmpl")
 )
 SPARKLE_FRAMEWORK = BUILD_DIR / "Sparkle.framework"
+WEB_SOURCE_DIR = ROOT / "web"
+DOCS_SOURCE_DIR = ROOT / "docs"
+POLICY_DOCS = ("docs/privacy.md", "docs/terms.md")
+INCLUDE_SPARKLE = os.environ.get("DETOX_INCLUDE_SPARKLE") == "1"
+SPARKLE_FRAMEWORKS = (
+    [str(SPARKLE_FRAMEWORK)]
+    if INCLUDE_SPARKLE and (SPARKLE_FRAMEWORK / "Sparkle").exists()
+    else []
+)
 
-DATA_FILES = [
-    ("web", [str(p) for p in (ROOT / "web").rglob("*") if p.is_file()]),
-]
+
+def web_data_files():
+    grouped = {}
+    for path in WEB_SOURCE_DIR.rglob("*"):
+        if not path.is_file():
+            continue
+        relative_dir = path.parent.relative_to(WEB_SOURCE_DIR)
+        target_dir = pathlib.Path("web") / relative_dir
+        grouped.setdefault(str(target_dir), []).append(str(path))
+    return sorted(grouped.items())
+
+
+def docs_data_files():
+    files = [str(ROOT / relative_path) for relative_path in POLICY_DOCS]
+    return [(str(pathlib.Path("docs")), files)]
+
+
+DATA_FILES = web_data_files() + docs_data_files()
 
 OPTIONS = {
     "argv_emulation": False,
@@ -55,7 +79,7 @@ OPTIONS = {
         "pytest",
         "_pytest",
     ],
-    "frameworks": [str(SPARKLE_FRAMEWORK)] if (SPARKLE_FRAMEWORK / "Sparkle").exists() else [],
+    "frameworks": SPARKLE_FRAMEWORKS,
     "resources": [],
     "strip": True,
 }
