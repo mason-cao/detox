@@ -1,14 +1,49 @@
 import os
+import sys
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_DIR = os.path.join(BASE_DIR, "data")
+
+
+def _resolve_web_dir(base_dir):
+    candidates = [
+        os.path.join(base_dir, "web"),
+        os.path.abspath(os.path.join(base_dir, "..", "..", "web")),
+    ]
+    for candidate in candidates:
+        if os.path.isdir(candidate):
+            return candidate
+    return candidates[0]
+
+
+def _resolve_docs_dir(base_dir):
+    candidates = [
+        os.path.join(base_dir, "docs"),
+        os.path.abspath(os.path.join(base_dir, "..", "..", "docs")),
+    ]
+    for candidate in candidates:
+        if os.path.isdir(candidate):
+            return candidate
+    return candidates[0]
+
+
+def _resolve_data_dir(base_dir, frozen=None, home_dir=None):
+    if frozen is None:
+        frozen = bool(getattr(sys, "frozen", False))
+    if frozen:
+        home_dir = home_dir or os.path.expanduser("~")
+        return os.path.join(home_dir, "Library", "Application Support", "Detox")
+    return os.path.join(base_dir, "data")
+
+
+DATA_DIR = _resolve_data_dir(BASE_DIR)
 DB_PATH = os.path.join(DATA_DIR, "screentime.db")
 PID_FILE = os.path.join(DATA_DIR, "monitor.pid")
 LOG_PATH = os.path.join(DATA_DIR, "monitor.log")
 CARDS_DIR = os.path.join(DATA_DIR, "cards")
-WEB_DIR = os.path.join(BASE_DIR, "web")
+WEB_DIR = _resolve_web_dir(BASE_DIR)
+DOCS_DIR = _resolve_docs_dir(BASE_DIR)
 
-APP_VERSION = "1.0.0"
+APP_VERSION = os.environ.get("DETOX_APP_VERSION", "0.1.0")
 BUNDLE_IDENTIFIER = "com.detox.agent"
 LAUNCH_AGENT_PATH = os.path.expanduser(
     "~/Library/LaunchAgents/com.detox.agent.plist"

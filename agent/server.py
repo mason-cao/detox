@@ -11,10 +11,10 @@ from datetime import datetime, timedelta
 from flask import Flask, jsonify, request, send_from_directory
 
 from agent.config import (
-    BASE_DIR,
     CARDS_DIR,
     CHANGELOG_ENTRIES,
     DEFAULT_SETTINGS,
+    DOCS_DIR,
     WEB_DIR,
     MAX_IDLE_TIMEOUT_MINUTES,
     PID_FILE,
@@ -286,7 +286,7 @@ def serve_docs(filename):
     if not filename.endswith(".md") or "/" in filename or ".." in filename:
         return ("", 404)
     return send_from_directory(
-        os.path.join(BASE_DIR, "docs"),
+        DOCS_DIR,
         filename,
         mimetype="text/markdown; charset=utf-8",
     )

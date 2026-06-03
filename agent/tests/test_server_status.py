@@ -28,3 +28,17 @@ def test_status_uses_in_process_monitor_provider(tmp_path, monkeypatch):
 
     assert response.status_code == 200
     assert response.get_json() == {"monitor_running": True}
+
+
+def test_policy_docs_are_served_from_configured_docs_dir(tmp_path, monkeypatch):
+    from agent import server
+
+    docs_dir = tmp_path / "docs"
+    docs_dir.mkdir()
+    (docs_dir / "privacy.md").write_text("# Privacy\n")
+    monkeypatch.setattr(server, "DOCS_DIR", str(docs_dir))
+
+    response = server.app.test_client().get("/docs/privacy.md")
+
+    assert response.status_code == 200
+    assert response.text == "# Privacy\n"
