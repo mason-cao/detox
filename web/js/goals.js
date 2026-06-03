@@ -10,63 +10,87 @@ const Goals = {
         const bedtimeGoals = goals.filter(g => g.type === 'bedtime');
 
         container.innerHTML = `
-            <div class="fade-in">
+            <div class="fade-in charter-view">
                 <div class="page-bar">
                     ${App.backToIsleButton()}
                     <h1 class="page-heading">The Town Charter</h1>
                 </div>
 
-                <div class="charter-section">
-                    <div class="charter-section__header">
-                        <h2 class="charter-section__title">DAILY SCREEN-TIME DECREE</h2>
-                        ${dailyGoals.length === 0 ? `<button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Goals.addDailyGoal())">ISSUE</button>` : ''}
-                    </div>
-                    ${dailyGoals.length > 0 ? dailyGoals.map(g => `
-                        <div class="decree">
-                            <div>
-                                <div class="decree__kind">DAILY LIMIT</div>
-                                <div class="decree__body">${App.formatTime(g.target_minutes)} per day</div>
-                            </div>
-                            <button class="pixel-button pixel-button--danger" onclick="App.runAction(() => Goals.removeGoal(${g.id}))">REPEAL</button>
+                <div class="charter-scroll">
+                    <div class="charter-scroll__rod charter-scroll__rod--top" aria-hidden="true"></div>
+                    <div class="charter-scroll__paper">
+                        <div class="charter-scroll__crest" aria-hidden="true">
+                            <span></span>
+                            <span></span>
+                            <span></span>
                         </div>
-                    `).join('') : `<div class="decree-empty">No daily decree. Issue one to be warned when you exceed it.</div>`}
-                </div>
 
-                <div class="charter-section">
-                    <div class="charter-section__header">
-                        <h2 class="charter-section__title">PER-RESIDENT DECREES</h2>
-                        <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Goals.addAppLimit())">ADD</button>
-                    </div>
-                    ${appGoals.length > 0 ? appGoals.map(g => `
-                        <div class="decree">
-                            <div>
-                                <div class="decree__kind">APP LIMIT</div>
-                                <div class="decree__body">${App.escapeHtml(g.app_name)} — ${App.formatTime(g.target_minutes)}/day</div>
+                        <div class="charter-section charter-section--daily">
+                            <div class="charter-section__header">
+                                <div class="charter-section__heading">
+                                    <span class="charter-section__sigil" aria-hidden="true">DAY</span>
+                                    <h2 class="charter-section__title">DAILY SCREEN-TIME DECREE</h2>
+                                </div>
+                                ${dailyGoals.length === 0 ? `<button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Goals.addDailyGoal())">ISSUE</button>` : ''}
                             </div>
-                            <button class="pixel-button pixel-button--danger" onclick="App.runAction(() => Goals.removeGoal(${g.id}))">REPEAL</button>
+                            ${dailyGoals.length > 0 ? dailyGoals.map(g => `
+                                <div class="decree decree--daily">
+                                    <div class="decree__seal" aria-hidden="true">D</div>
+                                    <div class="decree__text">
+                                        <div class="decree__kind">DAILY LIMIT</div>
+                                        <div class="decree__body">${App.formatTime(g.target_minutes)} per day</div>
+                                    </div>
+                                    <button class="pixel-button pixel-button--danger" onclick="App.runAction(() => Goals.removeGoal(${g.id}))">REPEAL</button>
+                                </div>
+                            `).join('') : `<div class="decree-empty">No daily decree. Issue one to be warned when you exceed it.</div>`}
                         </div>
-                    `).join('') : `<div class="decree-empty">No per-resident decrees in effect.</div>`}
-                </div>
 
-                <div class="charter-section">
-                    <div class="charter-section__header">
-                        <h2 class="charter-section__title">BEDTIME BELL</h2>
-                        ${bedtimeGoals.length === 0 ? `<button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Goals.addBedtime())">SET</button>` : ''}
-                    </div>
-                    ${bedtimeGoals.length > 0 ? bedtimeGoals.map(g => {
-                        const hr = g.bedtime_hour;
-                        const min = (g.bedtime_minute || 0).toString().padStart(2, '0');
-                        const ampm = hr >= 12 ? 'PM' : 'AM';
-                        const h12 = hr > 12 ? hr - 12 : (hr === 0 ? 12 : hr);
-                        return `
-                        <div class="decree">
-                            <div>
-                                <div class="decree__kind">BEDTIME</div>
-                                <div class="decree__body">${h12}:${min} ${ampm}</div>
+                        <div class="charter-section charter-section--resident">
+                            <div class="charter-section__header">
+                                <div class="charter-section__heading">
+                                    <span class="charter-section__sigil" aria-hidden="true">APP</span>
+                                    <h2 class="charter-section__title">PER-RESIDENT DECREES</h2>
+                                </div>
+                                <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Goals.addAppLimit())">ADD</button>
                             </div>
-                            <button class="pixel-button pixel-button--danger" onclick="App.runAction(() => Goals.removeGoal(${g.id}))">REPEAL</button>
-                        </div>`;
-                    }).join('') : `<div class="decree-empty">No bedtime bell set.</div>`}
+                            ${appGoals.length > 0 ? appGoals.map(g => `
+                                <div class="decree decree--resident">
+                                    <div class="decree__seal" aria-hidden="true">R</div>
+                                    <div class="decree__text">
+                                        <div class="decree__kind">APP LIMIT</div>
+                                        <div class="decree__body">${App.escapeHtml(g.app_name)}: ${App.formatTime(g.target_minutes)}/day</div>
+                                    </div>
+                                    <button class="pixel-button pixel-button--danger" onclick="App.runAction(() => Goals.removeGoal(${g.id}))">REPEAL</button>
+                                </div>
+                            `).join('') : `<div class="decree-empty">No per-resident decrees in effect.</div>`}
+                        </div>
+
+                        <div class="charter-section charter-section--bedtime">
+                            <div class="charter-section__header">
+                                <div class="charter-section__heading">
+                                    <span class="charter-section__sigil" aria-hidden="true">BELL</span>
+                                    <h2 class="charter-section__title">BEDTIME BELL</h2>
+                                </div>
+                                ${bedtimeGoals.length === 0 ? `<button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Goals.addBedtime())">SET</button>` : ''}
+                            </div>
+                            ${bedtimeGoals.length > 0 ? bedtimeGoals.map(g => {
+                                const hr = g.bedtime_hour;
+                                const min = (g.bedtime_minute || 0).toString().padStart(2, '0');
+                                const ampm = hr >= 12 ? 'PM' : 'AM';
+                                const h12 = hr > 12 ? hr - 12 : (hr === 0 ? 12 : hr);
+                                return `
+                                <div class="decree decree--bedtime">
+                                    <div class="decree__seal" aria-hidden="true">B</div>
+                                    <div class="decree__text">
+                                        <div class="decree__kind">BEDTIME</div>
+                                        <div class="decree__body">${h12}:${min} ${ampm}</div>
+                                    </div>
+                                    <button class="pixel-button pixel-button--danger" onclick="App.runAction(() => Goals.removeGoal(${g.id}))">REPEAL</button>
+                                </div>`;
+                            }).join('') : `<div class="decree-empty">No bedtime bell set.</div>`}
+                        </div>
+                    </div>
+                    <div class="charter-scroll__rod charter-scroll__rod--bottom" aria-hidden="true"></div>
                 </div>
             </div>
         `;
@@ -152,7 +176,7 @@ const Goals = {
         });
         App.invalidateAppSuggestions();
         document.querySelector('.modal-overlay').remove();
-        App.toast(`Limit set: ${appName} — ${App.formatTime(total)}/day`, 'success');
+        App.toast(`Limit set: ${appName}: ${App.formatTime(total)}/day`, 'success');
         if (App.currentTab === 'goals') {
             const content = document.getElementById('content');
             await this.render(content);
@@ -208,8 +232,6 @@ const Goals = {
         this.render(document.getElementById('content'));
     },
 
-    // Stamp a wax seal at the top of the Charter view. Caller passes the
-    // freshly re-rendered content element so the seal lands on the new DOM.
     _celebrateSave(content) {
         const host = content?.querySelector('.fade-in');
         if (!host) return;

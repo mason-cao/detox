@@ -8,7 +8,7 @@ const Cards = {
         const date = App.currentDate;
 
         container.innerHTML = `
-            <div class="fade-in">
+            <div class="fade-in postcard-view">
                 <div class="page-bar">
                     ${App.backToIsleButton()}
                     <h1 class="page-heading">Postcards</h1>
@@ -19,28 +19,45 @@ const Cards = {
                     </div>
                 </div>
 
-                <div class="postcard-intro">
-                    <div class="postcard-compose">
-                        <div class="postcard-compose__art" aria-hidden="true">
-                            <svg viewBox="0 0 190 132" role="presentation">
-                                <rect x="5" y="6" width="180" height="120"></rect>
-                                <path class="postcard-compose__sea" d="M10 84 C38 75 58 96 86 85 S138 76 180 92"></path>
-                                <path class="postcard-compose__sand" d="M30 82 C40 48 88 34 128 48 C162 60 166 88 132 104 C92 122 18 106 30 82 Z"></path>
-                                <path class="postcard-compose__grass" d="M58 82 L92 56 L132 76 L98 102 Z"></path>
-                                <path class="postcard-compose__path" d="M70 84 L96 70 L120 80"></path>
-                                <circle class="postcard-compose__sun" cx="148" cy="30" r="11"></circle>
-                                <path class="postcard-compose__stamp" d="M22 24 H52 V50 H22 Z"></path>
-                            </svg>
+                <div class="postcard-workbench">
+                    <div class="postcard-workbench__rail" aria-hidden="true">
+                        <span>ISLE POST</span>
+                        <span>STAMP DESK</span>
+                    </div>
+                    <div class="postcard-intro">
+                        <div class="postcard-compose">
+                            <div class="postcard-compose__pixel-grid" aria-hidden="true"></div>
+                            <div class="postcard-compose__art" aria-hidden="true">
+                                <svg viewBox="0 0 190 132" role="presentation">
+                                    <rect x="5" y="6" width="180" height="120"></rect>
+                                    <path class="postcard-compose__sea" d="M10 86 H34 V80 H58 V88 H86 V82 H118 V88 H180"></path>
+                                    <path class="postcard-compose__sand" d="M32 82 H48 V64 H66 V52 H104 V44 H130 V54 H150 V78 H164 V94 H144 V106 H88 V116 H44 V104 H26 V92 H32 Z"></path>
+                                    <path class="postcard-compose__grass" d="M58 82 H74 V70 H92 V58 H116 V70 H132 V84 H112 V96 H84 V92 H58 Z"></path>
+                                    <path class="postcard-compose__path" d="M70 84 H86 V76 H106 V80 H122"></path>
+                                    <circle class="postcard-compose__sun" cx="150" cy="30" r="10"></circle>
+                                    <path class="postcard-compose__stamp" d="M20 22 H54 V52 H20 Z"></path>
+                                    <path class="postcard-compose__flag" d="M118 48 H138 V62 H118 Z M118 62 V88"></path>
+                                </svg>
+                            </div>
+                            <div class="postcard-compose__copy">
+                                <span class="postcard-compose__eyebrow">Detox Isle Post</span>
+                                <h2>Greetings from the Isle</h2>
+                                <p>Stamp today's screen-time report as a pixel postcard from your island desk.</p>
+                                <div class="postcard-stamp-sheet" aria-hidden="true">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                                <button class="pixel-button pixel-button--primary" onclick="Cards.generate('${date}')" id="generateBtn">
+                                    STAMP POSTCARD
+                                </button>
+                            </div>
+                            <div class="postcard-compose__seal" aria-hidden="true">D</div>
                         </div>
-                        <div class="postcard-compose__copy">
-                            <span class="postcard-compose__eyebrow">Detox Isle Post</span>
-                            <h2>Greetings from the Isle</h2>
-                            <p>Stamp today's screen-time report as a warm island postcard.</p>
-                            <button class="pixel-button pixel-button--primary" onclick="Cards.generate('${date}')" id="generateBtn">
-                                STAMP POSTCARD
-                            </button>
-                        </div>
-                        <div class="postcard-compose__seal" aria-hidden="true">D</div>
+                    </div>
+                    <div class="postcard-workbench__pouches" aria-hidden="true">
+                        <span></span>
+                        <span></span>
                     </div>
                 </div>
 

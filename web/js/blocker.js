@@ -25,6 +25,9 @@ const Blocker = {
         const ruleEntry = (block, { allow = false } = {}) => {
             const appName = App.escapeHtml(block.app_name);
             const firstLetter = App.escapeHtml(block.app_name.charAt(0).toUpperCase());
+            const symbolMarkup = typeof AppSymbols !== 'undefined'
+                ? AppSymbols.badge({ app_name: block.app_name })
+                : firstLetter;
             const detail = allow
                 ? 'Gate stays open during lockdown'
                 : block.daily_limit_minutes
@@ -34,7 +37,9 @@ const Blocker = {
 
             return `
                 <div class="rule-entry${allow ? ' rule-entry--allow' : ''}" data-app-name="${App.escapeAttr(block.app_name)}">
-                    <div class="rule-entry__portrait"${portraitStyle}>${firstLetter}</div>
+                    <div class="rule-entry__portrait"${portraitStyle}>
+                        <span class="rule-entry__symbol">${symbolMarkup}</span>
+                    </div>
                     <div>
                         <div class="rule-entry__name">${appName}</div>
                         <div class="rule-entry__detail">${detail}</div>
@@ -47,10 +52,14 @@ const Blocker = {
         };
 
         container.innerHTML = `
-            <div class="fade-in">
+            <div class="fade-in rule-board-shell">
                 <div class="page-bar">
                     ${App.backToIsleButton()}
                     <h1 class="page-heading">The Rule Board</h1>
+                </div>
+
+                <div class="rule-board-shell__chalk" aria-hidden="true">
+                    <span></span><span></span><span></span>
                 </div>
 
                 ${whitelistMode ? `
@@ -63,60 +72,75 @@ const Blocker = {
                     </div>
                 ` : ''}
 
-                <div class="rule-toggle-panel">
-                    <div>
-                        <div class="rule-toggle-panel__title">FULL LOCKDOWN</div>
-                        <div class="rule-toggle-panel__detail">Close every resident except whitelisted ones.</div>
+                <div class="rule-board-shell__frame">
+                    <div class="rule-toggle-panel">
+                        <div>
+                            <div class="rule-toggle-panel__title">FULL LOCKDOWN</div>
+                            <div class="rule-toggle-panel__detail">Close every resident except whitelisted ones.</div>
+                        </div>
+                        <label class="rule-board__toggle" aria-label="Toggle full lockdown">
+                            <input type="checkbox" ${whitelistMode ? 'checked' : ''} onchange="App.runAction(() => Blocker.toggleWhitelist(event.target.checked))">
+                            <span class="rule-board__knob" aria-hidden="true"></span>
+                        </label>
                     </div>
-                    <label class="rule-board__toggle" aria-label="Toggle full lockdown">
-                        <input type="checkbox" ${whitelistMode ? 'checked' : ''} onchange="App.runAction(() => Blocker.toggleWhitelist(event.target.checked))">
-                        <span class="rule-board__knob" aria-hidden="true"></span>
-                    </label>
-                </div>
 
-                <div class="charter-section__header">
-                    <h2 class="charter-section__title">BLOCKED RESIDENTS</h2>
-                    <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Blocker.addBlock())">ADD</button>
-                </div>
-                <p class="rule-board__copy">These residents are sent home on sight.</p>
-                ${blockedApps.length > 0 ? `
-                    <div class="rule-list">
-                        ${blockedApps.map(b => ruleEntry(b)).join('')}
-                    </div>
-                ` : `
-                    <div class="rule-empty">No residents are banished.</div>
-                `}
-
-                <div class="charter-section__header">
-                    <h2 class="charter-section__title">WHITELISTED RESIDENTS</h2>
-                    <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Blocker.addWhitelist())">ADD</button>
-                </div>
-                <p class="rule-board__copy">These residents are always allowed, even in lockdown.</p>
-                ${whitelisted.length > 0 ? `
-                    <div class="rule-list">
-                        ${whitelisted.map(b => ruleEntry(b, { allow: true })).join('')}
-                    </div>
-                ` : `
-                    <div class="rule-empty">No residents are cleared for lockdown.</div>
-                `}
-
-                <div class="charter-section__header">
-                    <h2 class="charter-section__title">CATEGORY DECREES</h2>
-                </div>
-                <p class="rule-board__copy">Block every resident in a category at once.</p>
-                <div class="category-grid">
-                    ${categoryNames.map(cat => {
-                        const isBlocked = blockedCategories.has(cat);
-                        const catArg = App.inlineArg(cat);
-                        return `
-                        <button type="button" class="category-tile${isBlocked ? ' category-tile--blocked' : ''}" onclick="App.runAction(() => Blocker.toggleCategory(${catArg}, ${!isBlocked}))">
+                    <section class="rule-board-section rule-board-section--blocked">
+                        <div class="rule-board-section__header">
                             <div>
-                                <div class="category-tile__name">${App.escapeHtml(cat)}</div>
-                                <div class="category-tile__state">${isBlocked ? 'BLOCKED' : 'ALLOWED'}</div>
+                                <h2 class="rule-board-section__title">BLOCKED RESIDENTS</h2>
+                                <p class="rule-board__copy">These residents are sent home on sight.</p>
                             </div>
-                            <div class="category-tile__dot"></div>
-                        </button>`;
-                    }).join('')}
+                            <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Blocker.addBlock())">ADD</button>
+                        </div>
+                        ${blockedApps.length > 0 ? `
+                            <div class="rule-list">
+                                ${blockedApps.map(b => ruleEntry(b)).join('')}
+                            </div>
+                        ` : `
+                            <div class="rule-empty">No residents are banished.</div>
+                        `}
+                    </section>
+
+                    <section class="rule-board-section rule-board-section--allow">
+                        <div class="rule-board-section__header">
+                            <div>
+                                <h2 class="rule-board-section__title">WHITELISTED RESIDENTS</h2>
+                                <p class="rule-board__copy">These residents are always allowed, even in lockdown.</p>
+                            </div>
+                            <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Blocker.addWhitelist())">ADD</button>
+                        </div>
+                        ${whitelisted.length > 0 ? `
+                            <div class="rule-list">
+                                ${whitelisted.map(b => ruleEntry(b, { allow: true })).join('')}
+                            </div>
+                        ` : `
+                            <div class="rule-empty">No residents are cleared for lockdown.</div>
+                        `}
+                    </section>
+
+                    <section class="rule-board-section rule-board-section--categories">
+                        <div class="rule-board-section__header">
+                            <div>
+                                <h2 class="rule-board-section__title">CATEGORY DECREES</h2>
+                                <p class="rule-board__copy">Block every resident in a category at once.</p>
+                            </div>
+                        </div>
+                        <div class="category-grid">
+                            ${categoryNames.map(cat => {
+                                const isBlocked = blockedCategories.has(cat);
+                                const catArg = App.inlineArg(cat);
+                                return `
+                                <button type="button" class="category-tile${isBlocked ? ' category-tile--blocked' : ''}" onclick="App.runAction(() => Blocker.toggleCategory(${catArg}, ${!isBlocked}))">
+                                    <div class="category-tile__rail" aria-hidden="true"></div>
+                                    <div>
+                                        <div class="category-tile__name">${App.escapeHtml(cat)}</div>
+                                        <div class="category-tile__state">${isBlocked ? 'BLOCKED' : 'ALLOWED'}</div>
+                                    </div>
+                                    <div class="category-tile__dot"></div>
+                                </button>`;
+                            }).join('')}
+                        </div>
+                    </section>
                 </div>
             </div>
         `;

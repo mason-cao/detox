@@ -14,65 +14,84 @@ const Stats = {
         ]);
 
         container.innerHTML = `
-            <div class="fade-in">
+            <div class="fade-in chronicle-view">
                 <div class="page-bar">
                     ${App.backToIsleButton()}
                     <h1 class="page-heading">The Chronicle</h1>
                 </div>
-                <div class="page-bar">
-                    <div class="chronicle-toggle">
-                        <button class="${this.view === 'daily' ? 'is-active' : ''}" onclick="Stats.view='daily'; Stats.render(document.getElementById('content'))">DAILY</button>
-                        <button class="${this.view === 'weekly' ? 'is-active' : ''}" onclick="Stats.view='weekly'; Stats.render(document.getElementById('content'))">WEEKLY</button>
+                <div class="chronicle-ledger chronicle-ledger--${this.view}">
+                    <div class="chronicle-ledger__spine" aria-hidden="true">
+                        <span></span><span></span><span></span><span></span>
                     </div>
-                    <div class="chronicle-datenav">
-                        <button class="pixel-button" onclick="App.prevDate()">&#8249;</button>
-                        <span>${App.formatDate(date)}</span>
-                        <button class="pixel-button" onclick="App.nextDate()">&#8250;</button>
+                    <div class="chronicle-ledger__page">
+                        <div class="chronicle-ledger__tools">
+                            <div class="chronicle-toggle">
+                                <button class="${this.view === 'daily' ? 'is-active' : ''}" onclick="Stats.view='daily'; Stats.render(document.getElementById('content'))">DAILY</button>
+                                <button class="${this.view === 'weekly' ? 'is-active' : ''}" onclick="Stats.view='weekly'; Stats.render(document.getElementById('content'))">WEEKLY</button>
+                            </div>
+                            <div class="chronicle-datenav">
+                                <button class="pixel-button" onclick="App.prevDate()">&#8249;</button>
+                                <span>${App.formatDate(date)}</span>
+                                <button class="pixel-button" onclick="App.nextDate()">&#8250;</button>
+                            </div>
+                        </div>
+                        ${this.view === 'daily' ? this.renderDaily(daily) : this.renderWeekly(weekly)}
                     </div>
                 </div>
-                ${this.view === 'daily' ? this.renderDaily(daily) : this.renderWeekly(weekly)}
             </div>
         `;
     },
 
     renderDaily(stats) {
         return `
+            <div class="chronicle-map-strip" aria-hidden="true">
+                <span>sunrise</span>
+                <span>noon</span>
+                <span>dusk</span>
+            </div>
             <div class="chronicle-hero">
                 <div class="chronicle-hero__label">TOTAL SCREEN TIME</div>
                 <div class="chronicle-hero__value">${App.formatTime(stats.total_minutes)}</div>
             </div>
-            <div class="chronicle-grid">
-                <div class="chronicle-tile">
+            <div class="chronicle-grid chronicle-grid--daily">
+                <div class="chronicle-tile chronicle-tile--pickups">
+                    <div class="chronicle-tile__stamp" aria-hidden="true">P</div>
                     <div class="chronicle-tile__label">PICKUPS</div>
                     <div class="chronicle-tile__value">${stats.pickups_count}</div>
                     <div class="chronicle-tile__detail">times today</div>
                 </div>
-                <div class="chronicle-tile">
+                <div class="chronicle-tile chronicle-tile--pace">
+                    <div class="chronicle-tile__stamp" aria-hidden="true">C</div>
                     <div class="chronicle-tile__label">CHECKING EVERY</div>
-                    <div class="chronicle-tile__value">${stats.checking_every_minutes || '—'}</div>
+                    <div class="chronicle-tile__value">${stats.checking_every_minutes || '--'}</div>
                     <div class="chronicle-tile__detail">minutes</div>
                 </div>
-                <div class="chronicle-tile">
+                <div class="chronicle-tile chronicle-tile--detox">
+                    <div class="chronicle-tile__stamp" aria-hidden="true">D</div>
                     <div class="chronicle-tile__label">LONGEST DETOX</div>
                     <div class="chronicle-tile__value">${App.formatTime(stats.longest_detox_minutes)}</div>
                     <div class="chronicle-tile__detail">away from screen</div>
                 </div>
-                <div class="chronicle-tile">
+                <div class="chronicle-tile chronicle-tile--session">
+                    <div class="chronicle-tile__stamp" aria-hidden="true">S</div>
                     <div class="chronicle-tile__label">CONTINUOUS USE</div>
                     <div class="chronicle-tile__value">${App.formatTime(stats.continuous_use_minutes)}</div>
                     <div class="chronicle-tile__detail">longest session</div>
                 </div>
-                <div class="chronicle-tile">
+                <div class="chronicle-tile chronicle-tile--first">
+                    <div class="chronicle-tile__stamp" aria-hidden="true">AM</div>
                     <div class="chronicle-tile__label">FIRST PICKUP</div>
-                    <div class="chronicle-tile__value">${stats.first_pickup || '—'}</div>
+                    <div class="chronicle-tile__value">${stats.first_pickup || '--'}</div>
                 </div>
-                <div class="chronicle-tile">
+                <div class="chronicle-tile chronicle-tile--last">
+                    <div class="chronicle-tile__stamp" aria-hidden="true">PM</div>
                     <div class="chronicle-tile__label">LAST PICKUP</div>
-                    <div class="chronicle-tile__value">${stats.last_pickup || '—'}</div>
+                    <div class="chronicle-tile__value">${stats.last_pickup || '--'}</div>
                 </div>
-                <div class="chronicle-tile">
+                <div class="chronicle-tile chronicle-tile--used">
+                    <div class="chronicle-tile__stamp" aria-hidden="true">TOP</div>
                     <div class="chronicle-tile__label">MOST USED</div>
-                    <div class="chronicle-tile__value" style="font-size: var(--fs-lg);">${stats.most_used_app ? App.escapeHtml(stats.most_used_app) : '—'}</div>
+                    <div class="chronicle-tile__value chronicle-tile__value--name">${stats.most_used_app ? App.escapeHtml(stats.most_used_app) : '--'}</div>
                 </div>
             </div>
         `;
@@ -81,27 +100,39 @@ const Stats = {
     renderWeekly(weekly) {
         setTimeout(() => this.renderWeeklyChart(weekly), 0);
         return `
-            <div class="chronicle-grid">
-                <div class="chronicle-tile">
+            <div class="chronicle-map-strip chronicle-map-strip--weekly" aria-hidden="true">
+                <span>mon</span>
+                <span>wed</span>
+                <span>sun</span>
+            </div>
+            <div class="chronicle-grid chronicle-grid--weekly">
+                <div class="chronicle-tile chronicle-tile--average">
+                    <div class="chronicle-tile__stamp" aria-hidden="true">AVG</div>
                     <div class="chronicle-tile__label">DAILY AVERAGE</div>
                     <div class="chronicle-tile__value">${App.formatTime(weekly.daily_average)}</div>
                 </div>
-                <div class="chronicle-tile">
+                <div class="chronicle-tile chronicle-tile--total">
+                    <div class="chronicle-tile__stamp" aria-hidden="true">SUM</div>
                     <div class="chronicle-tile__label">WEEKLY TOTAL</div>
                     <div class="chronicle-tile__value">${App.formatTime(weekly.weekly_total)}</div>
                 </div>
-                <div class="chronicle-tile">
+                <div class="chronicle-tile chronicle-tile--shortest">
+                    <div class="chronicle-tile__stamp" aria-hidden="true">LOW</div>
                     <div class="chronicle-tile__label">SHORTEST DAY</div>
                     <div class="chronicle-tile__value">${App.formatTime(weekly.shortest_day)}</div>
                 </div>
-                <div class="chronicle-tile">
+                <div class="chronicle-tile chronicle-tile--longest">
+                    <div class="chronicle-tile__stamp" aria-hidden="true">HIGH</div>
                     <div class="chronicle-tile__label">LONGEST DAY</div>
                     <div class="chronicle-tile__value">${App.formatTime(weekly.longest_day)}</div>
                 </div>
             </div>
 
-            <div class="chronicle-chart">
-                <h3>DAILY BREAKDOWN</h3>
+            <div class="chronicle-chart chronicle-chart--ledger">
+                <div class="chronicle-chart__titlebar">
+                    <h3>DAILY BREAKDOWN</h3>
+                    <span>7 day log</span>
+                </div>
                 <div class="chart-wrapper" style="position: relative;">
                     <canvas id="weeklyStatsChart"></canvas>
                     <span class="effect-quill" data-role="quill" aria-hidden="true">

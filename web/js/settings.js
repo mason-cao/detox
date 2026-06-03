@@ -12,7 +12,6 @@ const Settings = {
         const idleTimeout = Number.isFinite(parsedIdleTimeout) ? Math.min(120, Math.max(0, parsedIdleTimeout)) : 5;
         const ghostMode = String(settings.ghost_mode ?? '0') === '1';
 
-        // Group categories
         const catGroups = {};
         categories.forEach(c => {
             if (!catGroups[c.category]) catGroups[c.category] = [];
@@ -25,163 +24,207 @@ const Settings = {
         const weekAgo = toLocalDateString(weekAgoDate);
 
         container.innerHTML = `
-            <div class="fade-in">
+            <div class="fade-in study-view">
                 <div class="page-bar">
                     ${App.backToIsleButton()}
                     <h1 class="page-heading">The Mayor's Study</h1>
                 </div>
 
-                <div class="study-section">
-                    <div class="study-section__header">
-                        <h2 class="study-section__title">TRACKING</h2>
+                <div class="study-room">
+                    <div class="study-room__shelves" aria-hidden="true">
+                        <span></span><span></span><span></span><span></span>
                     </div>
-                    <div class="study-panel">
-                        <div class="study-row">
-                            <div>
-                                <div class="study-row__label">IDLE DETECTION</div>
-                                <div class="study-row__detail">Stop counting screen time after no keyboard or pointer activity.</div>
-                            </div>
-                        </div>
-                        <div class="study-form">
-                            <div class="pixel-modal__group">
-                                <label class="pixel-modal__label">IDLE TIMEOUT (min)</label>
-                                <input class="pixel-modal__input" type="number" id="idleTimeoutMinutes" min="0" max="120" value="${idleTimeout}">
-                            </div>
-                            <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Settings.saveIdleTimeout())">SAVE</button>
-                        </div>
-                        <div class="study-row__detail">Use 0 minutes to disable idle detection.</div>
-                    </div>
-                </div>
 
-                <div class="study-section">
-                    <div class="study-section__header">
-                        <h2 class="study-section__title">PRIVACY</h2>
-                    </div>
-                    <div class="study-panel">
-                        <div class="study-row">
-                            <div>
-                                <div class="study-row__label">GHOST MODE</div>
-                                <div class="study-row__detail">Hash app names before they leave this Mac. The cloud sees opaque tokens; this dashboard still shows real names because it reads the local file.</div>
-                            </div>
-                            <label class="rule-board__toggle" aria-label="Toggle Ghost Mode">
-                                <input type="checkbox" id="ghostModeToggle" ${ghostMode ? 'checked' : ''} onchange="App.runAction(() => Settings.toggleGhostMode(this.checked))">
-                                <span class="rule-board__knob" aria-hidden="true"></span>
-                            </label>
-                        </div>
-                        <div class="study-row__detail">Salt stays on this device — see <a href="/docs/privacy.md" target="_blank" rel="noopener">privacy policy</a> for trade-offs.</div>
-                    </div>
-                </div>
-
-                <div class="study-section">
-                    <div class="study-section__header">
-                        <h2 class="study-section__title">DATA EXPORT</h2>
-                    </div>
-                    <div class="study-panel">
-                        <div class="study-row">
-                            <div>
-                                <div class="study-row__label">EXPORT YOUR DATA</div>
-                                <div class="study-row__detail">Download a CSV or JSON dump of your sessions.</div>
-                            </div>
-                        </div>
-                        <div class="study-form">
-                            <div class="pixel-modal__group">
-                                <label class="pixel-modal__label">START DATE</label>
-                                <input class="pixel-modal__input" type="date" id="exportStart" value="${weekAgo}">
-                            </div>
-                            <div class="pixel-modal__group">
-                                <label class="pixel-modal__label">END DATE</label>
-                                <input class="pixel-modal__input" type="date" id="exportEnd" value="${today}">
-                            </div>
-                            <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Settings.exportData('csv'))">EXPORT CSV</button>
-                            <button class="pixel-button" onclick="App.runAction(() => Settings.exportData('json'))">EXPORT JSON</button>
-                        </div>
-                        <div class="study-row">
-                            <div>
-                                <div class="study-row__label">FULL ARCHIVE</div>
-                                <div class="study-row__detail">Download every row stored for this account in one JSON file.</div>
-                            </div>
-                            <button class="pixel-button" onclick="App.runAction(() => Settings.exportFull())">DOWNLOAD ARCHIVE</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="study-section">
-                    <div class="study-section__header">
-                        <h2 class="study-section__title">DANGER ZONE</h2>
-                    </div>
-                    <div class="study-panel">
-                        <div class="study-row">
-                            <div>
-                                <div class="study-row__label">DELETE ALL DATA</div>
-                                <div class="study-row__detail">Wipe every session, decree, and reward this account holds. This cannot be undone.</div>
-                            </div>
-                            <button class="pixel-button pixel-button--danger" onclick="App.runAction(() => Settings.confirmDelete())">DELETE EVERYTHING</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="study-section">
-                    <div class="study-section__header">
-                        <h2 class="study-section__title">CATEGORIES</h2>
-                        <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Settings.addCategory())">CATEGORIZE</button>
-                    </div>
-                    <p class="rule-board__copy">Assign residents to categories for decrees and the Chronicle breakdown.</p>
-                    <div class="category-catalog">
-                        ${Object.entries(catGroups).map(([cat, apps]) => {
-                            const categoryName = App.escapeHtml(cat);
-                            const appList = apps.slice(0, 8).map(app => App.escapeHtml(app)).join(', ');
-                            const overflow = apps.length > 8 ? `, +${apps.length - 8} more` : '';
-                            return `
-                                <div class="category-card">
-                                    <div class="category-card__header">
-                                        <span class="category-card__name" style="color: ${App.categoryColor(cat)}">${categoryName}</span>
-                                        <span class="category-card__count">${apps.length} apps</span>
-                                    </div>
-                                    <div class="category-card__apps">${appList}${overflow}</div>
+                    <div class="study-room__grid">
+                        <section class="study-section study-section--tracking">
+                            <div class="study-section__header">
+                                <div class="study-section__heading">
+                                    <span class="study-section__marker">01</span>
+                                    <h2 class="study-section__title">TRACKING</h2>
                                 </div>
-                            `;
-                        }).join('')}
-                    </div>
-                </div>
+                            </div>
+                            <div class="study-panel study-panel--tracking">
+                                <div class="study-panel__icon" aria-hidden="true">IDLE</div>
+                                <div class="study-panel__body">
+                                    <div class="study-row">
+                                        <div>
+                                            <div class="study-row__label">IDLE DETECTION</div>
+                                            <div class="study-row__detail">Stop counting screen time after no keyboard or pointer activity.</div>
+                                        </div>
+                                    </div>
+                                    <div class="study-form study-form--compact">
+                                        <div class="pixel-modal__group">
+                                            <label class="pixel-modal__label">IDLE TIMEOUT (min)</label>
+                                            <input class="pixel-modal__input" type="number" id="idleTimeoutMinutes" min="0" max="120" value="${idleTimeout}">
+                                        </div>
+                                        <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Settings.saveIdleTimeout())">SAVE</button>
+                                    </div>
+                                    <div class="study-note">Use 0 minutes to disable idle detection.</div>
+                                </div>
+                            </div>
+                        </section>
 
-                <div class="study-section">
-                    <div class="study-section__header">
-                        <h2 class="study-section__title">SHORTCUTS</h2>
-                    </div>
-                    <div class="kbd-scroll">
-                        <div class="kbd-scroll__row">
-                            <span class="kbd-scroll__keys"><span class="kbd-scroll__key">←</span><span class="kbd-scroll__key">→</span></span>
-                            <span>Navigate dates</span>
-                        </div>
-                        <div class="kbd-scroll__row">
-                            <span class="kbd-scroll__keys"><span class="kbd-scroll__key">/</span></span>
-                            <span>Search residents</span>
-                        </div>
-                        <div class="kbd-scroll__row">
-                            <span class="kbd-scroll__keys"><span class="kbd-scroll__key">1</span>-<span class="kbd-scroll__key">8</span></span>
-                            <span>Switch tabs</span>
-                        </div>
-                        <div class="kbd-scroll__row">
-                            <span class="kbd-scroll__keys"><span class="kbd-scroll__key">Esc</span></span>
-                            <span>Close modals</span>
-                        </div>
-                    </div>
-                </div>
+                        <section class="study-section study-section--privacy">
+                            <div class="study-section__header">
+                                <div class="study-section__heading">
+                                    <span class="study-section__marker">02</span>
+                                    <h2 class="study-section__title">PRIVACY</h2>
+                                </div>
+                            </div>
+                            <div class="study-panel study-panel--privacy">
+                                <div class="study-panel__icon" aria-hidden="true">HASH</div>
+                                <div class="study-panel__body">
+                                    <div class="study-row">
+                                        <div>
+                                            <div class="study-row__label">GHOST MODE</div>
+                                            <div class="study-row__detail">Hash app names before they leave this Mac. The cloud sees opaque tokens; this dashboard still shows real names because it reads the local file.</div>
+                                        </div>
+                                        <label class="rule-board__toggle" aria-label="Toggle Ghost Mode">
+                                            <input type="checkbox" id="ghostModeToggle" ${ghostMode ? 'checked' : ''} onchange="App.runAction(() => Settings.toggleGhostMode(this.checked))">
+                                            <span class="rule-board__knob" aria-hidden="true"></span>
+                                        </label>
+                                    </div>
+                                    <div class="study-note">Salt stays on this device. See <a href="/docs/privacy.md" target="_blank" rel="noopener">privacy policy</a> for trade-offs.</div>
+                                </div>
+                            </div>
+                        </section>
 
-                <div class="study-section">
-                    <div class="study-section__header">
-                        <h2 class="study-section__title">ABOUT</h2>
-                    </div>
-                    <div class="about-study">
-                        <div class="about-study__sigil">🏛</div>
-                        <div class="about-study__title">DETOX ISLE</div>
-                        <div class="about-study__copy">
-                            A private screen-time tracker for macOS.<br>
-                            Monitor polls every 2 seconds. Data stays on this Mac.<br>
-                            <a href="/docs/privacy.md" target="_blank" rel="noopener">Privacy policy</a>
-                            &nbsp;·&nbsp;
-                            <a href="/docs/terms.md" target="_blank" rel="noopener">Terms of service</a>
-                        </div>
+                        <section class="study-section study-section--export">
+                            <div class="study-section__header">
+                                <div class="study-section__heading">
+                                    <span class="study-section__marker">03</span>
+                                    <h2 class="study-section__title">DATA EXPORT</h2>
+                                </div>
+                            </div>
+                            <div class="study-panel study-panel--export">
+                                <div class="study-panel__icon" aria-hidden="true">CSV</div>
+                                <div class="study-panel__body">
+                                    <div class="study-row">
+                                        <div>
+                                            <div class="study-row__label">EXPORT YOUR DATA</div>
+                                            <div class="study-row__detail">Download a CSV or JSON dump of your sessions.</div>
+                                        </div>
+                                    </div>
+                                    <div class="study-form study-form--export">
+                                        <div class="pixel-modal__group">
+                                            <label class="pixel-modal__label">START DATE</label>
+                                            <input class="pixel-modal__input" type="date" id="exportStart" value="${weekAgo}">
+                                        </div>
+                                        <div class="pixel-modal__group">
+                                            <label class="pixel-modal__label">END DATE</label>
+                                            <input class="pixel-modal__input" type="date" id="exportEnd" value="${today}">
+                                        </div>
+                                        <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Settings.exportData('csv'))">EXPORT CSV</button>
+                                        <button class="pixel-button" onclick="App.runAction(() => Settings.exportData('json'))">EXPORT JSON</button>
+                                    </div>
+                                    <div class="study-divider" aria-hidden="true"></div>
+                                    <div class="study-row">
+                                        <div>
+                                            <div class="study-row__label">FULL ARCHIVE</div>
+                                            <div class="study-row__detail">Download every row stored for this account in one JSON file.</div>
+                                        </div>
+                                        <button class="pixel-button" onclick="App.runAction(() => Settings.exportFull())">DOWNLOAD ARCHIVE</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="study-section study-section--danger">
+                            <div class="study-section__header">
+                                <div class="study-section__heading">
+                                    <span class="study-section__marker">04</span>
+                                    <h2 class="study-section__title">DANGER ZONE</h2>
+                                </div>
+                            </div>
+                            <div class="study-panel study-panel--danger">
+                                <div class="study-panel__icon" aria-hidden="true">STOP</div>
+                                <div class="study-panel__body">
+                                    <div class="study-row">
+                                        <div>
+                                            <div class="study-row__label">DELETE ALL DATA</div>
+                                            <div class="study-row__detail">Wipe every session, decree, and reward this account holds. This cannot be undone.</div>
+                                        </div>
+                                        <button class="pixel-button pixel-button--danger" onclick="App.runAction(() => Settings.confirmDelete())">DELETE EVERYTHING</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="study-section study-section--wide study-section--categories">
+                            <div class="study-section__header">
+                                <div class="study-section__heading">
+                                    <span class="study-section__marker">05</span>
+                                    <h2 class="study-section__title">CATEGORIES</h2>
+                                </div>
+                                <button class="pixel-button pixel-button--primary" onclick="App.runAction(() => Settings.addCategory())">CATEGORIZE</button>
+                            </div>
+                            <p class="rule-board__copy">Assign residents to categories for decrees and the Chronicle breakdown.</p>
+                            <div class="category-catalog">
+                                ${Object.entries(catGroups).map(([cat, apps]) => {
+                                    const categoryName = App.escapeHtml(cat);
+                                    const appList = apps.slice(0, 8).map(app => App.escapeHtml(app)).join(', ');
+                                    const overflow = apps.length > 8 ? `, +${apps.length - 8} more` : '';
+                                    return `
+                                        <div class="category-card" style="--category-card-color: ${App.categoryColor(cat)}">
+                                            <div class="category-card__header">
+                                                <span class="category-card__name">${categoryName}</span>
+                                                <span class="category-card__count">${apps.length} apps</span>
+                                            </div>
+                                            <div class="category-card__apps">${appList}${overflow}</div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </section>
+
+                        <section class="study-section study-section--wide study-section--shortcuts">
+                            <div class="study-section__header">
+                                <div class="study-section__heading">
+                                    <span class="study-section__marker">06</span>
+                                    <h2 class="study-section__title">SHORTCUTS</h2>
+                                </div>
+                            </div>
+                            <div class="kbd-scroll">
+                                <div class="kbd-scroll__row">
+                                    <span class="kbd-scroll__keys"><span class="kbd-scroll__key">←</span><span class="kbd-scroll__key">→</span></span>
+                                    <span>Navigate dates</span>
+                                </div>
+                                <div class="kbd-scroll__row">
+                                    <span class="kbd-scroll__keys"><span class="kbd-scroll__key">/</span></span>
+                                    <span>Search residents</span>
+                                </div>
+                                <div class="kbd-scroll__row">
+                                    <span class="kbd-scroll__keys"><span class="kbd-scroll__key">1</span>-<span class="kbd-scroll__key">8</span></span>
+                                    <span>Switch tabs</span>
+                                </div>
+                                <div class="kbd-scroll__row">
+                                    <span class="kbd-scroll__keys"><span class="kbd-scroll__key">Esc</span></span>
+                                    <span>Close modals</span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="study-section study-section--wide study-section--about">
+                            <div class="study-section__header">
+                                <div class="study-section__heading">
+                                    <span class="study-section__marker">07</span>
+                                    <h2 class="study-section__title">ABOUT</h2>
+                                </div>
+                            </div>
+                            <div class="about-study">
+                                <div class="about-study__sigil" aria-hidden="true"><span></span></div>
+                                <div>
+                                    <div class="about-study__title">DETOX ISLE</div>
+                                    <div class="about-study__copy">
+                                        A private screen-time tracker for macOS.<br>
+                                        Monitor polls every 2 seconds. Data stays on this Mac.<br>
+                                        <a href="/docs/privacy.md" target="_blank" rel="noopener">Privacy policy</a>
+                                        &nbsp;|&nbsp;
+                                        <a href="/docs/terms.md" target="_blank" rel="noopener">Terms of service</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
                     </div>
                 </div>
             </div>
@@ -263,7 +306,7 @@ const Settings = {
             method: 'POST',
             body: { ghost_mode: enabled ? '1' : '0' },
         });
-        App.toast(enabled ? 'Ghost Mode on — app names hashed before leaving' : 'Ghost Mode off — app names sent in cleartext', 'success');
+        App.toast(enabled ? 'Ghost Mode on, app names hashed before leaving' : 'Ghost Mode off, app names sent in cleartext', 'success');
     },
 
     async saveIdleTimeout() {
