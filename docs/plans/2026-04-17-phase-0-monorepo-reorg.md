@@ -32,7 +32,7 @@
 - `README.md` — update directory listing and any `backend/` / `frontend/` prose
 
 **Unchanged but verify:**
-- `.gitignore` — already correct; ignores `data/`, `CLAUDE.md`, `.claude/`
+- `.gitignore` — already correct; ignores `data/` and local tool notes
 - `requirements.txt` — no path changes needed
 - `LICENSE` — unchanged
 

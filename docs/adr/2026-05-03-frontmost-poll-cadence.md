@@ -34,6 +34,6 @@ matching resident sprite can pulse a halo and snap to its home tile.
   latency and a process spawn. Rejected — the monitor already owns the
   osascript path; duplicating it racks up needless work.
 - **WebSocket / SSE push from monitor.** Simplest model is HTTP polling;
-  WebSockets exceed the "stay vanilla" constraint of `CLAUDE.md`.
+  WebSockets exceed the project's "stay vanilla" constraint.
 - **Reuse `agent/server.py:get_frontmost_app_name`.** Same osascript
   problem above. The DB-row path is cheaper and equally fresh.
