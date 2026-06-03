@@ -59,8 +59,10 @@ const World = {
             <g id="worldPan" transform="translate(0 0)">
                 ${this.islandBackdrop()}
                 <g id="worldGround">${this.groundTiles()}</g>
+                <g id="worldPlacementGrid">${this.placementGrid()}</g>
                 <g id="worldGroundDecor">${this.groundDecor()}</g>
                 <rect id="worldNightDim" x="${dimX}" y="${dimY}" width="${dimW}" height="${dimH}" pointer-events="none"></rect>
+                <g id="worldLanterns"></g>
                 <g id="worldBuildings"></g>
                 <g id="worldResidents"></g>
                 <g id="worldEffects"></g>
@@ -84,6 +86,13 @@ const World = {
             width: w + this.VIEW_PAD_X * 2,
             height: h + this.VIEW_PAD_BOTTOM,
         };
+    },
+
+    setEditMode(enabled) {
+        const root = document.querySelector('.isle');
+        const svg = document.querySelector('.isle__stage svg.world');
+        root?.classList.toggle('isle--editing', Boolean(enabled));
+        svg?.classList.toggle('world--editing', Boolean(enabled));
     },
 
     seaLayer(w, h, view = this.viewBox(w, h)) {
@@ -220,16 +229,32 @@ const World = {
         return out;
     },
 
+    placementGrid() {
+        let out = '';
+        for (let ty = 0; ty < Iso.WORLD_TY; ty++) {
+            for (let tx = 0; tx < Iso.WORLD_TX; tx++) {
+                const { x, y } = Iso.tileToScreen(tx, ty);
+                const cy = y + Iso.TILE_H + 80;
+                out += `<polygon class="world__placement-tile" data-tile="${tx},${ty}" points="${Iso.tileDiamond(x, cy)}"></polygon>`;
+            }
+        }
+        return out;
+    },
+
     // Sparse ground decorations — daisies, pebble clusters, grass tufts —
     // distributed via deterministic hashes so the look is stable. Avoids
     // tiles that hold buildings (Buildings.catalog footprints).
     groundDecor() {
-        const occupied = new Set();
-        for (const b of Buildings.catalog) {
-            const span = b.size === 'major' ? 1 : 0;
-            for (let dx = 0; dx <= span; dx++) {
-                for (let dy = 0; dy <= span; dy++) {
-                    occupied.add(`${b.tx + dx},${b.ty + dy}`);
+        const occupied = window.IslandState
+            ? IslandState.occupiedCells(Buildings.catalog)
+            : new Set();
+        if (!window.IslandState) {
+            for (const b of Buildings.catalog) {
+                const span = b.size === 'major' ? 1 : 0;
+                for (let dx = 0; dx <= span; dx++) {
+                    for (let dy = 0; dy <= span; dy++) {
+                        occupied.add(`${b.tx + dx},${b.ty + dy}`);
+                    }
                 }
             }
         }
@@ -414,13 +439,19 @@ const World = {
         const layer = document.getElementById('worldBuildings');
         if (!layer) return;
         layer.innerHTML = Buildings.catalog.map(b => {
-            const { x, y } = Buildings.anchor(b.tx, b.ty, b.size);
+            const { x, y } = Buildings.anchorFor ? Buildings.anchorFor(b) : Buildings.anchor(b.tx, b.ty, b.size);
+            const tab = b.tab || '';
+            const movable = b.movable !== false;
             return `
-                <g class="world__building world__building--${b.size}" data-tab="${b.tab}"
+                <g class="world__building world__building--${b.size} world__building--${App.escapeAttr(b.source || 'core')}"
+                   data-building-id="${App.escapeAttr(b.id)}"
+                   data-tab="${App.escapeAttr(tab)}"
+                   data-kind="${App.escapeAttr(b.kind || b.id)}"
+                   data-movable="${movable ? 'true' : 'false'}"
                    transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"
                    role="button" tabindex="0" aria-label="${b.label}">
-                    <g class="world__building-shape">${Buildings.markup(b.id)}</g>
-                    <text class="world__building-label" x="0" y="14" text-anchor="middle">${b.label}</text>
+                    <g class="world__building-shape">${Buildings.markup(b.id, b)}</g>
+                    <text class="world__building-label" x="0" y="14" text-anchor="middle">${App.escapeHtml(b.label)}</text>
                 </g>
             `;
         }).join('');
@@ -428,7 +459,11 @@ const World = {
         // Click + keyboard activation routes to App.showTab.
         layer.querySelectorAll('.world__building').forEach(node => {
             const tab = node.dataset.tab;
-            const go = () => App.showTab(tab);
+            const go = () => {
+                if (window.Isle?.editMode) return;
+                if (tab) App.showTab(tab);
+                else App.showTab('market');
+            };
             node.addEventListener('click', go);
             node.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -436,16 +471,103 @@ const World = {
                     go();
                 }
             });
+            this.bindBuildingPlacement(node);
         });
+    },
+
+    bindBuildingPlacement(node) {
+        if (!node || node.dataset.placementBound === 'true') return;
+        node.dataset.placementBound = 'true';
+
+        node.addEventListener('pointerdown', (e) => {
+            if (!window.Isle?.editMode || node.dataset.movable !== 'true') return;
+            if (e.button !== undefined && e.button !== 0) return;
+            const building = Buildings.catalog.find(candidate => candidate.id === node.dataset.buildingId);
+            if (!building) return;
+
+            let latestTile = { tx: building.tx, ty: building.ty };
+            let latestValid = true;
+            const original = { tx: building.tx, ty: building.ty };
+            const activePointerId = e.pointerId;
+
+            const preview = (event) => {
+                const tile = this.tileFromPointer(event, building);
+                latestTile = tile;
+                latestValid = Boolean(window.IslandState?.canPlace(Buildings.catalog, building.id, tile));
+                const previewBuilding = { ...building, tx: tile.tx, ty: tile.ty };
+                const { x, y } = Buildings.anchorFor(previewBuilding);
+                node.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+                node.dataset.placement = latestValid ? 'valid' : 'invalid';
+            };
+
+            const end = () => {
+                node.classList.remove('is-dragging');
+                delete node.dataset.placement;
+                node.removeEventListener('pointermove', preview);
+                node.removeEventListener('pointerup', end);
+                node.removeEventListener('pointercancel', cancel);
+                node.removeEventListener('lostpointercapture', cancel);
+                try { node.releasePointerCapture(activePointerId); } catch (_) {}
+                if (latestValid) Isle.moveBuilding(building.id, latestTile);
+                else {
+                    const { x, y } = Buildings.anchorFor({ ...building, tx: original.tx, ty: original.ty });
+                    node.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+                    App.toast('That spot is already occupied', 'warning');
+                }
+            };
+
+            const cancel = () => {
+                latestValid = false;
+                end();
+            };
+
+            node.classList.add('is-dragging');
+            try { node.setPointerCapture(activePointerId); } catch (_) {}
+            node.addEventListener('pointermove', preview);
+            node.addEventListener('pointerup', end);
+            node.addEventListener('pointercancel', cancel);
+            node.addEventListener('lostpointercapture', cancel);
+            preview(e);
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    },
+
+    tileFromPointer(event, building = {}) {
+        const panGroup = document.getElementById('worldPan');
+        const local = this.pointerToWorld(event, panGroup);
+        const raw = Iso.screenToTile(local.x, local.y - 80 - Iso.TILE_H / 2);
+        const footprint = window.IslandState?.footprintFor
+            ? IslandState.footprintFor(building)
+            : (building.size === 'major' ? { w: 2, h: 2 } : { w: 1, h: 1 });
+        const maxTx = Math.max(0, Iso.WORLD_TX - footprint.w);
+        const maxTy = Math.max(0, Iso.WORLD_TY - footprint.h);
+        return {
+            tx: Math.max(0, Math.min(maxTx, Math.round(raw.tx))),
+            ty: Math.max(0, Math.min(maxTy, Math.round(raw.ty))),
+        };
+    },
+
+    pointerToWorld(event, target) {
+        const svg = event.currentTarget?.ownerSVGElement || document.querySelector('.isle__stage svg.world');
+        if (!svg) return { x: 0, y: 0 };
+        const matrixTarget = target || svg;
+        const matrix = matrixTarget.getScreenCTM ? matrixTarget.getScreenCTM() : svg.getScreenCTM();
+        if (!matrix) return { x: 0, y: 0 };
+        const point = svg.createSVGPoint();
+        point.x = event.clientX;
+        point.y = event.clientY;
+        return point.matrixTransform(matrix.inverse());
     },
 
     // Add a single soft lantern circle above each building. The is-night /
     // is-dusk class on the SVG root fades them in via CSS.
     mountLanterns() {
-        const layer = document.getElementById('worldBuildings');
+        const layer = document.getElementById('worldLanterns') || document.getElementById('worldBuildings');
         if (!layer) return;
+        layer.innerHTML = '';
         Buildings.catalog.forEach(b => {
-            const { x, y } = Buildings.anchor(b.tx, b.ty, b.size);
+            const { x, y } = Buildings.anchorFor ? Buildings.anchorFor(b) : Buildings.anchor(b.tx, b.ty, b.size);
             const lanternY = y - (b.size === 'major' ? 76 : 56);
             const lantern = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
             lantern.setAttribute('class', 'world__lantern');
@@ -471,6 +593,7 @@ const World = {
             .filter(item => !item.refunded)
             .filter(item => item.item_key || item.key)
             .slice(0, 48);
+        const propItems = owned.filter(item => !window.IslandState?.placeableTemplateForItem(item));
 
         root.classList.toggle('market-has-inventory', owned.length > 0);
         owned.forEach(item => {
@@ -480,7 +603,7 @@ const World = {
             if (category) root.classList.add(`market-category-${category}`);
         });
 
-        layer.innerHTML = this.marketProps(owned);
+        layer.innerHTML = this.marketProps(propItems);
     },
 
     marketProps(owned) {
@@ -508,27 +631,36 @@ const World = {
     },
 
     marketPropTiles() {
-        const blocked = new Set();
-        Buildings.catalog.forEach(b => {
-            const span = b.size === 'major' ? 1 : 0;
-            for (let dx = 0; dx <= span; dx++) {
-                for (let dy = 0; dy <= span; dy++) {
-                    blocked.add(`${b.tx + dx},${b.ty + dy}`);
+        const walkable = window.IslandState
+            ? IslandState.walkableTiles(Buildings.catalog)
+            : [];
+        const walkableKeys = new Set(walkable.map(tile => `${tile.tx},${tile.ty}`));
+        const blocked = window.IslandState ? null : new Set();
+        if (!window.IslandState) {
+            Buildings.catalog.forEach(b => {
+                const span = b.size === 'major' ? 1 : 0;
+                for (let dx = 0; dx <= span; dx++) {
+                    for (let dy = 0; dy <= span; dy++) {
+                        blocked.add(`${b.tx + dx},${b.ty + dy}`);
+                    }
                 }
-            }
-        });
+            });
+        }
 
         const preferred = [
             { tx: 0, ty: 0 }, { tx: 2, ty: 0 }, { tx: 6, ty: 0 }, { tx: 8, ty: 0 }, { tx: 11, ty: 0 },
             { tx: 0, ty: 2 }, { tx: 3, ty: 2 }, { tx: 7, ty: 2 }, { tx: 11, ty: 2 },
             { tx: 1, ty: 4 }, { tx: 4, ty: 4 }, { tx: 7, ty: 4 }, { tx: 10, ty: 4 },
             { tx: 0, ty: 7 }, { tx: 3, ty: 7 }, { tx: 6, ty: 7 }, { tx: 9, ty: 7 }, { tx: 11, ty: 7 },
-        ].filter(tile => this.inWorld(tile) && !blocked.has(`${tile.tx},${tile.ty}`));
+        ].filter(tile => this.inWorld(tile)
+            && (window.IslandState ? walkableKeys.has(`${tile.tx},${tile.ty}`) : !blocked.has(`${tile.tx},${tile.ty}`)));
 
-        const rest = [];
-        for (let ty = 0; ty < Iso.WORLD_TY; ty++) {
-            for (let tx = 0; tx < Iso.WORLD_TX; tx++) {
-                if (!blocked.has(`${tx},${ty}`)) rest.push({ tx, ty });
+        const rest = window.IslandState ? walkable.slice() : [];
+        if (!window.IslandState) {
+            for (let ty = 0; ty < Iso.WORLD_TY; ty++) {
+                for (let tx = 0; tx < Iso.WORLD_TX; tx++) {
+                    if (!blocked.has(`${tx},${ty}`)) rest.push({ tx, ty });
+                }
             }
         }
         rest.sort((a, b) => Iso.tileHash(a.tx, a.ty, 31) - Iso.tileHash(b.tx, b.ty, 31));

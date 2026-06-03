@@ -121,6 +121,20 @@
 }
 .is-night .world__tile-shadow { fill: rgba(0, 0, 0, 0.32); }
 
+.world__placement-tile {
+    fill: rgba(255, 244, 214, 0.06);
+    opacity: 0;
+    pointer-events: none;
+    stroke: rgba(42, 30, 42, 0.34);
+    stroke-dasharray: 3 4;
+    stroke-width: 1;
+    transition: opacity 140ms ease-out;
+}
+
+.isle--editing .world__placement-tile {
+    opacity: 1;
+}
+
 /* ── Ground decor sprites (daisy, pebble, grass, bush) ───────────────── */
 .world__decor { pointer-events: none; }
 .world__decor--daisy circle { fill: #fff4d6; }
@@ -220,7 +234,8 @@
 /* ── HUD overlays (HTML on top of SVG) ───────────────────────────────── */
 .isle__datebar,
 .isle__weather-badge,
-.isle__signboards {
+.isle__signboards,
+.isle__editor {
     position: absolute;
     z-index: 4;
 }
@@ -297,6 +312,47 @@
     font-style: normal;
 }
 
+.isle__editor {
+    top: calc(var(--sp-4) + 54px);
+    left: var(--sp-4);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-2);
+    background: rgba(255, 244, 214, 0.94);
+    color: var(--dc-ink);
+    box-shadow: 0 0 0 2px rgba(42, 30, 42, 0.86), 0 10px 24px rgba(42, 30, 42, 0.12);
+}
+
+.isle__editor-button {
+    min-height: 32px;
+    border: 0;
+    background: var(--dc-noon);
+    color: var(--dc-ink);
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-size: 9px;
+    line-height: 1.3;
+    padding: var(--sp-2);
+    box-shadow: 0 0 0 2px var(--dc-ink);
+}
+
+.isle__editor-button:hover {
+    background: var(--dc-coin);
+}
+
+.isle__editor-button--reset {
+    background: #f6d39b;
+}
+
+.isle__editor-hint {
+    max-width: 190px;
+    color: var(--dc-ink-soft);
+    font-family: var(--font-game);
+    font-size: var(--fs-md);
+    line-height: 1;
+}
+
 .isle__signboards {
     left: var(--sp-4);
     right: var(--sp-4);
@@ -370,19 +426,38 @@
         width: 100%;
         grid-template-columns: auto minmax(0, 1fr);
     }
+    .isle__editor {
+        position: static;
+        order: 3;
+        flex-wrap: wrap;
+        width: 100%;
+    }
     .isle__signboards {
         position: static;
-        order: 4;
+        order: 5;
         grid-template-columns: 1fr;
     }
+    .isle__stage { order: 4; }
     .isle-signboard { min-height: 72px; }
 }
 
 /* ── Buildings ───────────────────────────────────────────────────────── */
 .world__building { cursor: pointer; outline: none; }
+.isle--editing .world__building[data-movable="true"] { cursor: grab; }
+.isle--editing .world__building[data-movable="true"].is-dragging { cursor: grabbing; }
 .world__building-shape { transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1); }
 .world__building:hover .world__building-shape,
 .world__building:focus .world__building-shape { transform: translateY(-3px); }
+.isle--editing .world__building .world__building-shape {
+    filter: drop-shadow(0 0 3px rgba(255, 208, 74, 0.42));
+}
+.world__building[data-placement="valid"] .world__building-shape {
+    filter: drop-shadow(0 0 6px rgba(74, 155, 110, 0.82));
+}
+.world__building[data-placement="invalid"] .world__building-shape {
+    filter: drop-shadow(0 0 6px rgba(196, 69, 58, 0.9));
+    opacity: 0.72;
+}
 
 /* Shared building details. .b-shadow is the ellipse beneath each base;
    it slightly fades on hover as the building lifts so the lift reads. */

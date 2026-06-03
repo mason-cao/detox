@@ -89,6 +89,20 @@
         return occupied;
     }
 
+    function walkableTiles(buildings = [], options = {}) {
+        const occupied = occupiedCells(buildings, options);
+        const world = options.world || {};
+        const maxTx = Number.isFinite(world.tx) ? world.tx : WORLD_TX;
+        const maxTy = Number.isFinite(world.ty) ? world.ty : WORLD_TY;
+        const tiles = [];
+        for (let ty = 0; ty < maxTy; ty++) {
+            for (let tx = 0; tx < maxTx; tx++) {
+                if (!occupied.has(`${tx},${ty}`)) tiles.push({ tx, ty });
+            }
+        }
+        return tiles;
+    }
+
     function inBounds(building, position, world = {}) {
         const footprint = footprintFor(building);
         const maxTx = Number.isFinite(world.tx) ? world.tx : WORLD_TX;
@@ -283,6 +297,7 @@
         footprintFor,
         footprintCells,
         occupiedCells,
+        walkableTiles,
         canPlace,
         placeableTemplateForItem,
         layoutFromInventory,

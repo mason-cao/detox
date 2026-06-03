@@ -87,3 +87,28 @@ test('occupiedCells returns every tile in every building footprint', () => {
     assert.equal(occupied.has('10,0'), true);
     assert.equal(occupied.has('11,0'), false);
 });
+
+test('walkableTiles excludes moved building footprints', () => {
+    const storage = memoryStorage();
+    const layout = IslandState.layoutFromInventory([], { storage });
+    const moved = IslandState.moveBuilding(layout, 'study', { tx: 0, ty: 0 }, { storage });
+    const walkable = IslandState.walkableTiles(moved.buildings);
+    const keys = new Set(walkable.map(tile => `${tile.tx},${tile.ty}`));
+
+    assert.equal(keys.has('0,0'), false);
+    assert.equal(keys.has('1,0'), true);
+    assert.equal(keys.has('5,1'), false);
+});
+
+test('placeable market buildings participate in collision and walking rules', () => {
+    const layout = IslandState.layoutFromInventory([
+        { item_key: 'bakery_facade', category: 'building', name: 'Bakery Facade' },
+    ], { storage: memoryStorage() });
+    const bakery = layout.buildings.find(building => building.id === 'market-bakery_facade');
+    const occupied = IslandState.occupiedCells(layout.buildings);
+    const walkable = new Set(IslandState.walkableTiles(layout.buildings).map(tile => `${tile.tx},${tile.ty}`));
+
+    assert.equal(occupied.has(`${bakery.tx},${bakery.ty}`), true);
+    assert.equal(occupied.has(`${bakery.tx + 1},${bakery.ty + 1}`), bakery.size === 'major');
+    assert.equal(walkable.has(`${bakery.tx},${bakery.ty}`), false);
+});

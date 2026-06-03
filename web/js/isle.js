@@ -2,6 +2,11 @@
    signboards stay as HTML overlays positioned above the SVG. */
 
 const Isle = {
+    editMode: false,
+    layout: null,
+    _apps: [],
+    _inventory: [],
+
     async render(container) {
         const [data, inventory] = await Promise.all([
             App.api(`/api/dashboard?date=${App.currentDate}`),
@@ -9,6 +14,9 @@ const Isle = {
         ]);
         const apps = data.apps || [];
         const weather = App.describeGoalWeather(data);
+        this._apps = apps;
+        this._inventory = inventory;
+        this.applyIslandLayout(inventory);
 
         if (window.HUD) HUD.updateWeather(weather);
 
@@ -16,6 +24,7 @@ const Isle = {
         const stage = container.querySelector('[data-role="world-stage"]');
         if (stage) {
             World.mount(stage, weather);
+            World.setEditMode?.(this.editMode);
             World.mountBuildings();
             World.mountLanterns();
             Residents.mount(apps);
@@ -36,6 +45,11 @@ const Isle = {
             const total = Number(data.total_minutes || 0);
             const goal = Number(data.goal_target || 0);
             const remaining = goal ? goal - total : null;
+            const previousLayoutSignature = this.layoutSignature();
+            this._apps = data.apps || [];
+            this._inventory = inventory;
+            this.applyIslandLayout(inventory);
+            const layoutChanged = previousLayoutSignature !== this.layoutSignature();
 
             if (window.HUD) HUD.updateWeather(weather);
             if (window.World) World.applyWeather(weather);
@@ -46,6 +60,7 @@ const Isle = {
             this.updateSignboard(root, 'goal', goal ? App.formatTime(goal) : 'Set one', 'Active daily-total goal.');
             this.updateSignboard(root, 'left', this.remainingLabel(remaining), weather.detail);
 
+            if (layoutChanged && window.World) this.remountWorldLayers({ residents: true });
             if (window.Residents) Residents.update(data.apps || []);
             if (window.World) World.applyMarketInventory(inventory);
         } catch (e) {
@@ -61,6 +76,64 @@ const Isle = {
         }
     },
 
+    applyIslandLayout(inventory = []) {
+        if (!window.Buildings) return null;
+        if (!window.IslandState) {
+            Buildings.resetCatalog?.();
+            return null;
+        }
+        this.layout = IslandState.layoutFromInventory(inventory);
+        Buildings.setCatalog(this.layout.buildings);
+        if (window.Compass) Compass.refresh();
+        return this.layout;
+    },
+
+    layoutSignature(layout = this.layout) {
+        return (layout?.buildings || [])
+            .map(building => `${building.id}:${building.tx},${building.ty}:${building.size}`)
+            .join('|');
+    },
+
+    remountWorldLayers({ residents = false } = {}) {
+        if (!document.getElementById('worldBuildings')) return;
+        World.mountBuildings();
+        World.mountLanterns();
+        World.applyMarketInventory(this._inventory);
+        World.setEditMode?.(this.editMode);
+        if (residents && window.Residents) Residents.mount(this._apps);
+    },
+
+    toggleEdit(force) {
+        this.editMode = typeof force === 'boolean' ? force : !this.editMode;
+        const root = document.querySelector('.isle');
+        if (root) root.classList.toggle('isle--editing', this.editMode);
+        this.updateEditorControls(root);
+        World.setEditMode?.(this.editMode);
+        this.remountWorldLayers();
+    },
+
+    moveBuilding(buildingId, tile) {
+        if (!window.IslandState || !this.layout) return;
+        const next = IslandState.moveBuilding(this.layout, buildingId, tile);
+        if (next === this.layout) {
+            App.toast('That spot is already occupied', 'warning');
+            this.remountWorldLayers();
+            return;
+        }
+        this.layout = next;
+        Buildings.setCatalog(next.buildings);
+        this.remountWorldLayers({ residents: true });
+        if (window.Compass) Compass.refresh();
+    },
+
+    resetLayout() {
+        if (!window.IslandState) return;
+        IslandState.reset();
+        this.applyIslandLayout(this._inventory);
+        this.remountWorldLayers({ residents: true });
+        App.toast('Isle layout reset', 'success');
+    },
+
     scaffold(data, weather) {
         const date = data.date || App.currentDate;
         const total = Number(data.total_minutes || 0);
@@ -71,6 +144,7 @@ const Isle = {
         return `
             <section class="isle" data-weather="${App.escapeAttr(weather.key)}">
                 <div class="isle__stage" data-role="world-stage"></div>
+                ${this.renderEditor()}
                 <div class="isle__datebar" aria-label="Date navigation">
                     <button class="isle__date-button" type="button" onclick="App.prevDate()" aria-label="Previous day">←</button>
                     <div class="isle__date-label">
@@ -91,6 +165,30 @@ const Isle = {
                 </div>
             </section>
         `;
+    },
+
+    renderEditor() {
+        return `
+            <div class="isle__editor" data-role="isle-editor">
+                <button class="isle__editor-button" type="button" data-role="isle-edit-toggle" onclick="Isle.toggleEdit()">
+                    ${this.editMode ? 'Done' : 'Edit Isle'}
+                </button>
+                <button class="isle__editor-button isle__editor-button--reset" type="button" data-role="isle-reset" onclick="Isle.resetLayout()" ${this.editMode ? '' : 'hidden'}>
+                    Reset
+                </button>
+                <span class="isle__editor-hint" data-role="isle-editor-hint">${this.editMode ? 'Drag buildings to open tiles.' : 'Arrange your village.'}</span>
+            </div>
+        `;
+    },
+
+    updateEditorControls(root = document.querySelector('.isle')) {
+        if (!root) return;
+        const toggle = root.querySelector('[data-role="isle-edit-toggle"]');
+        const reset = root.querySelector('[data-role="isle-reset"]');
+        const hint = root.querySelector('[data-role="isle-editor-hint"]');
+        if (toggle) toggle.textContent = this.editMode ? 'Done' : 'Edit Isle';
+        if (reset) reset.hidden = !this.editMode;
+        if (hint) hint.textContent = this.editMode ? 'Drag buildings to open tiles.' : 'Arrange your village.';
     },
 
     renderSignboard(key, label, value, title) {
