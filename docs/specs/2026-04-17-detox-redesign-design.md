@@ -39,7 +39,7 @@ A sunset-lit island viewed from an isometric camera. The user is the mayor. Ever
 - **Residents** visibly change behavior based on use: productive apps become farmers/builders/scribes; over-limit apps become idle tourists; blocked apps are banished to a rowboat offshore.
 - **Weather** is an honest read of today's adherence: sunny under goal, overcast when approaching, storm when past.
 - **Day/night** cycles with the actual system clock; at the user's configured bedtime, a town bell rings and residents walk home.
-- The frontmost application's resident glows in real time and shows a working tool overlay at their building. Background residents walk slow paths or bob in place. (Live binding lands in Phase 1f; resident-as-sprite rendering substrate lands in Phase 1e.)
+- The frontmost application's resident glows in real time and shows a working tool overlay at their building. Background residents move through eased open-ground routes or bob in place. Residents are programmatic SVG villagers, not sprite-atlas characters.
 - Missing a goal brings clouds but does not wipe progress. No punitive mechanics, no FOMO, no streak-loss rage bait.
 
 ### 3.2 Restrictions as law
@@ -47,7 +47,7 @@ A sunset-lit island viewed from an isometric camera. The user is the mayor. Ever
 Restrictions are first-class visible mechanics, not a separate admin tab.
 
 - **The Gate** — hard blocks close the town gate on the offending resident; reopening plays a welcome chime.
-- **Daily rations** — per-app limits show as a sand-hourglass above each resident; when empty, the **Sheriff** sprite walks over and escorts them off, force-quitting the app via the existing `pkill -x` path.
+- **Daily rations** — per-app limits show as a sand-hourglass above each resident; when empty, the **Sheriff** villager walks over and escorts them off, force-quitting the app via the existing `pkill -x` path.
 - **Curfew** — bedtime goal rings the town bell; residents return home. Opening a restricted app past curfew sends the Sheriff out with a lantern.
 - **Quarantine Zones** — category blocks are a fenced area on the map where category-blocked residents live.
 - **Banishment** — full blocks put the resident in a rowboat offshore.
@@ -165,7 +165,7 @@ Rule: Inter is the default; `font-family: pixel` is a per-component opt-in.
 - `image-rendering: pixelated` on all sprites/illustrations; anti-aliasing disabled there.
 - Pixel borders via double-step box-shadow: `0 0 0 2px #3B2A1A, 0 4px 0 0 #3B2A1A`.
 - Hover micro-interactions: 100–150 ms, color/opacity only, **never scale** (prevents layout shift).
-- Sprite animation: 4–8 frame walk cycles at ~6 fps via single background-position sprite sheet per resident.
+- Resident motion: eased route interpolation via `requestAnimationFrame`, with small inline-SVG body motion. No resident sprite atlas dependency.
 - Day/night: 30-minute cross-fade of sky gradient based on real system time.
 - Weather layer: SVG + CSS overlay above the isle; clouds drift, rain falls, sun beams rotate.
 - Currency earn: `+1` tokens float up from a resident's head; HUD counter ticks.
@@ -332,12 +332,12 @@ Every commit below is one atomic change. Ordering matches phase sequence. Messag
 
 - Agent signing certificate — Apple Developer account needed before Phase 3 packaging.
 - ~~Auth vendor choice (Clerk vs. Supabase Auth)~~ — **resolved Phase 4**: Supabase Auth (magic-link + Google) with JWKS verification on the api. Apple Sign-In via Supabase's web provider is good enough for v1.
-- Pixel sprite production — commission an illustrator or build in Aseprite internally. Impacts Phase 1 timeline.
+- Pixel resident production — resolved for launch as programmatic SVG villagers. Future commissioned art can be evaluated separately if it stays compatible with the no-atlas launch direction.
 - Sound pack licensing — chiptune sources must be CC-BY or original compositions.
 
 ## 14. Appendix — wireframes
 
-ASCII sketches of the three marquee screens. Implementation uses CSS grid + pixel sprites; these show layout intent only.
+ASCII sketches of the three marquee screens. These show layout intent only; the shipped Isle uses SVG world geometry and programmatic resident villagers.
 
 ### 14.1 The Isle
 

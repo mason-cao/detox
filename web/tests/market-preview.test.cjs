@@ -68,3 +68,17 @@ test('every market category uses generated keyed preview scenes', () => {
         assert.doesNotMatch(markup, /<img|items\.png|bazaar\.png|characters\.png/);
     }
 });
+
+test('every configured market item has a named hand-drawn preview treatment', () => {
+    const Market = loadMarket();
+    const config = fs.readFileSync(path.join(__dirname, '../../agent/config.py'), 'utf8');
+    const keys = [...config.matchAll(/\("([^"]+)",\s*"[^"]+",\s*"[^"]+",\s*"(?:sunlight|starshard)",\s*\d+\)/g)]
+        .map(match => match[1]);
+
+    assert.ok(keys.length > 80, 'catalog fixture should cover the full market');
+    for (const key of keys) {
+        assert.notEqual(Market.previewSceneKey(key), 'generic', `${key} needs a specific preview scene`);
+        const markup = Market.assetPreview({ key, item_key: key, category: 'decor', name: key, currency: 'sunlight' });
+        assert.match(markup, /data-preview-scene="/);
+    }
+});

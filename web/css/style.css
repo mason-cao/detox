@@ -56,12 +56,13 @@ body {
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 14px 16px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-left: 4px solid var(--red);
-    border-radius: var(--radius-sm);
-    box-shadow: var(--shadow-lg);
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--dc-parchment);
+    border: none;
+    box-shadow:
+        0 0 0 2px var(--dc-ink),
+        0 8px 0 0 rgba(42, 30, 42, 0.22);
+    font-family: var(--font-ui);
 }
 
 .focus-mode-banner[hidden] { display: none; }
@@ -75,35 +76,49 @@ body {
 
 .focus-mode-banner-copy strong,
 .focus-mode-card-title {
-    color: var(--text);
+    color: var(--dc-ink);
     font-size: 14px;
     font-weight: 700;
 }
 
 .focus-mode-banner-copy span,
 .focus-mode-card-detail {
-    color: var(--text-muted);
+    color: var(--dc-ink-soft);
     font-size: 12px;
     font-weight: 500;
 }
 
 .focus-exit-btn {
     border: none;
-    border-radius: var(--radius-sm);
-    background: var(--red);
-    color: white;
+    background: var(--dc-danger);
+    color: var(--dc-parchment);
     cursor: pointer;
     flex-shrink: 0;
-    font-family: inherit;
-    font-size: 13px;
+    font-family: var(--font-display);
+    font-size: 10px;
     font-weight: 700;
-    padding: 9px 14px;
-    transition: all 0.2s;
+    letter-spacing: 0.5px;
+    padding: var(--sp-2) var(--sp-3);
+    box-shadow:
+        0 0 0 2px var(--dc-ink),
+        0 3px 0 0 var(--dc-ink);
+    transition: transform 80ms steps(2), box-shadow 80ms steps(2), background 120ms ease-out;
 }
 
 .focus-exit-btn:hover {
-    box-shadow: 0 0 0 3px var(--red-bg);
-    transform: translateY(-1px);
+    background: #a93931;
+}
+
+.focus-exit-btn:focus-visible {
+    outline: 2px solid var(--dc-ink);
+    outline-offset: 4px;
+}
+
+.focus-exit-btn:active {
+    transform: translateY(2px);
+    box-shadow:
+        0 0 0 2px var(--dc-ink),
+        0 1px 0 0 var(--dc-ink);
 }
 
 .focus-mode-card {
@@ -113,9 +128,9 @@ body {
     gap: 16px;
     margin-bottom: 24px;
     padding: 16px 18px;
-    background: var(--red-bg);
-    border: 1px solid var(--red);
-    border-radius: var(--radius-sm);
+    background: rgba(196, 69, 58, 0.14);
+    border: none;
+    box-shadow: 0 0 0 2px var(--dc-danger);
 }
 
 /* ── Main Content transitions ─────────────────────────────────────── */
@@ -330,7 +345,7 @@ body {
     justify-content: center;
     font-weight: 700;
     font-size: 14px;
-    color: white;
+    color: var(--dc-parchment);
     flex-shrink: 0;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
@@ -439,7 +454,7 @@ body {
 
 .btn-primary {
     background: var(--accent);
-    color: white;
+    color: var(--dc-parchment);
 }
 
 .btn-primary:hover {

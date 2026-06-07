@@ -1,6 +1,6 @@
-/* Residents - calm app markers + frontmost-glow binding.
-   Residents walk tile routes with stepped timing so the Isle reads like a
-   small pixel-game village instead of a smooth marker animation. */
+/* Residents - programmatic SVG villagers + frontmost-glow binding.
+   Residents glide through eased tile routes so the Isle feels alive without
+   sprite-atlas animation or external resident image assets. */
 
 const Residents = {
     // Eight archetypes. These map categories to villager styling.
@@ -116,46 +116,70 @@ const Residents = {
     _routeFor(appName, index, total, openTiles, claimed) {
         const fallback = openTiles[0] || { tx: 0, ty: 0 };
         const start = this._pickStartTile(appName, index, total, openTiles, claimed) || fallback;
-        const route = [start];
-        const local = new Set([this._tileKey(start)]);
+        const route = this._closedLocalRoute(start, openTiles, appName, index, claimed, true)
+            || this._closedLocalRoute(start, openTiles, appName, index, claimed, false)
+            || this._fallbackLocalRoute(start, openTiles);
+        return route.length ? route : [fallback];
+    },
 
-        for (let step = 0; step < 4; step++) {
+    _closedLocalRoute(start, openTiles, appName, index, claimed, preferUnclaimed) {
+        const startKey = this._tileKey(start);
+        const buildingBoxes = this._buildingBoxes();
+        const maxLeg = 2.4;
+        const maxRouteLength = 5;
+        const minRouteLength = 3;
+
+        const search = (route, local) => {
             const current = route[route.length - 1];
+            const canClose = route.length >= minRouteLength
+                && this._distance(current, start) <= maxLeg
+                && this._segmentClear(current, start, buildingBoxes);
+            if (canClose) return route;
+            if (route.length >= maxRouteLength) return null;
+
             const candidates = openTiles
                 .filter(tile => {
                     const key = this._tileKey(tile);
+                    if (key === startKey || local.has(key)) return false;
+                    if (preferUnclaimed && claimed.has(key)) return false;
                     const distance = this._distance(tile, current);
-                    return !local.has(key)
-                        && !claimed.has(key)
-                        && distance >= 1
-                        && distance <= 2.4;
+                    return distance >= 1
+                        && distance <= maxLeg
+                        && this._segmentClear(current, tile, buildingBoxes);
                 })
-                .sort((a, b) => this._routeScore(b, current, appName, index, step, claimed)
-                    - this._routeScore(a, current, appName, index, step, claimed));
+                .sort((a, b) => this._routeScore(b, current, appName, index, route.length, claimed)
+                    - this._routeScore(a, current, appName, index, route.length, claimed));
 
-            const next = candidates[0] || openTiles
-                .filter(tile => {
-                    const key = this._tileKey(tile);
-                    const distance = this._distance(tile, current);
-                    return !local.has(key) && distance >= 1 && distance <= 2.4;
-                })
-                .sort((a, b) => this._routeScore(b, current, appName, index, step, claimed)
-                    - this._routeScore(a, current, appName, index, step, claimed))[0];
-            if (!next) break;
-            route.push(next);
-            local.add(this._tileKey(next));
+            for (const candidate of candidates) {
+                const key = this._tileKey(candidate);
+                local.add(key);
+                const next = search([...route, candidate], local);
+                if (next) return next;
+                local.delete(key);
+            }
+            return null;
+        };
+
+        return search([start], new Set([startKey]));
+    },
+
+    _fallbackLocalRoute(start, openTiles) {
+        const buildingBoxes = this._buildingBoxes();
+        const neighbors = openTiles
+            .filter(tile => this._tileKey(tile) !== this._tileKey(start)
+                && this._distance(tile, start) >= 1
+                && this._distance(tile, start) <= 2.4
+                && this._segmentClear(start, tile, buildingBoxes))
+            .sort((a, b) => this._distance(a, start) - this._distance(b, start));
+        for (let i = 0; i < neighbors.length; i++) {
+            for (let j = i + 1; j < neighbors.length; j++) {
+                if (this._distance(neighbors[i], neighbors[j]) <= 2.4
+                    && this._segmentClear(neighbors[i], neighbors[j], buildingBoxes)) {
+                    return [start, neighbors[i], neighbors[j]];
+                }
+            }
         }
-
-        if (route.length < 2) {
-            const neighbor = openTiles
-                .filter(tile => this._tileKey(tile) !== this._tileKey(start)
-                    && this._distance(tile, start) >= 1
-                    && this._distance(tile, start) <= 2.4)
-                .sort((a, b) => this._distance(a, start) - this._distance(b, start))[0];
-            if (neighbor) route.push(neighbor);
-        }
-
-        return route;
+        return neighbors[0] ? [start, neighbors[0], start] : [start];
     },
 
     _pickStartTile(appName, index, total, openTiles, claimed) {
@@ -247,11 +271,35 @@ const Residents = {
     _tileOverlapsBuilding(tile, buildingBoxes) {
         const { x, y } = Iso.tileToScreen(tile.tx, tile.ty);
         const cy = y + Iso.TILE_H / 2 + 80;
+        return this._pointOverlapsBuilding(x, cy, buildingBoxes);
+    },
+
+    _segmentClear(a, b, buildingBoxes) {
+        if (!buildingBoxes.length) return true;
+        const aPoint = this._tilePoint(a);
+        const bPoint = this._tilePoint(b);
+        const distance = this._distance(a, b);
+        const samples = Math.max(3, Math.ceil(distance * 4));
+        for (let i = 0; i <= samples; i++) {
+            const t = i / samples;
+            const x = aPoint.x + (bPoint.x - aPoint.x) * t;
+            const y = aPoint.y + (bPoint.y - aPoint.y) * t;
+            if (this._pointOverlapsBuilding(x, y, buildingBoxes)) return false;
+        }
+        return true;
+    },
+
+    _tilePoint(tile) {
+        const { x, y } = Iso.tileToScreen(tile.tx, tile.ty);
+        return { x, y: y + Iso.TILE_H / 2 + 80 };
+    },
+
+    _pointOverlapsBuilding(x, y, buildingBoxes) {
         return buildingBoxes.some(box => (
             x >= box.left
             && x <= box.right
-            && cy >= box.top
-            && cy <= box.bottom
+            && y >= box.top
+            && y <= box.bottom
         ));
     },
 
@@ -403,18 +451,11 @@ const Residents = {
         return tools[archetype] || '';
     },
 
-    spriteFor(archetype) {
-        const roles = new Set(['scribe', 'builder', 'jester', 'banished', 'farmer', 'musician', 'wanderer', 'sheriff']);
-        const role = roles.has(archetype) ? archetype : 'wanderer';
-        return `/assets/market/pixel/residents/${role}.png`;
-    },
-
-    // Render one resident as a full-body pixel sprite marker.
+    // Render one resident as a full-body inline SVG villager marker.
     _render(r) {
         const { x, y } = Iso.tileToScreen(r.tile.tx, r.tile.ty);
         const cy = y + Iso.TILE_H / 2 + 80; // sky headroom + tile-center
         const role = this.roleLabelFor(r.archetype);
-        const sprite = this.spriteFor(r.archetype);
         return `
             <g class="world__resident" transform="translate(${x.toFixed(1)} ${cy.toFixed(1)})"
                data-app="${App.escapeAttr(r.appName)}"
@@ -429,10 +470,29 @@ const Residents = {
                 <ellipse class="world__resident-shadow" cx="0" cy="4" rx="17" ry="5"></ellipse>
                 ${this.boatFor(r.archetype)}
                 <g class="world__resident-villager world__resident-villager--${r.archetype}">
-                    <image class="world__resident-sprite"
-                        href="${App.escapeAttr(sprite)}"
-                        x="-24" y="-58" width="48" height="66"
-                        preserveAspectRatio="xMidYMax meet"></image>
+                    <g class="world__resident-body">
+                        ${this.cloakFor(r.archetype)}
+                        <g class="world__resident-limbs world__resident-limbs--back">
+                            <path class="world__resident-arm" d="M-8,-17 L-18,-9"></path>
+                            <path class="world__resident-leg" d="M-5,-5 L-10,7"></path>
+                        </g>
+                        <path class="world__resident-tunic" d="M-12,-20 Q0,-27 12,-20 L11,-5 Q0,2 -11,-5 Z"></path>
+                        <path class="world__resident-collar" d="M-5,-20 L0,-16 L5,-20"></path>
+                        <path class="world__resident-sash" d="M-9,-18 L10,-6"></path>
+                        ${this.torsoDetailFor(r.archetype)}
+                        <g class="world__resident-limbs world__resident-limbs--front">
+                            <path class="world__resident-arm" d="M8,-17 L18,-9"></path>
+                            <path class="world__resident-leg" d="M5,-5 L10,7"></path>
+                        </g>
+                        <rect class="world__resident-satchel" x="-17" y="-13" width="8" height="9" rx="1"></rect>
+                        <circle class="world__resident-head" cx="0" cy="-27" r="8"></circle>
+                        ${this.headwearFor(r.archetype)}
+                        <circle class="world__resident-eye" cx="-3.2" cy="-27" r="1"></circle>
+                        <circle class="world__resident-eye" cx="3.2" cy="-27" r="1"></circle>
+                        <path class="world__resident-mouth" d="M-3,-23.5 Q0,-22.2 3,-23.5"></path>
+                        ${this.faceDetailFor(r.archetype)}
+                        ${this.toolFor(r.archetype)}
+                    </g>
                 </g>
                 <text class="world__resident-name" text-anchor="middle" y="25">${App.escapeHtml(r.appName)}</text>
                 <text class="world__resident-minutes" text-anchor="middle" y="38">${App.escapeHtml(App.formatTime(r.minutes))}</text>
@@ -474,23 +534,18 @@ const Residents = {
             const legFloat = t * r.route.length;
             const leg = Math.floor(legFloat);
             const progressRaw = legFloat - leg;
-            const progress = this._steppedProgress(progressRaw);
+            const progress = this._smoothstep(progressRaw);
             const a = r.route[leg];
             const b = r.route[(leg + 1) % r.route.length];
             const tx = a.tx + (b.tx - a.tx) * progress;
             const ty = a.ty + (b.ty - a.ty) * progress;
-            const frame = Math.floor(((now + offset) / 180) % 4);
-            const bob = frame % 2 === 0 ? 0 : -2;
-            this._setPosition(appName, tx, ty, bob, this._directionFor(a, b), frame);
+            const bob = Math.sin(progress * Math.PI) * -1.8;
+            this._setPosition(appName, tx, ty, bob, this._directionFor(a, b));
         });
     },
 
     _smoothstep(t) {
         return t * t * (3 - 2 * t);
-    },
-
-    _steppedProgress(t) {
-        return Math.max(0, Math.min(1, Math.round(t * 6) / 6));
     },
 
     _directionFor(a, b) {
@@ -501,7 +556,7 @@ const Residents = {
         return 'south';
     },
 
-    _setPosition(appName, tx, ty, bob = 0, direction = 'south', frame = 0) {
+    _setPosition(appName, tx, ty, bob = 0, direction = 'south') {
         const node = this._nodeFor(appName);
         if (!node) return;
         const { x, y } = Iso.tileToScreen(tx, ty);
@@ -509,7 +564,6 @@ const Residents = {
         node.setAttribute('transform', `translate(${x.toFixed(1)} ${cy.toFixed(1)})`);
         node.dataset.walking = 'true';
         node.dataset.direction = direction;
-        node.dataset.walkFrame = String(frame);
     },
 
     _pollInterval: null,

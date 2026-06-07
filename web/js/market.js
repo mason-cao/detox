@@ -2,7 +2,6 @@
 
 const Market = {
     COLLAPSE_KEY: 'detox.market.collapsedSections',
-    ASSET_BASE: '/assets/market/pixel',
 
     async render(container) {
         destroyCharts();
@@ -191,78 +190,45 @@ const Market = {
         `;
     },
 
-    assetForItem(item = {}) {
+    kindForItem(item = {}) {
         const category = String(item.category || 'decor').toLowerCase();
         const key = String(item.key || item.item_key || item.name || category).toLowerCase();
         const rare = item.currency === 'starshard' || key.includes('star') || key.includes('moon') || key.includes('aurora') || key.includes('comet');
-        const asset = path => `${this.ASSET_BASE}/${path}`;
-        const itemSprite = () => asset('items.png');
-        const bazaarSprite = () => asset('bazaar.png');
-        const characterSheet = () => asset('characters.png');
-        const residentSprite = role => `/assets/sprites/residents/${role}.png`;
 
         if (category === 'outfit') {
-            const roles = {
-                mayors_hat: 'sheriff',
-                resident_sashes: 'scribe',
-                straw_hats: 'farmer',
-                explorer_cloaks: 'wanderer',
-                work_aprons: 'builder',
-                scholar_specs: 'scribe',
-                rain_capes: 'wanderer',
-                festival_masks: 'jester',
-                wool_scarves: 'musician',
-                sailor_caps: 'musician',
-                gardening_gloves: 'farmer',
-                messenger_bags: 'scribe',
-                music_vests: 'musician',
-                night_hoods: 'wanderer',
-                brass_badges: 'sheriff',
-                ribbon_belts: 'jester',
-                boot_polish: 'builder',
-                travel_pouches: 'wanderer',
-                pocket_watches: 'scribe',
-                star_pins: 'sheriff',
-            };
-            return { src: residentSprite(roles[key] || 'wanderer'), kind: 'outfit' };
+            return 'outfit';
         }
 
-        if (category === 'building') return { src: bazaarSprite(), kind: 'building' };
+        if (category === 'building') return 'building';
         if (key.includes('fence') || key.includes('dock') || key.includes('pier') || key.includes('bridge') || key.includes('booth') || key.includes('point')) {
-            return { src: itemSprite(), kind: 'building' };
+            return 'building';
         }
-        if (rare) return { src: itemSprite(), kind: 'gem' };
+        if (rare) return 'gem';
         if (key.includes('lantern') || key.includes('light') || key.includes('charm') || key.includes('bell') || key.includes('chime') || category === 'weather') {
-            return { src: itemSprite(), kind: 'weather' };
+            return 'weather';
         }
         if (key.includes('fence') || key.includes('dock') || key.includes('pier') || key.includes('bridge') || key.includes('lighthouse') || category === 'building') {
-            return { src: itemSprite(), kind: 'building' };
+            return 'building';
         }
         if (key.includes('sapling') || key.includes('plant') || key.includes('garden') || key.includes('grove') || key.includes('orchard') || key.includes('flower') || key.includes('herb') || key.includes('tree')) {
-            return { src: itemSprite(), kind: 'plant' };
+            return 'plant';
         }
         if (key.includes('path') || key.includes('lane') || key.includes('loop') || key.includes('meadow') || key.includes('marsh') || key.includes('steps') || key.includes('spring') || category === 'map') {
-            return { src: itemSprite(), kind: 'map' };
+            return 'map';
         }
 
-        const byCategory = {
-            decor: itemSprite(),
-            weather: itemSprite(),
-            building: bazaarSprite(),
-            map: itemSprite(),
-            outfit: characterSheet(),
-        };
-        return { src: byCategory[category] || itemSprite(), kind: category };
+        return category || 'reward';
     },
 
     assetPreview(item = {}) {
-        const asset = this.assetForItem(item);
+        const kind = this.kindForItem(item);
         const category = String(item.category || 'reward').toLowerCase();
         const rare = item.currency === 'starshard';
         const itemKey = String(item.key || item.item_key || item.name || 'reward').toLowerCase();
         const itemName = item.name || category;
+        const sceneKey = this.previewSceneKey(itemKey);
         return `
-            <div class="market-asset-preview market-asset-preview--${App.escapeAttr(category)} market-asset-preview--kind-${App.escapeAttr(asset.kind)} ${rare ? 'market-asset-preview--rare' : ''}" data-item-key="${App.escapeAttr(itemKey)}">
+            <div class="market-asset-preview market-asset-preview--${App.escapeAttr(category)} market-asset-preview--kind-${App.escapeAttr(kind)} ${rare ? 'market-asset-preview--rare' : ''}" data-item-key="${App.escapeAttr(itemKey)}" data-preview-scene="${App.escapeAttr(sceneKey)}">
                 <div class="market-asset-preview__frame">
                     ${this.vectorPreviewSvg({ ...item, key: item.key || item.item_key || itemName })}
                 </div>
@@ -273,15 +239,19 @@ const Market = {
     },
 
     sectionIcon(icon) {
-        const assets = {
-            decor: `${this.ASSET_BASE}/items.png`,
-            outfit: '/assets/sprites/residents/sheriff.png',
-            weather: `${this.ASSET_BASE}/items.png`,
-            building: `${this.ASSET_BASE}/bazaar.png`,
-            map: `${this.ASSET_BASE}/items.png`,
-            other: `${this.ASSET_BASE}/items.png`,
+        const paths = {
+            decor: '<path d="M22 49 V24 M42 49 V21" class="market-shelf__icon-line"/><path d="M16 25 H28 L25 39 H19 Z M36 22 H48 L45 37 H39 Z" class="market-shelf__icon-fill"/><circle cx="22" cy="33" r="8" class="market-shelf__icon-glow"/><circle cx="42" cy="31" r="8" class="market-shelf__icon-glow"/>',
+            outfit: '<ellipse cx="32" cy="51" rx="18" ry="5" class="market-shelf__icon-shadow"/><path d="M22 34 Q32 25 42 34 L40 50 H24 Z" class="market-shelf__icon-fill"/><circle cx="32" cy="24" r="8" class="market-shelf__icon-skin"/><path d="M19 22 Q32 9 45 22 Z M17 23 H47" class="market-shelf__icon-line"/><path d="M24 37 L42 47" class="market-shelf__icon-accent"/>',
+            weather: '<circle cx="23" cy="22" r="10" class="market-shelf__icon-fill"/><path d="M34 39 C39 30 52 31 55 40 C61 40 65 44 65 49 H25 C25 43 29 39 34 39 Z" class="market-shelf__icon-cloud"/><path d="M21 6 V12 M21 34 V40 M5 22 H11 M33 22 H39" class="market-shelf__icon-line"/>',
+            building: '<ellipse cx="32" cy="52" rx="24" ry="6" class="market-shelf__icon-shadow"/><rect x="18" y="30" width="28" height="21" class="market-shelf__icon-wall"/><path d="M14 31 L32 14 L50 31 Z" class="market-shelf__icon-fill"/><rect x="29" y="39" width="8" height="12" class="market-shelf__icon-door"/>',
+            map: '<path d="M13 42 C18 23 41 16 55 29 C66 39 54 51 35 53 C20 55 8 50 13 42 Z" class="market-shelf__icon-wall"/><path d="M27 39 L36 28 L49 38 L37 48 Z" class="market-shelf__icon-fill"/><path d="M20 45 C31 35 43 44 54 34" class="market-shelf__icon-accent"/>',
+            other: '<path d="M32 12 L38 25 L52 27 L42 37 L45 52 L32 45 L19 52 L22 37 L12 27 L26 25 Z" class="market-shelf__icon-fill"/>',
         };
-        return `<img src="${App.escapeAttr(assets[icon] || assets.other)}" alt="" loading="lazy">`;
+        return `
+            <svg class="market-shelf__icon" viewBox="0 0 64 64" role="presentation" focusable="false">
+                ${paths[icon] || paths.other}
+            </svg>
+        `;
     },
 
     renderStall(item, balance, ownedKeys) {
@@ -333,10 +303,11 @@ const Market = {
         const hue = Math.floor(this.hash(key) * 360);
         const accent = `hsl(${hue}, 54%, 62%)`;
         const palette = this.previewPalette();
+        const sceneKey = this.previewSceneKey(key);
 
-        const scene = this.previewScene(category, key, accent, palette);
+        const scene = this.previewScene(category, key, accent, palette, sceneKey);
         return `
-            <svg class="stall-preview" viewBox="0 0 112 84" role="presentation">
+            <svg class="stall-preview" viewBox="0 0 112 84" role="presentation" data-preview-scene="${App.escapeAttr(sceneKey)}">
                 <rect x="4" y="5" width="104" height="74" fill="${palette.parchment}" stroke="${palette.ink}" stroke-width="2.5"/>
                 <path d="M10 13 H102 M10 72 H102" stroke="${palette.sand}" stroke-width="3" opacity=".65"/>
                 <path d="M4 5 H18 V10 H9 V20 H4 Z M108 5 H94 V10 H103 V20 H108 Z M4 79 H18 V74 H9 V64 H4 Z M108 79 H94 V74 H103 V64 H108 Z" fill="${item.currency === 'starshard' ? palette.shard : palette.coin}" stroke="${palette.ink}" stroke-width="1.4"/>
@@ -349,6 +320,112 @@ const Market = {
                 </g>
             </svg>
         `;
+    },
+
+    previewSceneKey(key) {
+        const scenes = {
+            lantern_path: 'decor-lantern-road',
+            harbor_lanterns: 'decor-harbor-lanterns',
+            market_bunting: 'decor-market-bunting',
+            tide_pool_garden: 'decor-tide-pool-garden',
+            flower_boxes: 'decor-flower-boxes',
+            pebble_mosaics: 'decor-pebble-mosaic',
+            fountain_tile: 'decor-fountain-tile',
+            picnic_cloth: 'decor-picnic-cloth',
+            wind_chimes: 'decor-wind-chimes',
+            shell_border: 'decor-shell-border',
+            herb_planters: 'decor-herb-planters',
+            village_banners: 'decor-village-banners',
+            firefly_jars: 'decor-firefly-jars',
+            mossy_steps: 'decor-mossy-steps',
+            tea_table: 'decor-tea-table',
+            orchard_crates: 'decor-orchard-crates',
+            birdbath: 'decor-birdbath',
+            moon_mirror: 'decor-moon-mirror',
+            painted_signposts: 'decor-painted-signposts',
+            sun_dial: 'decor-sun-dial',
+            mayors_hat: 'outfit-mayor-hat',
+            resident_sashes: 'outfit-resident-sashes',
+            straw_hats: 'outfit-straw-hats',
+            explorer_cloaks: 'outfit-explorer-cloaks',
+            work_aprons: 'outfit-work-aprons',
+            scholar_specs: 'outfit-scholar-specs',
+            rain_capes: 'outfit-rain-capes',
+            festival_masks: 'outfit-festival-masks',
+            wool_scarves: 'outfit-wool-scarves',
+            sailor_caps: 'outfit-sailor-caps',
+            gardening_gloves: 'outfit-gardening-gloves',
+            messenger_bags: 'outfit-messenger-bags',
+            music_vests: 'outfit-music-vests',
+            night_hoods: 'outfit-night-hoods',
+            brass_badges: 'outfit-brass-badges',
+            ribbon_belts: 'outfit-ribbon-belts',
+            boot_polish: 'outfit-boot-polish',
+            travel_pouches: 'outfit-travel-pouches',
+            pocket_watches: 'outfit-pocket-watches',
+            star_pins: 'outfit-star-pins',
+            sunbeam_charm: 'weather-sunbeam-charm',
+            cloud_kite: 'weather-cloud-kite',
+            rain_bell: 'weather-rain-bell',
+            breeze_streamers: 'weather-breeze-streamers',
+            rainbow_prism: 'weather-rainbow-prism',
+            fog_lantern: 'weather-fog-lantern',
+            storm_drums: 'weather-storm-drums',
+            dew_collectors: 'weather-dew-collectors',
+            aurora_glass: 'weather-aurora-glass',
+            tide_whistle: 'weather-tide-whistle',
+            noon_chimes: 'weather-noon-chimes',
+            dusk_filter: 'weather-dusk-filter',
+            cloud_seeds: 'weather-cloud-seeds',
+            wind_sock: 'weather-wind-sock',
+            thunder_jars: 'weather-thunder-jars',
+            mist_fountain: 'weather-mist-fountain',
+            comet_lens: 'weather-comet-lens',
+            moonbeam_charm: 'weather-moonbeam-charm',
+            weather_vane: 'weather-vane',
+            sun_sail: 'weather-sun-sail',
+            lighthouse_skin: 'building-lighthouse-skin',
+            observatory_roof: 'building-observatory-roof',
+            market_roof_tiles: 'building-market-roof-tiles',
+            ruleboard_roof_cap: 'building-ruleboard-roof-cap',
+            registry_archives: 'building-registry-archives',
+            townhall_bell: 'building-townhall-bell',
+            study_lamplight: 'building-study-lamplight',
+            postcard_awning: 'building-postcard-awning',
+            charter_pillars: 'building-charter-pillars',
+            chronicle_stacks: 'building-chronicle-stacks',
+            bakery_facade: 'building-bakery-facade',
+            bathhouse_tiles: 'building-bathhouse-tiles',
+            greenhouse_frame: 'building-greenhouse-frame',
+            workshop_chimney: 'building-workshop-chimney',
+            inn_windowboxes: 'building-inn-windowboxes',
+            schoolhouse_clock: 'building-schoolhouse-clock',
+            dockmaster_booth: 'building-dockmaster-booth',
+            library_balcony: 'building-library-balcony',
+            tea_shop_shutters: 'building-tea-shop-shutters',
+            apothecary_shelves: 'building-apothecary-shelves',
+            cove_expansion: 'map-cove-expansion',
+            north_isle_bridge: 'map-north-bridge',
+            south_dock: 'map-south-dock',
+            west_grove_path: 'map-west-grove-path',
+            east_overlook: 'map-east-overlook',
+            orchard_corner: 'map-orchard-corner',
+            hidden_spring: 'map-hidden-spring',
+            shell_beach: 'map-shell-beach',
+            watchtower_hill: 'map-watchtower-hill',
+            ferry_marker: 'map-ferry-marker',
+            tidal_steps: 'map-tidal-steps',
+            cave_gate: 'map-cave-gate',
+            marsh_walkway: 'map-marsh-walkway',
+            lighthouse_point: 'map-lighthouse-point',
+            meadow_loop: 'map-meadow-loop',
+            quarry_nook: 'map-quarry-nook',
+            garden_lane: 'map-garden-lane',
+            stargaze_plateau: 'map-stargaze-plateau',
+            fishing_pier: 'map-fishing-pier',
+            reef_marker: 'map-reef-marker',
+        };
+        return scenes[String(key || '').toLowerCase()] || 'generic';
     },
 
     previewPalette() {
@@ -367,19 +444,22 @@ const Market = {
         };
     },
 
-    previewScene(category, key, accent, p) {
+    previewScene(category, key, accent, p, sceneKey = this.previewSceneKey(key)) {
         const normalizedCategory = String(category || '').toLowerCase();
         const normalizedKey = String(key || '').toLowerCase();
-        if (normalizedCategory === 'decor') return this.decorPreview(normalizedKey, accent, p);
-        if (normalizedCategory === 'outfit') return this.outfitPreview(normalizedKey, accent, p);
-        if (normalizedCategory === 'weather') return this.weatherPreview(normalizedKey, accent, p);
-        if (normalizedCategory === 'building') return this.buildingPreview(normalizedKey, accent, p);
-        if (normalizedCategory === 'map') return this.mapPreview(normalizedKey, accent, p);
-        return this.decorPreview(normalizedKey, accent, p);
+        const semanticKey = `${normalizedKey} ${sceneKey.replace(/-/g, ' ')}`;
+        if (normalizedCategory === 'decor') return this.decorPreview(semanticKey, accent, p);
+        if (normalizedCategory === 'outfit') return this.outfitPreview(semanticKey, accent, p);
+        if (normalizedCategory === 'weather') return this.weatherPreview(semanticKey, accent, p);
+        if (normalizedCategory === 'building') return this.buildingPreview(semanticKey, accent, p);
+        if (normalizedCategory === 'map') return this.mapPreview(semanticKey, accent, p);
+        return this.decorPreview(semanticKey, accent, p);
     },
 
     decorPreview(key, accent, p) {
-        const base = `<path d="M18 48 C24 29 48 21 70 33 C82 40 75 54 54 57 C34 60 14 55 18 48 Z" fill="${p.moss}" stroke="${p.ink}" stroke-width="2"/>`;
+        const base = `<path d="M18 48 C24 29 48 21 70 33 C82 40 75 54 54 57 C34 60 14 55 18 48 Z" fill="${p.moss}" stroke="${p.ink}" stroke-width="2"/><path d="M24 51 C36 44 58 50 75 42" fill="none" stroke="${p.mossDark}" stroke-width="1.5" opacity=".5"/>`;
+        if (key.includes('firefly')) return `${base}<g stroke="${p.ink}" stroke-width="1.4"><rect x="28" y="32" width="12" height="18" rx="2" fill="${p.parchment}"/><rect x="58" y="29" width="12" height="18" rx="2" fill="${p.parchment}"/></g><g fill="${p.coin}" opacity=".85"><circle cx="34" cy="39" r="4"/><circle cx="64" cy="36" r="4"/><circle cx="49" cy="28" r="2.5"/></g><path d="M30 30 H38 M60 27 H68" stroke="${p.ink}" stroke-width="1.2"/>`;
+        if (key.includes('harbor')) return `<path d="M18 46 C28 33 48 26 70 34 C82 39 75 54 55 57 C36 60 16 55 18 46 Z" fill="${p.sea}" stroke="${p.ink}" stroke-width="2"/><path d="M27 52 L72 35" stroke="${p.wood}" stroke-width="6"/><path d="M34 49 V58 M48 44 V55 M62 39 V50" stroke="${p.ink}" stroke-width="1.4"/><path d="M30 37 V21 M66 33 V18" stroke="${p.ink}" stroke-width="2"/><path d="M24 21 H36 L34 33 H27 Z M60 18 H72 L70 30 H63 Z" fill="${p.coin}" stroke="${p.ink}" stroke-width="2"/><circle cx="30" cy="28" r="7" fill="${p.coin}" opacity=".34"/><circle cx="66" cy="25" r="7" fill="${p.coin}" opacity=".34"/>`;
         if (key.includes('lantern')) return `${base}<path d="M36 48 V25 M60 49 V22" stroke="${p.ink}" stroke-width="2"/><path d="M29 25 H43 L40 38 H32 Z M53 22 H67 L64 36 H56 Z" fill="${p.coin}" stroke="${p.ink}" stroke-width="2"/><circle cx="36" cy="33" r="8" fill="${p.coin}" opacity=".35"/><circle cx="60" cy="31" r="8" fill="${p.coin}" opacity=".35"/>`;
         if (key.includes('bunting') || key.includes('banner')) return `${base}<path d="M23 25 C36 18 56 18 73 25" fill="none" stroke="${p.ink}" stroke-width="2"/><path d="M28 26 L34 37 L40 26 M45 24 L51 36 L57 24 M62 25 L68 36 L74 25" fill="${accent}" stroke="${p.ink}" stroke-width="1.5"/>`;
         if (key.includes('pool') || key.includes('mirror')) return `${base}<ellipse cx="50" cy="42" rx="20" ry="9" fill="${key.includes('moon') ? p.night : p.sea}" stroke="${p.ink}" stroke-width="2"/><path d="M36 41 C43 36 56 36 64 42" fill="none" stroke="${p.parchment}" stroke-width="2" opacity=".8"/><circle cx="58" cy="34" r="4" fill="${key.includes('moon') ? p.shard : p.coin}"/>`;
@@ -404,15 +484,21 @@ const Market = {
         const bag = key.includes('bag') || key.includes('pouch') ? `<path d="M37 34 L59 54" stroke="${p.ink}" stroke-width="1.5"/><rect x="55" y="44" width="12" height="10" fill="${p.wood}" stroke="${p.ink}" stroke-width="1.5"/>` : '';
         const tool = key.includes('glove') || key.includes('apron') || key.includes('boot') ? `<path d="M62 38 L75 30" stroke="${p.ink}" stroke-width="2"/><rect x="72" y="25" width="7" height="8" fill="${p.wood}" stroke="${p.ink}" stroke-width="1.4"/>` : '';
         const badge = key.includes('badge') || key.includes('pin') || key.includes('mask') || key.includes('vest') ? `<circle cx="55" cy="39" r="4" fill="${p.coin}" stroke="${p.ink}" stroke-width="1.5"/><path d="M41 24 Q48 18 55 24" fill="none" stroke="${key.includes('mask') ? p.coral : p.ink}" stroke-width="2"/>` : '';
-        return `${villager}${cloak}${hat}${specs}${sash}${bag}${tool}${badge}<path d="M38 55 L32 62 M58 55 L64 62" stroke="${p.ink}" stroke-width="2" stroke-linecap="round"/>`;
+        const watch = key.includes('watch') ? `<circle cx="67" cy="42" r="6" fill="${p.coin}" stroke="${p.ink}" stroke-width="1.5"/><path d="M67 42 V38 M67 42 H70" stroke="${p.ink}" stroke-width="1"/>` : '';
+        return `${villager}${cloak}${hat}${specs}${sash}${bag}${tool}${badge}${watch}<path d="M38 55 L32 62 M58 55 L64 62" stroke="${p.ink}" stroke-width="2" stroke-linecap="round"/>`;
     },
 
     weatherPreview(key, accent, p) {
         const sky = `<rect x="10" y="12" width="76" height="42" fill="${key.includes('night') || key.includes('moon') || key.includes('aurora') || key.includes('comet') ? p.night : '#7fc8df'}" stroke="${p.ink}" stroke-width="2"/><circle cx="24" cy="25" r="8" fill="${key.includes('moon') || key.includes('night') ? p.shard : p.coin}" stroke="${p.ink}" stroke-width="2"/><path d="M39 35 C45 27 59 28 64 36 C70 36 75 40 75 45 H30 C30 39 33 35 39 35 Z" fill="${p.parchment}" stroke="${p.ink}" stroke-width="2"/>`;
+        if (key.includes('charm') || key.includes('beam')) return `${sky}<circle cx="58" cy="34" r="13" fill="${key.includes('moon') ? p.shard : p.coin}" opacity=".26"/><path d="M58 18 V50 M42 34 H74 M47 23 L69 45 M69 23 L47 45" stroke="${key.includes('moon') ? p.shard : p.coin}" stroke-width="2.4" stroke-linecap="round"/>`;
         if (key.includes('kite')) return `${sky}<path d="M58 17 L75 28 L59 39 L43 28 Z" fill="${accent}" stroke="${p.ink}" stroke-width="2"/><path d="M59 39 C54 45 61 50 52 56" fill="none" stroke="${p.ink}" stroke-width="1.5"/>`;
         if (key.includes('bell') || key.includes('chime')) return `${sky}<path d="M47 18 V53" stroke="${p.ink}" stroke-width="2"/><path d="M35 31 H59 L55 48 H39 Z" fill="${p.coin}" stroke="${p.ink}" stroke-width="2"/><circle cx="47" cy="51" r="3" fill="${accent}" stroke="${p.ink}" stroke-width="1.2"/>`;
+        if (key.includes('lantern')) return `${sky}<path d="M49 18 V54" stroke="${p.ink}" stroke-width="2"/><path d="M38 29 H60 L57 48 H41 Z" fill="${p.coin}" stroke="${p.ink}" stroke-width="2"/><circle cx="49" cy="39" r="13" fill="${p.coin}" opacity=".28"/>`;
         if (key.includes('prism') || key.includes('aurora')) return `${sky}<path d="M31 50 L50 19 L69 50 Z" fill="${p.parchment}" stroke="${p.ink}" stroke-width="2"/><path d="M54 28 L81 18 M55 36 L82 36 M54 43 L79 55" stroke="${accent}" stroke-width="3" stroke-linecap="round"/>`;
         if (key.includes('drum') || key.includes('thunder')) return `${sky}<ellipse cx="49" cy="42" rx="17" ry="8" fill="${p.wood}" stroke="${p.ink}" stroke-width="2"/><rect x="32" y="32" width="34" height="13" fill="${p.coral}" stroke="${p.ink}" stroke-width="2"/><path d="M31 24 L47 34 M66 24 L51 34" stroke="${p.ink}" stroke-width="2"/>`;
+        if (key.includes('filter')) return `${sky}<rect x="17" y="19" width="62" height="28" fill="${p.coral}" opacity=".38"/><path d="M18 49 C34 39 58 58 82 40" fill="none" stroke="${p.coin}" stroke-width="3"/>`;
+        if (key.includes('seeds')) return `${sky}<g fill="${p.parchment}" stroke="${p.ink}" stroke-width="1.5"><path d="M22 45 C25 38 35 39 38 46 Z"/><path d="M49 33 C53 24 67 27 70 36 Z"/><path d="M58 49 C62 42 75 43 78 51 Z"/></g>`;
+        if (key.includes('whistle')) return `${sky}<path d="M30 48 C42 41 54 55 72 45" fill="none" stroke="${p.sea}" stroke-width="5" stroke-linecap="round"/><path d="M39 28 L62 22 L70 31 L45 37 Z" fill="${accent}" stroke="${p.ink}" stroke-width="2"/>`;
         if (key.includes('sock') || key.includes('vane') || key.includes('sail')) return `${sky}<path d="M35 54 V18" stroke="${p.ink}" stroke-width="2"/><path d="M35 20 C48 16 58 19 70 24 C58 30 48 26 35 31 Z" fill="${accent}" stroke="${p.ink}" stroke-width="2"/>`;
         if (key.includes('fountain') || key.includes('dew')) return `${sky}<ellipse cx="49" cy="48" rx="21" ry="7" fill="${p.sea}" stroke="${p.ink}" stroke-width="2"/><path d="M49 45 C42 34 56 34 49 23" fill="none" stroke="${p.parchment}" stroke-width="3" stroke-linecap="round"/>`;
         if (key.includes('comet')) return `${sky}<path d="M28 26 C44 18 55 17 72 16" stroke="${p.coin}" stroke-width="4" stroke-linecap="round"/><circle cx="73" cy="16" r="5" fill="${accent}" stroke="${p.ink}" stroke-width="1.5"/>`;
@@ -423,10 +509,11 @@ const Market = {
         const roofColor = key.includes('market') || key.includes('roof') ? p.coral : accent;
         const body = `<ellipse cx="48" cy="58" rx="28" ry="6" fill="rgba(42,30,42,.22)"/><rect x="28" y="30" width="38" height="26" fill="${p.sand}" stroke="${p.ink}" stroke-width="2"/><path d="M23 31 L48 12 L73 31 Z" fill="${roofColor}" stroke="${p.ink}" stroke-width="2"/><rect x="43" y="42" width="10" height="14" fill="${p.ink}"/>`;
         if (key.includes('lighthouse')) return `<ellipse cx="48" cy="58" rx="25" ry="5" fill="rgba(42,30,42,.22)"/><path d="M38 54 L43 18 H58 L63 54 Z" fill="${p.parchment}" stroke="${p.ink}" stroke-width="2"/><rect x="40" y="15" width="21" height="9" fill="${accent}" stroke="${p.ink}" stroke-width="2"/><path d="M61 19 L84 12 M40 19 L14 12" stroke="${p.coin}" stroke-width="3" opacity=".8"/>`;
+        if (key.includes('lamp')) return `${body}<circle cx="60" cy="38" r="11" fill="${p.coin}" opacity=".28"/><path d="M60 25 V50" stroke="${p.ink}" stroke-width="1.6"/><path d="M53 30 H67 L64 41 H56 Z" fill="${p.coin}" stroke="${p.ink}" stroke-width="1.5"/>`;
         if (key.includes('dome') || key.includes('observatory')) return `${body}<path d="M34 28 Q48 8 62 28 Z" fill="${p.coin}" stroke="${p.ink}" stroke-width="2"/><circle cx="48" cy="18" r="4" fill="${p.shard}" stroke="${p.ink}" stroke-width="1.2"/>`;
         if (key.includes('shelf') || key.includes('archive') || key.includes('apothecary')) return `${body}<rect x="31" y="35" width="13" height="16" fill="${p.wood}" stroke="${p.ink}" stroke-width="1.5"/><path d="M32 40 H43 M32 46 H43" stroke="${p.parchment}" stroke-width="1.5"/><circle cx="60" cy="36" r="3" fill="${p.shard}" stroke="${p.ink}"/>`;
         if (key.includes('bell') || key.includes('clock')) return `${body}<circle cx="48" cy="24" r="6" fill="${p.parchment}" stroke="${p.ink}" stroke-width="1.5"/><path d="M48 24 V20 M48 24 H52" stroke="${p.ink}" stroke-width="1.2"/><path d="M41 10 H55 L52 17 H44 Z" fill="${p.coin}" stroke="${p.ink}" stroke-width="1.5"/>`;
-        if (key.includes('awning') || key.includes('shutter') || key.includes('facade')) return `${body}<rect x="24" y="31" width="48" height="10" fill="${p.parchment}" stroke="${p.ink}" stroke-width="1.5"/><path d="M27 31 V41 M36 31 V41 M45 31 V41 M54 31 V41 M63 31 V41" stroke="${p.coral}" stroke-width="4"/>`;
+        if (key.includes('awning') || key.includes('shutter') || key.includes('facade') || key.includes('windowbox') || key.includes('booth') || key.includes('tile')) return `${body}<rect x="24" y="31" width="48" height="10" fill="${p.parchment}" stroke="${p.ink}" stroke-width="1.5"/><path d="M27 31 V41 M36 31 V41 M45 31 V41 M54 31 V41 M63 31 V41" stroke="${p.coral}" stroke-width="4"/><rect x="31" y="47" width="10" height="5" fill="${p.moss}" stroke="${p.ink}" stroke-width="1"/>`;
         if (key.includes('pillar') || key.includes('balcony')) return `${body}<path d="M27 56 V31 M69 56 V31" stroke="${p.parchment}" stroke-width="5"/><path d="M31 43 H65" stroke="${p.ink}" stroke-width="2"/>`;
         if (key.includes('chimney') || key.includes('stack')) return `${body}<rect x="58" y="12" width="9" height="18" fill="${p.wood}" stroke="${p.ink}" stroke-width="1.5"/><path d="M64 11 C56 3 71 0 63 -7" fill="none" stroke="${p.parchment}" stroke-width="2" stroke-linecap="round"/>`;
         if (key.includes('greenhouse')) return `<ellipse cx="48" cy="58" rx="30" ry="6" fill="rgba(42,30,42,.22)"/><path d="M20 55 H76 V34 Q48 12 20 34 Z" fill="rgba(127,200,223,.55)" stroke="${p.ink}" stroke-width="2"/><path d="M30 55 V30 M48 55 V18 M66 55 V30 M24 42 H72" stroke="${p.ink}" stroke-width="1.4"/>`;
@@ -435,12 +522,14 @@ const Market = {
 
     mapPreview(key, accent, p) {
         const island = `<path d="M16 49 C22 25 52 15 74 31 C88 40 76 57 51 61 C30 64 11 57 16 49 Z" fill="${p.sand}" stroke="${p.ink}" stroke-width="2"/><path d="M34 45 L48 29 L67 42 L51 55 Z" fill="${p.moss}" stroke="${p.ink}" stroke-width="1.8"/>`;
+        if (key.includes('cove') || key.includes('annex')) return `${island}<path d="M67 41 C76 33 86 38 84 49 C78 54 68 53 61 49 Z" fill="${p.moss}" stroke="${p.ink}" stroke-width="1.5"/><path d="M56 45 C66 36 73 51 84 43" fill="none" stroke="${accent}" stroke-width="3"/>`;
         if (key.includes('bridge')) return `${island}<path d="M19 42 C35 28 59 28 76 42" fill="none" stroke="${p.wood}" stroke-width="5"/><path d="M25 40 V48 M48 31 V42 M70 40 V48" stroke="${p.ink}" stroke-width="1.5"/>`;
         if (key.includes('dock') || key.includes('pier')) return `${island}<path d="M52 54 L78 65" stroke="${p.wood}" stroke-width="7"/><path d="M58 56 L62 65 M68 60 L72 68" stroke="${p.ink}" stroke-width="1.5"/>`;
         if (key.includes('grove') || key.includes('orchard') || key.includes('garden')) return `${island}<g fill="${p.mossDark}" stroke="${p.ink}" stroke-width="1.2"><circle cx="32" cy="34" r="6"/><circle cx="45" cy="30" r="6"/><circle cx="61" cy="37" r="6"/></g><circle cx="45" cy="29" r="2" fill="${accent}"/>`;
         if (key.includes('overlook') || key.includes('tower') || key.includes('plateau')) return `${island}<path d="M56 48 L66 20 L76 48 Z" fill="${p.wood}" stroke="${p.ink}" stroke-width="2"/><rect x="61" y="17" width="10" height="8" fill="${accent}" stroke="${p.ink}" stroke-width="1.5"/>`;
         if (key.includes('spring') || key.includes('beach') || key.includes('reef')) return `${island}<ellipse cx="50" cy="45" rx="18" ry="7" fill="${p.sea}" stroke="${p.ink}" stroke-width="1.6"/><path d="M22 53 C38 48 55 58 78 49" fill="none" stroke="${accent}" stroke-width="3"/>`;
         if (key.includes('buoy') || key.includes('marker')) return `${island}<path d="M75 48 V25" stroke="${p.ink}" stroke-width="2"/><path d="M66 27 H84 L79 37 H71 Z" fill="${accent}" stroke="${p.ink}" stroke-width="2"/><circle cx="75" cy="50" r="6" fill="${p.coral}" stroke="${p.ink}" stroke-width="1.5"/>`;
+        if (key.includes('lighthouse')) return `${island}<path d="M66 51 L70 27 H80 L84 51 Z" fill="${p.parchment}" stroke="${p.ink}" stroke-width="1.6"/><circle cx="75" cy="28" r="5" fill="${p.coin}" opacity=".55"/>`;
         if (key.includes('cave') || key.includes('quarry')) return `${island}<path d="M31 53 Q48 28 66 53 Z" fill="#6a6862" stroke="${p.ink}" stroke-width="2"/><path d="M42 53 Q49 39 57 53 Z" fill="${p.night}"/>`;
         if (key.includes('walkway') || key.includes('steps') || key.includes('loop') || key.includes('lane')) return `${island}<path d="M24 51 C34 40 47 53 58 42 S72 35 78 45" fill="none" stroke="${p.wood}" stroke-width="5" stroke-linecap="round"/><path d="M31 43 L36 51 M47 47 L52 55 M64 37 L69 45" stroke="${p.ink}" stroke-width="1.2"/>`;
         return `${island}<path d="M26 52 C38 38 55 50 72 35" fill="none" stroke="${accent}" stroke-width="4" stroke-linecap="round"/><circle cx="72" cy="35" r="6" fill="${p.coin}" stroke="${p.ink}" stroke-width="1.5"/>`;
