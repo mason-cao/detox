@@ -34,7 +34,9 @@ This GitHub release is unsigned. macOS will warn that the developer cannot be ve
 
 - Menu-bar Detox app with pause/resume, dashboard, logs, launch-at-login, cloud pairing, sync, and sign-out controls.
 - Local-first screen-time tracking using the Mac's frontmost app.
-- Detox Isle dashboard, residents, goals, blocks, market rewards, postcards, privacy controls, export, and delete.
+- Detox Isle dashboard, clickable isometric buildings, residents, goals, blocks, market rewards, postcards, privacy controls, export, and delete.
+- Programmatic SVG villager residents with closed local walking routes that avoid building footprints.
+- Generated SVG item previews across the 100-item market catalog; no bitmap catalog or resident sprite atlas dependency.
 - Optional hosted dashboard pairing for users running a compatible cloud deployment.
 
 ## Known Limitations

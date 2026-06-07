@@ -17,10 +17,10 @@ Detox is a macOS screen-time tracker that polls your frontmost app every 2 secon
 - A real isometric SVG world replaces the dashboard grid. Every tracked app is a resident, every restriction is a law, every building is a destination.
 - **Drag-to-pan** — click anywhere on the ground or sky and drag the camera. Touch works on mobile/iPad. Double-click re-centers.
 - **Sophisticated terrain** — four green tile variants distributed by deterministic tile hash (no checkerboard), south-east shadow wedge per tile for fake elevation, scattered meadow decor (daisies, pebbles, grass tufts, bushes) on a hash-seeded distribution that skips building footprints.
-- **Detailed buildings** — every building has iso depth (right-side wall panel + roof side slope), a base-shadow ellipse that fades when you hover, mullioned windows that light up at night, and ornaments that read its purpose: a clock + weather vane on Town Hall, ledger sign on Registry, full bazaar stall on Market, smoking chimney on Chronicle, scroll inset on Charter, complete rule hut with chalkboard, postcard + mailbox flag on Postcards, arched stained glass on Mayor's Study.
+- **Detailed buildings** — every building has iso depth (right-side wall panel + roof side slope), a base-shadow ellipse that fades when you hover, an expanded SVG hit target for reliable navigation, mullioned windows that light up at night, and ornaments that read its purpose: a clock + weather vane on Town Hall, ledger sign on Registry, full bazaar stall on Market, smoking chimney on Chronicle, scroll inset on Charter, complete rule hut with chalkboard, postcard + mailbox flag on Postcards, arched stained glass on Mayor's Study.
 - **Day/night light pass** driven by the system clock. Soft dim and warm lantern glow above each building at dusk.
 - **Live frontmost glow** on the resident marker representing your current app (3 s frontend poll, 2 s server cache).
-- **Simple villager residents** keep app presence readable while gliding through eased routes. The active villager rises visually through glow and layer priority.
+- **Simple villager residents** keep app presence readable while gliding through closed local routes that avoid building footprints. The active villager rises visually through glow and layer priority.
 - **Visual compass map** stays available on the Isle as a small compass control with building pins; buildings remain the primary navigation surface.
 
 ### Tab signature animations
@@ -40,7 +40,7 @@ Detox is a macOS screen-time tracker that polls your frontmost app every 2 secon
 - **Chronicle** (Statistics) — pickups count, checking frequency, longest detox, longest continuous use, first/last pickup, most-used app. Daily + weekly views with Chart.js.
 - **Rule Board** (App Blocker) — block individual apps always or after a daily time limit, block by category, or run **Focus Mode** (whitelist-only). Blocked apps are force-quit (`pkill -x`) with a macOS notification.
 - **Charter** (Goals) — daily total decree, per-app limits, bedtime bell.
-- **Market** — closed-economy reward loop. Detoxed minutes earn ☀ Sunlight; streaks earn ✦ Starshards. Spend on 100 sectioned visual upgrades to the Isle. 100% refund within 24 h, 50% after. Hall of Honor records milestones.
+- **Market** — closed-economy reward loop. Detoxed minutes earn ☀ Sunlight; streaks earn ✦ Starshards. Spend on 100 sectioned visual upgrades to the Isle, each with a generated SVG item preview. 100% refund within 24 h, 50% after. Hall of Honor records milestones.
 - **Postcards** — generate a 1080×1920 PNG of the day's stats to share. (Local agent only — cloud renders the rest of the dashboard but card generation needs Pillow on the device.)
 - **Mayor's Study** (Settings) — idle timeout, **Ghost Mode** toggle (hash app names before they leave the Mac), CSV/JSON range exports, **full archive** JSON download, **Delete Everything** with typed confirmation, categories, keyboard shortcuts. Links to the in-repo [privacy policy](docs/privacy.md) and [terms of service](docs/terms.md).
 
@@ -232,13 +232,14 @@ detox/
 │   │   ├── pair.js              # pair page logic
 │   │   ├── app.js               # router, API client, toasts, shortcuts
 │   │   ├── iso.js               # tile projection + tile hash + shadow wedge
-│   │   ├── world.js             # SVG scaffold, sky, weather, panZ, ground decor
+│   │   ├── world.js             # SVG scaffold, sky, weather, panZ, ground decor, building hitboxes
 │   │   ├── buildings.js         # 8 building generators with iso depth
 │   │   ├── compass.js           # visual compass map HUD
 │   │   ├── effects.js           # waxSeal, chalkDust, currencyFloat, pageTurn, slamIn
-│   │   ├── residents.js         # smooth villager residents + frontmost glow
+│   │   ├── residents.js         # inline-SVG villagers, closed local walking loops, frontmost glow
+│   │   ├── market.js            # 100 generated SVG item previews + buy/refund UI
 │   │   ├── isle.js              # mounts world + residents + signboards
-│   │   └── dashboard.js + apps.js + stats.js + goals.js + blocker.js + market.js + cards.js + settings.js
+│   │   └── dashboard.js + apps.js + stats.js + goals.js + blocker.js + cards.js + settings.js
 ├── infra/
 │   ├── docker-compose.dev.yml   # Local Postgres + Redis for dev
 │   ├── railway/README.md        # Runbook: project init, env wiring, deploy, alembic
@@ -268,10 +269,11 @@ detox/
 | Cloud DB | Supabase Postgres 17 with RLS scoped via `app.current_user_id` GUC |
 | Cloud cache | Redis (Railway add-on) — rate limit + rules etag |
 | Hosting | Railway (api + Redis), Supabase (Postgres + Auth) |
-| Web | Vanilla HTML/CSS/JS — no bundler, no Node |
+| Web | Vanilla HTML/CSS/JS — no runtime bundler |
 | Charts | Chart.js 4.4.1 (CDN) |
 | Fonts | Press Start 2P, VT323, Inter (Google Fonts) |
-| Resident markers | Programmatic SVG villagers, eased RAF movement, no sprite atlas dependency |
+| Resident markers | Programmatic SVG villagers, eased RAF movement, closed local routes, no sprite atlas dependency |
+| Market item art | 100 generated SVG item previews, no bitmap catalog dependency |
 | App detection | `osascript` (AppleScript) — macOS only |
 | App blocking | `pkill -x` (process executable name match) |
 | Notifications | macOS Notification Center via `osascript` |
@@ -279,7 +281,7 @@ detox/
 
 ---
 
-## Status (May 2026)
+## Status (June 2026)
 
 | Phase | What | State |
 |---|---|---|
@@ -301,6 +303,8 @@ The GitHub release ships an unsigned `Detox.app` inside a DMG, with a zip fallba
 
 ```bash
 python3 -m pytest agent/tests api/tests -q
+node --test web/tests/*.test.cjs
+find web/js -name '*.js' -exec node --check {} \;
 ```
 
 The api tests skip Postgres- and Redis-marked cases unless `DETOX_TEST_DATABASE_URL` and `DETOX_TEST_REDIS_URL` point at reachable instances. The agent tests run pure-Python against a tmp SQLite file. Visual / restriction behavior (real `pkill`, real `osascript`, real browser drag) is verified manually.

@@ -135,7 +135,7 @@
     opacity: 1;
 }
 
-/* ── Ground decor sprites (daisy, pebble, grass, bush) ───────────────── */
+/* ── Ground decor shapes (daisy, pebble, grass, bush) ────────────────── */
 .world__decor { pointer-events: none; }
 .world__decor--daisy circle { fill: #fff4d6; }
 .world__decor--daisy .world__decor-core { fill: var(--dc-coin); }
@@ -529,7 +529,7 @@
     .world__building:focus .world__building-shape { transform: none; }
 }
 
-/* ── Residents — sprite layer styles live in residents.css ───────────── */
+/* ── Residents — villager styles live in residents.css ───────────────── */
 .world__resident { cursor: pointer; }
 
 /* ── Day / night light pass ──────────────────────────────────────────── */
