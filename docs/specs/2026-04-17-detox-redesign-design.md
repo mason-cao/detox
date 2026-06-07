@@ -162,7 +162,7 @@ Rule: Inter is the default; `font-family: pixel` is a per-component opt-in.
 
 ### 5.3 Effects & motion
 
-- `image-rendering: pixelated` on all sprites/illustrations; anti-aliasing disabled there.
+- `image-rendering: pixelated` on raster-style decorations only. Current resident and market item art is code-native SVG, with no resident sprite atlas or bitmap market catalog dependency.
 - Pixel borders via double-step box-shadow: `0 0 0 2px #3B2A1A, 0 4px 0 0 #3B2A1A`.
 - Hover micro-interactions: 100–150 ms, color/opacity only, **never scale** (prevents layout shift).
 - Resident motion: eased route interpolation via `requestAnimationFrame`, with small inline-SVG body motion. No resident sprite atlas dependency.

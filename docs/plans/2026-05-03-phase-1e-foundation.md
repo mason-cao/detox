@@ -9,7 +9,7 @@
 **Tech stack:** Vanilla HTML / CSS / JS. No build step. Inline SVG. Existing Press Start 2P / VT323 / Inter fonts. No new Python deps. No backend changes.
 
 **Non-goals (deferred to Plan 1f / 1g):**
-- Sprite-pack residents and walk cycles. Residents in 1e remain emoji rendered as SVG `<text>` so Plan 1f can swap them for `<image>` sprite atlases in place.
+- Programmatic villager residents and walk cycles. Residents in 1e remain emoji rendered as SVG `<text>` so Plan 1f can replace them in place without changing the world layer contract.
 - Frontmost-app live binding and the new `/api/dashboard/now` endpoint.
 - Day/night light pass beyond the existing sky-gradient phase logic.
 - Per-tab signature animations (chalk write, page turn, etc.).
@@ -833,7 +833,7 @@ Append to `World` (above the closing `};`):
     },
 
     // Place residents (1e: SVG <text> emoji) at iso tile coords.
-    // Plan 1f swaps these for <image> sprite atlases inside the same layer.
+    // Plan 1f replaces these with programmatic inline-SVG villagers inside the same layer.
     placeResidents(apps) {
         const layer = document.getElementById('worldResidents');
         if (!layer) return;
@@ -952,7 +952,7 @@ Append at the bottom of `web/css/isle.css`:
     .world__building:focus .world__building-shape { transform: none; }
 }
 
-/* ── Residents (1e: SVG text glyphs; 1f swaps to <image> sprites) ────── */
+/* ── Residents (1e: SVG text glyphs; 1f swaps to inline-SVG villagers) ─ */
 .world__resident { cursor: pointer; }
 .world__resident-glyph { font-size: 22px; }
 .world__resident-name {
@@ -1426,6 +1426,6 @@ This plan covers spec sections 1–11 of `docs/specs/2026-05-02-phase-1efg-immer
 - §7.2: "Back to Isle" door from sub-tabs — deferred (compass already provides the same affordance; sub-tab back-doors are aesthetic and live in Plan 1g per the per-tab signature pass).
 - §11: Spec amendments → Task 8.
 
-Residents in 1e are SVG `<text>` glyphs in the `worldResidents` layer — Plan 1f swaps them for `<image>` sprite atlases inside the same layer without touching iso/world plumbing.
+Residents in 1e are SVG `<text>` glyphs in the `worldResidents` layer. The shipped 1f implementation replaced them with programmatic inline-SVG villagers inside the same layer, without introducing external resident sprite atlases.
 
 No backend changes in this plan. No schema changes. No new Python deps. No bundler. Total surface ≈ 5 new files (~430 LOC) and 4 modified files (~150 LOC delta).

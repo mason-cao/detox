@@ -35,6 +35,10 @@ Repeat with `Detox-<version>.app.zip` if the DMG path fails or if GitHub/browser
 - [ ] Click the menu-bar lantern and choose **Open Dashboard**.
 - [ ] `http://localhost:5050` opens.
 - [ ] Visit every section: Isle, Residents, Chronicle, Charter, Rule Board, Market, Postcards, Study.
+- [ ] On the Isle, the date badge and **Edit Isle** controls do not overlap at desktop or narrow widths.
+- [ ] Click several building illustrations directly, including Market and Mayor's Study; each opens the matching section.
+- [ ] Watch residents for at least 30 seconds; villagers keep steady local routes, do not jump across the map, and do not cross building footprints.
+- [ ] Open Market and scan the section shelves; all item cards show neat generated SVG previews with no broken images or generic fallback art.
 - [ ] Leave Detox running for at least 60 seconds.
 - [ ] Refresh the Isle and confirm today's total is non-zero.
 - [ ] Toggle **Pause tracking**. The glyph changes and today's total stops increasing.
@@ -59,5 +63,6 @@ Do not publish the release if any of these are true:
 - [ ] The app cannot launch with the documented **Open Anyway** flow.
 - [ ] Accessibility permission is granted but usage remains empty after 60 seconds.
 - [ ] **Open Dashboard** does not reach `localhost:5050`.
+- [ ] Isle building clicks, resident paths, or market item previews fail the local app smoke.
 - [ ] Quit leaves a stale `data/monitor.pid`.
 - [ ] Release notes do not include the unsigned-build warning and SHA256 values.
