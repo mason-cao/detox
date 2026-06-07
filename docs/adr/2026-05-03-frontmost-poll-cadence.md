@@ -7,7 +7,7 @@ Status: Accepted
 
 Phase 1f's marquee feature is the frontmost-app glow on the Isle. The
 frontend needs to know which app is frontmost in near-real-time so the
-matching resident sprite can pulse a halo and snap to its home tile.
+matching resident marker can pulse a halo and snap to its home tile.
 
 ## Decision
 

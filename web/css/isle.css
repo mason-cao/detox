@@ -313,7 +313,7 @@
 }
 
 .isle__editor {
-    top: calc(var(--sp-4) + 54px);
+    top: calc(var(--sp-4) + 72px);
     left: var(--sp-4);
     display: flex;
     align-items: center;
@@ -443,6 +443,10 @@
 
 /* ── Buildings ───────────────────────────────────────────────────────── */
 .world__building { cursor: pointer; outline: none; }
+.world__building-hitbox {
+    fill: transparent;
+    pointer-events: all;
+}
 .isle--editing .world__building[data-movable="true"] { cursor: grab; }
 .isle--editing .world__building[data-movable="true"].is-dragging { cursor: grabbing; }
 .world__building-shape { transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1); }

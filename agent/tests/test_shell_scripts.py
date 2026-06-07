@@ -119,17 +119,45 @@ def test_pair_page_points_installed_users_to_menubar_pairing():
     assert "python3 -m agent.cli.pair" in pair_page
 
 
-def test_market_asset_paths_match_checked_in_assets():
+def test_market_uses_generated_icons_without_legacy_sprite_dependencies():
     market_js = _read("web/js/market.js")
+    residents_js = _read("web/js/residents.js")
+    residents_css = _read("web/css/residents.css")
 
     assert "sti" + "tch/" not in market_js
     assert "items/${name}.jpg" not in market_js
     assert "asset(`residents/" not in market_js
     assert "${this.ASSET_BASE}/residents" not in market_js
-    assert "bazaar.png" in market_js
-    assert "items.png" in market_js
-    assert "characters.png" in market_js
-    assert "/assets/sprites/residents" in market_js
+    assert "characters.png" not in market_js
+    assert "/assets/sprites/residents" not in market_js
+    assert "/assets/market/pixel/residents" not in residents_js
+    assert "world__resident-sprite" not in residents_js
+    assert "world__resident-sprite" not in residents_css
+
+
+def test_focus_mode_banner_uses_dawn_cove_pixel_theme():
+    css = _read("web/css/style.css")
+    banner_rule = _css_rule(css, ".focus-mode-banner")
+    button_rule = _css_rule(css, ".focus-exit-btn")
+
+    assert "border-left" not in banner_rule
+    assert "border-radius" not in banner_rule
+    assert "var(--dc-parchment)" in banner_rule
+    assert "var(--dc-ink)" in banner_rule
+    assert "var(--dc-danger)" in button_rule
+    assert "color: white" not in button_rule
+
+
+def test_isle_editor_does_not_overlap_datebar_and_buildings_have_hitboxes():
+    css = _read("web/css/isle.css")
+    world_js = _read("web/js/world.js")
+    start = css.index(".isle__editor {\n    top:")
+    editor_rule = css[start : css.index("}", start) + 1]
+
+    assert "54px" not in editor_rule
+    assert "72px" in editor_rule
+    assert "world__building-hitbox" in world_js
+    assert 'pointer-events="all"' in world_js
 
 
 def test_build_readme_documents_github_release_command():

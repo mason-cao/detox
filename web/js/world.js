@@ -442,6 +442,13 @@ const World = {
             const { x, y } = Buildings.anchorFor ? Buildings.anchorFor(b) : Buildings.anchor(b.tx, b.ty, b.size);
             const tab = b.tab || '';
             const movable = b.movable !== false;
+            const major = b.size === 'major';
+            const hitbox = {
+                x: major ? -72 : -54,
+                y: major ? -108 : -82,
+                width: major ? 148 : 112,
+                height: major ? 134 : 108,
+            };
             return `
                 <g class="world__building world__building--${b.size} world__building--${App.escapeAttr(b.source || 'core')}"
                    data-building-id="${App.escapeAttr(b.id)}"
@@ -450,6 +457,10 @@ const World = {
                    data-movable="${movable ? 'true' : 'false'}"
                    transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"
                    role="button" tabindex="0" aria-label="${b.label}">
+                    <rect class="world__building-hitbox"
+                        x="${hitbox.x}" y="${hitbox.y}"
+                        width="${hitbox.width}" height="${hitbox.height}"
+                        pointer-events="all"></rect>
                     <g class="world__building-shape">${Buildings.markup(b.id, b)}</g>
                     <text class="world__building-label" x="0" y="14" text-anchor="middle">${App.escapeHtml(b.label)}</text>
                 </g>

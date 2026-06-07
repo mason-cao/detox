@@ -64,10 +64,10 @@
     stroke-linejoin: round;
 }
 
-.world__resident-sprite {
-    pointer-events: none;
-    image-rendering: pixelated;
-    filter: drop-shadow(0 3px 0 rgba(42, 30, 42, 0.32)) saturate(1.04) contrast(1.02);
+.world__resident-body {
+    filter: drop-shadow(0 3px 0 rgba(42, 30, 42, 0.22));
+    transform-box: fill-box;
+    transform-origin: center bottom;
 }
 
 .world__resident[data-archetype="builder"] .world__resident-portrait-rim { fill: #5d88a0; }
@@ -261,20 +261,20 @@ body:not(.reduce-motion) .world__resident-villager {
 }
 
 body:not(.reduce-motion) .world__resident[data-walking="true"] .world__resident-villager {
-    animation: villager-walk 520ms steps(2, end) infinite;
+    animation: villager-walk 920ms ease-in-out infinite;
 }
 
-.world__resident[data-direction="west"] .world__resident-sprite {
+.world__resident[data-direction="west"] .world__resident-body {
     transform: scaleX(-1);
     transform-origin: center;
 }
 
-.world__resident[data-direction="north"] .world__resident-sprite {
-    filter: drop-shadow(0 3px 0 rgba(42, 30, 42, 0.32)) saturate(0.96) contrast(1.02);
+.world__resident[data-direction="north"] .world__resident-body {
+    opacity: 0.94;
 }
 
-.world__resident[data-direction="east"] .world__resident-sprite,
-.world__resident[data-direction="south"] .world__resident-sprite {
+.world__resident[data-direction="east"] .world__resident-body,
+.world__resident[data-direction="south"] .world__resident-body {
     transform: scaleX(1);
     transform-origin: center;
 }
@@ -339,7 +339,7 @@ body:not(.reduce-motion) .world__resident-limbs--back {
 }
 @keyframes villager-walk {
     0%, 100% { transform: translate(0, 0); }
-    50% { transform: translate(0, -2.2px); }
+    50% { transform: translate(0, -1.4px); }
 }
 @keyframes villager-limb-front {
     0%, 100% { transform: translate(0, 0); }
