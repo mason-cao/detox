@@ -160,11 +160,11 @@ const Dashboard = {
                 labels,
                 datasets: [{
                     data: Object.values(hourly),
-                    backgroundColor: 'rgba(91, 143, 185, 0.35)',
-                    borderColor: '#5b8fb9',
+                    backgroundColor: 'rgba(47, 126, 166, 0.35)',
+                    borderColor: '#2f7ea6',
                     borderWidth: 0,
                     borderRadius: 0,
-                    hoverBackgroundColor: 'rgba(91, 143, 185, 0.6)',
+                    hoverBackgroundColor: 'rgba(47, 126, 166, 0.6)',
                 }],
             },
             options: {
@@ -229,7 +229,7 @@ const Dashboard = {
                 datasets: [{
                     data: weekData.days.map(d => d.minutes),
                     backgroundColor: weekData.days.map(d =>
-                        d.date === App.currentDate ? '#5b8fb9' : 'rgba(91, 143, 185, 0.35)'
+                        d.date === App.currentDate ? '#2f7ea6' : 'rgba(47, 126, 166, 0.35)'
                     ),
                     borderRadius: 0,
                     borderWidth: 0,

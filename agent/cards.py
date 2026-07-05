@@ -64,16 +64,16 @@ def generate_card(date):
     # Card dimensions (Instagram story: 1080x1920)
     W, H = 1080, 1920
     palette = {
-        "ink": (42, 30, 42),
-        "ink_soft": (91, 70, 70),
-        "parchment": (255, 244, 214),
-        "sand": (246, 211, 155),
-        "moss": (107, 142, 78),
-        "moss_dark": (74, 107, 58),
-        "sea": (63, 143, 186),
-        "sea_dark": (36, 112, 158),
-        "coin": (255, 208, 74),
-        "coral": (196, 69, 58),
+        "ink": (43, 33, 56),
+        "ink_soft": (95, 83, 112),
+        "parchment": (255, 248, 232),
+        "sand": (242, 212, 145),
+        "moss": (116, 169, 76),
+        "moss_dark": (89, 121, 60),
+        "sea": (47, 126, 166),
+        "sea_dark": (22, 69, 96),
+        "coin": (255, 201, 60),
+        "coral": (209, 75, 61),
         "wood": (123, 86, 53),
         "cream": (255, 250, 232),
     }
@@ -85,14 +85,14 @@ def generate_card(date):
         t = y / H
         if t < 0.55:
             mix = t / 0.55
-            r = int(123 + mix * (255 - 123))
-            g = int(184 + mix * (217 - 184))
+            r = int(102 + mix * (255 - 102))
+            g = int(179 + mix * (217 - 179))
             b = int(232 + mix * (138 - 232))
         else:
             mix = (t - 0.55) / 0.45
-            r = int(63 + mix * (36 - 63))
-            g = int(143 + mix * (112 - 143))
-            b = int(186 + mix * (158 - 186))
+            r = int(47 + mix * (22 - 47))
+            g = int(126 + mix * (69 - 126))
+            b = int(166 + mix * (96 - 166))
         draw.line([(0, y), (W, y)], fill=(r, g, b))
 
     # Fonts
@@ -117,86 +117,74 @@ def generate_card(date):
     def line(points, fill, width=4):
         draw.line(points, fill=fill, width=width, joint="curve")
 
+    # Pixel-art island vignette. Mirrors web/js/pixel-sprites.js
+    # postcardScene(): a character grid painted as square cells.
+    PIXEL_SCENE = [
+        "............................................",
+        "...CCC..........................G.G.G......",
+        "..CCCCCC........................gggg.......",
+        ".CCCCCCCCC.....................Gggggg......",
+        "................CCC.............gggg.......",
+        "...............CCCCC............G.G.G......",
+        "............................................",
+        "............................................",
+        "............................................",
+        "..................RRRR......TT.TT...........",
+        ".................RRRRRR......TTT............",
+        ".................kWkkWk.......K.............",
+        ".................kkddkk.......K.............",
+        "..........ssssssssssssssssss................",
+        ".......ssssssssssssssssssssssss.............",
+        ".....ssssTTTTTTTTTTTTTTTTssssss.............",
+        "....ssssTTTTTTTTTTTTTTTTTTssss..............",
+        "....ssssTTTTTTTTTTTTTTTTTTsssss.............",
+        ".....ssssTTTTTTTTTTTTTTssss.................",
+        ".......ssssssssssssssss.....................",
+        "............................................",
+        "....ww.ww.ww................................",
+        "..........................ww.ww............",
+        "............................................",
+    ]
+    PIXEL_COLORS = {
+        "C": (255, 248, 232),
+        "G": (255, 201, 60),
+        "g": (255, 221, 107),
+        "s": (242, 212, 145),
+        "T": (116, 169, 76),
+        "R": (192, 71, 47),
+        "k": (198, 141, 82),
+        "W": (253, 243, 216),
+        "d": (61, 46, 74),
+        "K": (123, 86, 53),
+        "w": (255, 248, 232),
+    }
+
     def draw_island(cx, cy, scale=1.0):
-        sand = [
-            (cx - 220 * scale, cy + 58 * scale),
-            (cx - 156 * scale, cy - 78 * scale),
-            (cx + 62 * scale, cy - 118 * scale),
-            (cx + 218 * scale, cy - 16 * scale),
-            (cx + 156 * scale, cy + 110 * scale),
-            (cx - 54 * scale, cy + 134 * scale),
-        ]
-        grass = [
-            (cx - 116 * scale, cy + 24 * scale),
-            (cx - 14 * scale, cy - 70 * scale),
-            (cx + 126 * scale, cy + 12 * scale),
-            (cx + 28 * scale, cy + 94 * scale),
-        ]
-        draw.polygon(sand, fill=palette["sand"], outline=palette["ink"])
-        line(sand + [sand[0]], palette["ink"], int(5 * scale))
-        draw.polygon(grass, fill=palette["moss"], outline=palette["ink"])
-        line(grass + [grass[0]], palette["ink"], int(4 * scale))
-        line(
-            [
-                (cx - 72 * scale, cy + 38 * scale),
-                (cx - 8 * scale, cy - 6 * scale),
-                (cx + 72 * scale, cy + 20 * scale),
-            ],
-            palette["cream"],
-            int(11 * scale),
-        )
-        rect(
-            [
-                cx + 72 * scale,
-                cy - 54 * scale,
-                cx + 128 * scale,
-                cy + 18 * scale,
-            ],
-            palette["wood"],
-            palette["ink"],
-            int(4 * scale),
-        )
-        roof = [
-            (cx + 54 * scale, cy - 52 * scale),
-            (cx + 100 * scale, cy - 94 * scale),
-            (cx + 146 * scale, cy - 52 * scale),
-        ]
-        draw.polygon(roof, fill=palette["coral"], outline=palette["ink"])
-        line(roof + [roof[0]], palette["ink"], int(4 * scale))
-        rect(
-            [
-                cx - 94 * scale,
-                cy - 28 * scale,
-                cx - 48 * scale,
-                cy + 24 * scale,
-            ],
-            palette["parchment"],
-            palette["ink"],
-            int(3 * scale),
-        )
-        draw.ellipse(
-            [
-                cx - 12 * scale,
-                cy - 132 * scale,
-                cx + 42 * scale,
-                cy - 78 * scale,
-            ],
-            fill=palette["coin"],
-            outline=palette["ink"],
-            width=int(4 * scale),
-        )
+        cell = int(15 * scale)
+        cols = len(PIXEL_SCENE[0])
+        rows_n = len(PIXEL_SCENE)
+        left = cx - (cols * cell) // 2
+        top = cy - (rows_n * cell) // 2
+        for j, row in enumerate(PIXEL_SCENE):
+            for i, ch in enumerate(row):
+                color = PIXEL_COLORS.get(ch)
+                if not color:
+                    continue
+                x0 = left + i * cell
+                y0 = top + j * cell
+                draw.rectangle([x0, y0, x0 + cell, y0 + cell], fill=color)
 
     # Sea motion lines.
     for offset in (760, 920, 1120, 1350, 1540):
         line(
             [(70, offset), (230, offset - 24), (390, offset + 18), (570, offset - 10), (820, offset + 20), (1010, offset - 8)],
-            (255, 244, 214),
+            (255, 248, 232),
             5,
         )
 
     # Postcard face.
     card = [72, 92, W - 72, H - 92]
-    rect([card[0] + 18, card[1] + 22, card[2] + 18, card[3] + 22], (42, 30, 42), None, 0)
+    rect([card[0] + 18, card[1] + 22, card[2] + 18, card[3] + 22], (43, 33, 56), None, 0)
     rect(card, palette["parchment"], palette["ink"], 8)
     rect([104, 126, W - 104, H - 126], palette["cream"], palette["ink"], 3)
 
@@ -236,7 +224,9 @@ def generate_card(date):
     draw.text((132, y_pos), "Top Apps", fill=palette["ink"], font=font_medium, anchor="lt")
     y_pos += 64
 
-    top_apps = daily[:5]
+    # Four rows fit between the section title and the footer rule; five
+    # collided with the "Most used" line and footer text.
+    top_apps = daily[:4]
     if top_apps:
         max_min = top_apps[0]["minutes"]
         bar_colors = [
@@ -244,24 +234,23 @@ def generate_card(date):
             palette["sea"],
             palette["coral"],
             palette["coin"],
-            palette["wood"],
         ]
         for i, app in enumerate(top_apps):
             color = bar_colors[i % len(bar_colors)]
             app_name = fit_text(draw, app["app_name"], font_small, W - 380)
             draw.text((132, y_pos), app_name, fill=palette["ink"], font=font_small, anchor="lt")
             draw.text((W - 132, y_pos), format_time(app["minutes"]), fill=palette["ink_soft"], font=font_small, anchor="rt")
-            y_pos += 42
-            rect([132, y_pos, W - 132, y_pos + 20], palette["sand"], palette["ink"], 2)
+            y_pos += 36
+            rect([132, y_pos, W - 132, y_pos + 16], palette["sand"], palette["ink"], 2)
             bar_width = int((app["minutes"] / max_min) * (W - 264)) if max_min > 0 else 0
-            rect([132, y_pos, 132 + bar_width, y_pos + 20], color, None, 0)
-            y_pos += 50
+            rect([132, y_pos, 132 + bar_width, y_pos + 16], color, None, 0)
+            y_pos += 40
     else:
         centered_text(W // 2, y_pos + 40, "No tracked app time on this date", font_small, palette["ink_soft"], W - 260)
 
     # Most used app highlight
     if stats.get("most_used_app"):
-        y_pos = min(y_pos + 34, H - 310)
+        y_pos = min(y_pos + 6, H - 272)
         centered_text(
             W // 2,
             y_pos,

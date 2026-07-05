@@ -2,7 +2,7 @@
     const CATEGORY_META = {
         Productivity: {
             symbol: 'book',
-            color: '#5b8fb9',
+            color: '#2f7ea6',
             path: '<path d="M5 5h7a3 3 0 0 1 3 3v11H8a3 3 0 0 0-3 3V5z"/><path d="M15 8h4v14h-7a3 3 0 0 0-3-3"/>',
         },
         Development: {
@@ -12,17 +12,17 @@
         },
         Communication: {
             symbol: 'chat',
-            color: '#b59cff',
+            color: '#a48bf5',
             path: '<path d="M5 6h14v10H9l-4 4V6z"/><path d="M8 10h8M8 13h5"/>',
         },
         Social: {
             symbol: 'people',
-            color: '#d16a8f',
+            color: '#e0708f',
             path: '<circle cx="9" cy="9" r="3"/><circle cx="16" cy="10" r="2.5"/><path d="M4 20c1-4 9-4 10 0"/><path d="M13 18c1-2 6-2 7 0"/>',
         },
         Entertainment: {
             symbol: 'ticket',
-            color: '#ffd04a',
+            color: '#ffc93c',
             path: '<path d="M5 8h14v4a2 2 0 0 0 0 4v4H5v-4a2 2 0 0 0 0-4V8z"/><path d="M10 9v10"/>',
         },
         Media: {
@@ -32,12 +32,12 @@
         },
         Utilities: {
             symbol: 'wrench',
-            color: '#6b8e4e',
+            color: '#74a94c',
             path: '<path d="M15 6a5 5 0 0 0 6 6L12 21 5 14l9-9z"/><path d="M8 17l-3 3"/>',
         },
         Enforcement: {
             symbol: 'shield',
-            color: '#c4453a',
+            color: '#d14b3d',
             path: '<path d="M12 4l8 3v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V7l8-3z"/><path d="M9 12l2 2 5-5"/>',
         },
         Design: {
