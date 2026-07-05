@@ -36,13 +36,38 @@
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
-    background: var(--bg);
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    background:
+        radial-gradient(1100px 500px at 12% -8%, rgba(255, 248, 232, 0.55), transparent 60%),
+        radial-gradient(900px 460px at 88% 110%, rgba(47, 126, 166, 0.10), transparent 55%),
+        var(--bg);
+    background-attachment: fixed;
     color: var(--text);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Subtle woven texture so flat sand doesn't read as dead space. */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+        repeating-linear-gradient(0deg, rgba(43, 33, 56, 0.022) 0 1px, transparent 1px 7px),
+        repeating-linear-gradient(90deg, rgba(43, 33, 56, 0.022) 0 1px, transparent 1px 7px);
+}
+
+::selection {
+    background: var(--dc-coin);
+    color: var(--dc-ink);
+}
+
+:focus-visible {
+    outline: 2px solid var(--dc-sea);
+    outline-offset: 2px;
 }
 
 /* ── Focus Mode Exit ───────────────────────────────────────────────── */
@@ -61,7 +86,7 @@ body {
     border: none;
     box-shadow:
         0 0 0 2px var(--dc-ink),
-        0 8px 0 0 rgba(42, 30, 42, 0.22);
+        0 8px 0 0 rgba(43, 33, 56, 0.22);
     font-family: var(--font-ui);
 }
 
@@ -95,7 +120,7 @@ body {
     cursor: pointer;
     flex-shrink: 0;
     font-family: var(--font-display);
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: 0.5px;
     padding: var(--sp-2) var(--sp-3);
@@ -128,27 +153,18 @@ body {
     gap: 16px;
     margin-bottom: 24px;
     padding: 16px 18px;
-    background: rgba(196, 69, 58, 0.14);
+    background: rgba(209, 75, 61, 0.14);
     border: none;
     box-shadow: 0 0 0 2px var(--dc-danger);
 }
 
 /* ── Main Content transitions ─────────────────────────────────────── */
-#content {
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
-    transition:
-        opacity 0.34s cubic-bezier(0.22, 1, 0.36, 1),
-        transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
-        filter 0.34s cubic-bezier(0.22, 1, 0.36, 1);
-    will-change: opacity, transform, filter;
-}
-
+/* View switches: the outgoing view hides instantly; the incoming view
+   animates in via .fade-in. No transition on #content itself — an
+   interrupted opacity transition + will-change left Chrome compositing
+   a stale half-faded layer until the next repaint. */
 #content.is-transitioning {
     opacity: 0;
-    transform: translateY(10px);
-    filter: blur(2px);
     pointer-events: none;
 }
 
@@ -166,12 +182,11 @@ body {
 }
 
 .view-loading-ring {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    width: 28px;
+    height: 28px;
     border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    animation: spin 0.9s linear infinite;
+    border-top-color: var(--dc-coin);
+    animation: spin 0.7s steps(8) infinite;
 }
 
 .page-header {
@@ -556,11 +571,14 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 14px 20px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    box-shadow: var(--shadow-lg);
+    padding: 13px 18px 13px 20px;
+    background: var(--dc-panel-grad);
+    border: none;
+    box-shadow:
+        0 0 0 2px var(--dc-ink),
+        0 4px 0 0 var(--dc-ink),
+        0 12px 24px rgba(43, 33, 56, 0.24);
+    font-family: var(--font-ui);
     font-size: 13px;
     font-weight: 500;
     color: var(--text);
@@ -577,8 +595,7 @@ body {
     left: 0;
     top: 0;
     bottom: 0;
-    width: 3px;
-    border-radius: 3px 0 0 3px;
+    width: 5px;
 }
 
 .toast.toast-success::before { background: var(--green); }
@@ -688,9 +705,11 @@ body {
 }
 
 /* ── Animations ───────────────────────────────────────────────────── */
+/* Transform-only entrance: animating opacity here left Chrome holding a
+   stale half-faded compositor layer on some views until the next repaint. */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(12px); filter: blur(2px); }
-    to { opacity: 1; transform: translateY(0); filter: blur(0); }
+    from { transform: translateY(10px); }
+    to { transform: translateY(0); }
 }
 
 @keyframes fadeOverlay {
@@ -727,7 +746,7 @@ body {
     to { transform: rotate(360deg); }
 }
 
-.fade-in { animation: fadeIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.fade-in { animation: fadeIn 0.22s ease-out both; }
 
 @media (prefers-reduced-motion: reduce) {
     *,
@@ -741,7 +760,10 @@ body {
 }
 
 /* ── Scrollbar ────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar { width: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+::-webkit-scrollbar-thumb {
+    background: rgba(43, 33, 56, 0.30);
+    border: 3px solid var(--dc-sand);
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(43, 33, 56, 0.5); }
