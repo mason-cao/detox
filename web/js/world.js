@@ -39,20 +39,20 @@ const World = {
                     <stop offset="100%" stop-color="rgba(0,0,0,0.18)"/>
                 </radialGradient>
                 <linearGradient id="seaGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="rgba(127, 200, 223, 0.24)"/>
-                    <stop offset="50%" stop-color="rgba(91, 143, 185, 0.72)"/>
-                    <stop offset="100%" stop-color="rgba(46, 124, 166, 0.94)"/>
+                    <stop offset="0%" stop-color="rgba(121, 197, 214, 0.30)"/>
+                    <stop offset="50%" stop-color="rgba(47, 126, 166, 0.78)"/>
+                    <stop offset="100%" stop-color="rgba(22, 69, 96, 0.96)"/>
                 </linearGradient>
                 <radialGradient id="islandAura" cx="50%" cy="42%" r="58%">
-                    <stop offset="0%" stop-color="rgba(255, 244, 214, 0.36)"/>
-                    <stop offset="72%" stop-color="rgba(255, 244, 214, 0.08)"/>
-                    <stop offset="100%" stop-color="rgba(255, 244, 214, 0)"/>
+                    <stop offset="0%" stop-color="rgba(255, 248, 232, 0.38)"/>
+                    <stop offset="72%" stop-color="rgba(255, 248, 232, 0.08)"/>
+                    <stop offset="100%" stop-color="rgba(255, 248, 232, 0)"/>
                 </radialGradient>
             </defs>
             <g id="worldSky">
                 <rect class="world__sky-rect" x="${view.x}" y="${view.y}" width="${view.width}" height="${view.height}"></rect>
                 <g id="worldStars"></g>
-                <circle id="worldCelestial" r="14"></circle>
+                <g id="worldCelestial"></g>
             </g>
             ${this.seaLayer(w, h, view)}
             <g id="worldWeather"></g>
@@ -107,15 +107,32 @@ const World = {
                 <path class="world__sea-line world__sea-line--a" d="M${seaX + 28} ${horizon + 52} C118 ${horizon + 38}, 196 ${horizon + 70}, 286 ${horizon + 52} S476 ${horizon + 48}, ${seaX + seaW - 44} ${horizon + 66}"></path>
                 <path class="world__sea-line world__sea-line--b" d="M${seaX + 18} ${horizon + 108} C110 ${horizon + 90}, 206 ${horizon + 126}, 326 ${horizon + 106} S526 ${horizon + 94}, ${seaX + seaW - 26} ${horizon + 124}"></path>
                 <path class="world__sea-line world__sea-line--c" d="M${seaX + 58} ${horizon + 158} C152 ${horizon + 144}, 254 ${horizon + 170}, 366 ${horizon + 152} S580 ${horizon + 140}, ${seaX + seaW - 66} ${horizon + 166}"></path>
+                ${this.seaSparkles(w, horizon)}
                 <ellipse class="world__island-aura" cx="${w / 2}" cy="${horizon + 76}" rx="${w * 0.46}" ry="92"></ellipse>
             </g>
         `;
+    },
+
+    // Small diamond glints scattered on the water, twinkling via CSS.
+    seaSparkles(w, horizon) {
+        const seeds = [
+            [0.06, 34], [0.14, 96], [0.22, 58], [0.30, 148], [0.38, 40],
+            [0.52, 170], [0.62, 52], [0.72, 128], [0.82, 74], [0.90, 160],
+            [0.10, 196], [0.46, 88], [0.68, 200], [0.94, 44], [0.26, 104],
+        ];
+        return seeds.map(([px, dy], i) => {
+            const x = (px * w * 1.4 - w * 0.2).toFixed(0);
+            const y = horizon + dy;
+            const r = 1.4 + (i % 3) * 0.5;
+            return `<path class="world__sea-sparkle" d="M${x} ${y - r} L${Number(x) + r} ${y} L${x} ${y + r} L${Number(x) - r} ${y} Z"></path>`;
+        }).join('');
     },
 
     islandBackdrop() {
         return `
             <g id="worldIslandBackdrop" aria-hidden="true">
                 <path class="world__island-shadow" d="M10 276 C50 214 160 154 312 142 C476 130 612 174 682 244 C730 294 650 354 502 390 C336 428 166 392 72 334 C30 306 -12 288 10 276 Z"></path>
+                <path class="world__shore-foam" d="M-2 260 C42 198 158 134 314 122 C488 110 634 160 704 232 C752 288 660 348 508 382 C340 420 168 384 72 326 C28 298 -26 272 -2 260 Z"></path>
                 <path class="world__shore world__shore--outer" d="M6 262 C48 202 160 140 314 128 C484 116 628 164 696 234 C742 288 654 344 504 376 C340 412 172 378 78 320 C36 294 -18 274 6 262 Z"></path>
                 <path class="world__shore world__shore--inner" d="M54 258 C94 210 186 170 318 158 C458 146 578 182 634 236 C672 276 604 318 484 346 C342 378 202 354 112 312 C78 292 34 272 54 258 Z"></path>
             </g>
@@ -274,11 +291,14 @@ const World = {
                 const px = x + jx;
                 const py = cy + jy;
 
-                // Pick a sprite kind from the same hash space.
-                const kind = Math.floor(Iso.tileHash(tx, ty, 23) * 4);
-                if (kind === 0) decor.push(this.spriteDaisy(px, py));
-                else if (kind === 1) decor.push(this.spritePebble(px, py));
-                else if (kind === 2) decor.push(this.spriteGrass(px, py));
+                // Pick a sprite kind from the same hash space. Trees stay
+                // rare so the meadow keeps its sightlines.
+                const kind = Math.floor(Iso.tileHash(tx, ty, 23) * 12);
+                if (kind === 0) decor.push(this.spriteTree(px, py, Iso.tileHash(tx, ty, 29) > 0.5));
+                else if (kind <= 2) decor.push(this.spriteDaisy(px, py));
+                else if (kind <= 4) decor.push(this.spritePebble(px, py));
+                else if (kind <= 7) decor.push(this.spriteGrass(px, py));
+                else if (kind <= 9) decor.push(this.spriteTulip(px, py, Iso.tileHash(tx, ty, 37)));
                 else decor.push(this.spriteBush(px, py));
             }
         }
@@ -286,60 +306,43 @@ const World = {
     },
 
     spriteDaisy(cx, cy) {
-        return `
-            <g class="world__decor world__decor--daisy" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})">
-                <circle cx="-2" cy="-1" r="1"/><circle cx="2" cy="-1" r="1"/>
-                <circle cx="0" cy="-3" r="1"/><circle cx="-2" cy="2" r="1"/><circle cx="2" cy="2" r="1"/>
-                <circle class="world__decor-core" cx="0" cy="0" r="1"/>
-            </g>
-        `;
+        return `<g class="world__decor" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})">${Px.decor.daisy()}</g>`;
     },
 
     spritePebble(cx, cy) {
-        return `
-            <g class="world__decor world__decor--pebble" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})">
-                <ellipse cx="-3" cy="0" rx="2.2" ry="1.4"/>
-                <ellipse cx="2" cy="-1" rx="1.8" ry="1.1"/>
-                <ellipse cx="3" cy="2" rx="1.5" ry="1"/>
-            </g>
-        `;
+        return `<g class="world__decor" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})">${Px.decor.pebble()}</g>`;
     },
 
     spriteGrass(cx, cy) {
-        return `
-            <g class="world__decor world__decor--grass" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})">
-                <path d="M-3,2 L-3,-3 M0,2 L0,-4 M3,2 L3,-3" stroke-linecap="round"/>
-            </g>
-        `;
+        return `<g class="world__decor" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})">${Px.decor.grassTuft()}</g>`;
     },
 
     spriteBush(cx, cy) {
-        return `
-            <g class="world__decor world__decor--bush" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})">
-                <ellipse cx="0" cy="0" rx="6" ry="3.5"/>
-                <ellipse cx="-3" cy="-2" rx="3" ry="2.4"/>
-                <ellipse cx="3" cy="-2" rx="3" ry="2.4"/>
-                <ellipse class="world__decor-shadow" cx="0" cy="2.2" rx="6" ry="1.3"/>
-            </g>
-        `;
+        return `<g class="world__decor" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})">${Px.decor.bush()}</g>`;
+    },
+
+    spriteTree(cx, cy, fruited = false) {
+        return `<g class="world__decor" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})">${Px.decor.tree(fruited)}</g>`;
+    },
+
+    spriteTulip(cx, cy, roll = 0.5) {
+        const hues = ['#e0708f', '#ffc93c', '#a48bf5', '#ff8d5c'];
+        const bloom = hues[Math.floor(roll * hues.length) % hues.length];
+        return `<g class="world__decor" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})">${Px.decor.tulip(bloom)}</g>`;
     },
 
     applyWeather(weather) {
         const layer = document.getElementById('worldWeather');
         if (!layer) return;
 
-        const cloud = (cx, cy, scale = 1) => `
-            <g class="weather-cloud" transform="translate(${cx} ${cy}) scale(${scale})">
-                <g class="weather-cloud__puff">
-                    <ellipse cx="0" cy="0" rx="22" ry="8"></ellipse>
-                    <ellipse cx="-12" cy="-4" rx="10" ry="6"></ellipse>
-                    <ellipse cx="14" cy="-2" rx="12" ry="6"></ellipse>
-                </g>
+        const cloud = (cx, cy, scale = 1, storm = false) => `
+            <g class="weather-cloud" transform="translate(${cx} ${cy})">
+                <g class="weather-cloud__puff">${Px.cloud(scale, storm)}</g>
             </g>
         `;
 
         if (weather.key === 'storm') {
-            layer.innerHTML = cloud(120, 60, 1.2) + cloud(360, 80, 1.4);
+            layer.innerHTML = cloud(120, 60, 1.2, true) + cloud(360, 80, 1.4, true);
             layer.setAttribute('class', 'weather-layer--storm');
             return;
         }
@@ -408,9 +411,13 @@ const World = {
             const w = Iso.worldW();
             const x = t * w;
             const y = 80 - Math.sin(t * Math.PI) * 56;
-            celestial.setAttribute('cx', String(x));
-            celestial.setAttribute('cy', String(y));
-            celestial.classList.toggle('world__celestial--moon', phase.isNight);
+            const wantMoon = phase.isNight;
+            const isMoon = celestial.classList.contains('world__celestial--moon');
+            if (!celestial.firstChild || wantMoon !== isMoon) {
+                celestial.innerHTML = wantMoon ? Px.moon() : Px.sun();
+            }
+            celestial.setAttribute('transform', `translate(${x.toFixed(1)} ${(y + 12).toFixed(1)})`);
+            celestial.classList.toggle('world__celestial--moon', wantMoon);
         }
     },
 
@@ -427,10 +434,11 @@ const World = {
     },
 
     hourToPhase(h) {
-        if (h >= 5 && h < 7) return { top: '#ffb27a', bottom: '#ffd98a', ground: '#e8c896', isNight: false };
-        if (h >= 7 && h < 17) return { top: '#7bb8e8', bottom: '#ffd98a', ground: '#e8c896', isNight: false };
-        if (h >= 17 && h < 19) return { top: '#d16a8f', bottom: '#ffb27a', ground: '#c89677', isNight: false };
-        return { top: '#1a1f3a', bottom: '#2a3050', ground: '#4a4060', isNight: true };
+        if (h >= 5 && h < 7)   return { top: '#ff9d6b', bottom: '#ffdd94', ground: '#e8d5a5', isNight: false };
+        if (h >= 7 && h < 16)  return { top: '#66b3e8', bottom: '#c8ecf4', ground: '#e8d5a5', isNight: false };
+        if (h >= 16 && h < 17) return { top: '#7fb2dd', bottom: '#ffd98a', ground: '#e8d5a5', isNight: false };
+        if (h >= 17 && h < 19) return { top: '#c25a86', bottom: '#ff9d6b', ground: '#d1a97e', isNight: false };
+        return { top: '#171c38', bottom: '#2c3560', ground: '#4a4060', isNight: true };
     },
 
     // Mount all buildings from Buildings.catalog into the buildings layer.
@@ -679,67 +687,12 @@ const World = {
     },
 
     marketPropSprite(item, index) {
-        const category = String(item.category || 'decor').toLowerCase();
-        const key = String(item.item_key || item.key || item.name || '');
+        const key = String(item.item_key || item.key || item.name || index);
         const hue = Math.floor(Iso.tileHash(index + 1, key.length, 83) * 360);
-        const accent = `hsl(${hue}, 54%, 62%)`;
-        const palette = {
-            ink: '#2a1e2a',
-            sand: '#f6d39b',
-            parchment: '#fff4d6',
-            moss: '#6b8e4e',
-            mossDark: '#4a6b3a',
-            sea: '#3f8fba',
-            coin: '#ffd04a',
-            coral: '#c4453a',
-            wood: '#7b5635',
-            night: '#2a3050',
-            shard: '#b59cff',
-        };
-
-        if (typeof Market !== 'undefined' && Market.previewScene) {
-            return `
-                <ellipse class="market-prop__shadow" cx="0" cy="4" rx="13" ry="4"></ellipse>
-                <svg x="-18" y="-31" width="36" height="27" viewBox="0 0 96 72" aria-hidden="true">
-                    ${Market.previewScene(category, key, accent, palette)}
-                </svg>
-            `;
-        }
-
-        if (category === 'outfit') {
-            return `
-                <ellipse class="market-prop__shadow" cx="0" cy="2" rx="9" ry="3"></ellipse>
-                <path class="market-prop__cloth" d="M-8,-5 Q0,-12 8,-5 L6,5 H-6 Z" style="fill:${accent}"></path>
-                <path class="market-prop__line" d="M-10,-8 H10"></path>
-            `;
-        }
-        if (category === 'weather') {
-            return `
-                <ellipse class="market-prop__shadow" cx="0" cy="3" rx="10" ry="3"></ellipse>
-                <circle class="market-prop__sun" cx="-4" cy="-6" r="5"></circle>
-                <path class="market-prop__cloud" d="M-5,0 C-2,-6 7,-6 9,0 C13,0 15,3 15,6 H-12 C-12,2 -10,0 -5,0 Z"></path>
-            `;
-        }
-        if (category === 'building') {
-            return `
-                <ellipse class="market-prop__shadow" cx="0" cy="3" rx="10" ry="3"></ellipse>
-                <rect class="market-prop__crate" x="-8" y="-8" width="16" height="11"></rect>
-                <path class="market-prop__roof" d="M-10,-8 L0,-15 L10,-8 Z" style="fill:${accent}"></path>
-            `;
-        }
-        if (category === 'map') {
-            return `
-                <ellipse class="market-prop__shadow" cx="0" cy="3" rx="10" ry="3"></ellipse>
-                <path class="market-prop__flagpole" d="M-5,3 V-14"></path>
-                <path class="market-prop__flag" d="M-5,-14 H10 L6,-8 H-5 Z" style="fill:${accent}"></path>
-                <path class="market-prop__path" d="M-13,4 C-6,0 4,8 13,2"></path>
-            `;
-        }
+        const accent = `hsl(${hue}, 54%, 58%)`;
         return `
             <ellipse class="market-prop__shadow" cx="0" cy="3" rx="10" ry="3"></ellipse>
-            <path class="market-prop__lantern" d="M-5,-10 H5 L7,0 L0,5 L-7,0 Z" style="fill:${accent}"></path>
-            <path class="market-prop__line" d="M0,-10 V-16"></path>
-            <circle class="market-prop__glow" cx="0" cy="-2" r="4"></circle>
+            ${Px.itemGlyph(key, item.category, accent, { scale: 2, dy: 2 })}
         `;
     },
 

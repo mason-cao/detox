@@ -1,5 +1,12 @@
 /* Isle dashboard — SVG world stage with HTML HUD overlays. */
 
+/* The Isle escapes the framed content column and fills the viewport. */
+#content:has(.isle) {
+    max-width: none;
+    padding: 0;
+    overflow: hidden;
+}
+
 .isle {
     position: relative;
     display: grid;
@@ -7,7 +14,7 @@
     gap: var(--sp-4);
     min-height: calc(100vh - var(--hud-top-h));
     height: calc(100vh - var(--hud-top-h));
-    margin: calc(var(--sp-4) * -1);
+    margin: 0;
     padding: 0;
     overflow: hidden;
 }
@@ -16,13 +23,13 @@
 .isle__stage {
     position: relative;
     border: 0;
-    box-shadow: inset 0 -18px 36px rgba(42, 30, 42, 0.16);
+    box-shadow: inset 0 -24px 48px rgba(23, 42, 66, 0.28);
     background:
         linear-gradient(to bottom,
             var(--sky-top) 0%,
             var(--sky-bottom) 44%,
-            rgba(91, 143, 185, 0.86) 45%,
-            rgba(46, 124, 166, 0.98) 100%);
+            rgba(45, 110, 148, 0.92) 45%,
+            rgba(22, 69, 96, 0.99) 100%);
     overflow: hidden;
     min-height: 0;
     height: 100%;
@@ -40,7 +47,7 @@
 }
 
 .world__star {
-    fill: #fff4d6;
+    fill: #fff8e8;
     opacity: 0.9;
     animation: star-twinkle 3.8s ease-in-out infinite;
 }
@@ -48,12 +55,10 @@
 .world__star:nth-child(3n) { animation-delay: -2.6s; }
 
 #worldCelestial {
-    fill: var(--dc-coin);
-    filter: drop-shadow(0 0 6px rgba(255, 208, 74, 0.7));
-    transition: cx 1200ms ease-out, cy 1200ms ease-out;
+    filter: drop-shadow(0 0 6px rgba(255, 201, 60, 0.7));
+    transition: transform 1200ms ease-out;
 }
 #worldCelestial.world__celestial--moon {
-    fill: #e8ddf0;
     filter: drop-shadow(0 0 4px rgba(232, 221, 240, 0.6));
 }
 
@@ -63,7 +68,7 @@
 }
 .world__sea-current {
     fill: none;
-    stroke: rgba(255, 244, 214, 0.08);
+    stroke: rgba(255, 248, 232, 0.09);
     stroke-width: 24;
     stroke-linecap: round;
     opacity: 0.75;
@@ -77,43 +82,59 @@
 }
 .world__sea-line {
     fill: none;
-    stroke: rgba(255, 244, 214, 0.20);
-    stroke-width: 1.5;
+    stroke: rgba(255, 248, 232, 0.30);
+    stroke-width: 1.6;
     stroke-linecap: round;
     animation: sea-drift 6.8s ease-in-out infinite alternate;
     transform-box: fill-box;
 }
 .world__sea-line--b {
-    stroke: rgba(255, 244, 214, 0.15);
+    stroke: rgba(255, 248, 232, 0.22);
     stroke-width: 1.3;
     animation-duration: 8.2s;
     animation-delay: -2s;
 }
 .world__sea-line--c {
-    stroke: rgba(255, 244, 214, 0.12);
+    stroke: rgba(255, 248, 232, 0.17);
     stroke-width: 1.2;
     animation-duration: 10.2s;
     animation-delay: -4s;
 }
+.world__sea-sparkle {
+    fill: rgba(255, 248, 232, 0.85);
+    animation: sea-sparkle 3.4s ease-in-out infinite;
+}
+.world__sea-sparkle:nth-child(2n) { animation-delay: -1.1s; }
+.world__sea-sparkle:nth-child(3n) { animation-delay: -2.3s; }
 .world__island-aura { fill: url(#islandAura); }
-.world__island-shadow { fill: rgba(42, 30, 42, 0.18); }
-.world__shore--outer { fill: #f6d39b; opacity: 0.84; }
-.world__shore--inner { fill: rgba(255, 244, 214, 0.15); }
-.is-night .world__sea-line { stroke: rgba(232, 221, 240, 0.16); }
-.is-night .world__sea-current { stroke: rgba(232, 221, 240, 0.08); }
-.is-night .world__shore--outer { fill: #59405f; opacity: 0.72; }
-.is-night .world__shore--inner { fill: rgba(232, 221, 240, 0.08); }
+.world__island-shadow { fill: rgba(18, 32, 48, 0.30); }
+.world__shore--outer { fill: #f2d491; opacity: 0.92; }
+.world__shore--inner { fill: rgba(255, 248, 232, 0.20); }
+.world__shore-foam {
+    fill: none;
+    stroke: rgba(255, 248, 232, 0.55);
+    stroke-width: 2.4;
+    stroke-dasharray: 10 14;
+    stroke-linecap: round;
+    animation: foam-lap 9s linear infinite;
+}
+.is-night .world__sea-line { stroke: rgba(210, 214, 255, 0.18); }
+.is-night .world__sea-current { stroke: rgba(210, 214, 255, 0.08); }
+.is-night .world__sea-sparkle { fill: rgba(210, 214, 255, 0.7); }
+.is-night .world__shore--outer { fill: #6a5a74; opacity: 0.8; }
+.is-night .world__shore--inner { fill: rgba(210, 214, 255, 0.10); }
+.is-night .world__shore-foam { stroke: rgba(210, 214, 255, 0.30); }
 
 /* ── Ground tiles ────────────────────────────────────────────────────── */
 .world__tile {
-    stroke: rgba(42, 30, 42, 0.16);
+    stroke: rgba(43, 33, 56, 0.10);
     stroke-width: 1;
 }
 /* Four greens, distributed by tile hash so the field reads as meadow. */
-.world__tile--a { fill: var(--dc-moss); }
-.world__tile--b { fill: #7aa84e; }
-.world__tile--c { fill: #5a7a3f; }
-.world__tile--d { fill: #94a754; }
+.world__tile--a { fill: #74a94c; }
+.world__tile--b { fill: #82b658; }
+.world__tile--c { fill: #659544; }
+.world__tile--d { fill: #8fbd62; }
 
 .world__tile-shadow {
     fill: rgba(20, 12, 18, 0.18);
@@ -122,10 +143,10 @@
 .is-night .world__tile-shadow { fill: rgba(0, 0, 0, 0.32); }
 
 .world__placement-tile {
-    fill: rgba(255, 244, 214, 0.06);
+    fill: rgba(255, 248, 232, 0.06);
     opacity: 0;
     pointer-events: none;
-    stroke: rgba(42, 30, 42, 0.34);
+    stroke: rgba(43, 33, 56, 0.34);
     stroke-dasharray: 3 4;
     stroke-width: 1;
     transition: opacity 140ms ease-out;
@@ -135,14 +156,21 @@
     opacity: 1;
 }
 
-/* ── Ground decor shapes (daisy, pebble, grass, bush) ────────────────── */
+/* ── Ground decor shapes (daisy, pebble, grass, bush, tree, tulip) ───── */
 .world__decor { pointer-events: none; }
-.world__decor--daisy circle { fill: #fff4d6; }
+.world__decor--daisy circle { fill: #fff8e8; }
 .world__decor--daisy .world__decor-core { fill: var(--dc-coin); }
-.world__decor--pebble ellipse { fill: #6a6862; stroke: #2a1e2a; stroke-width: 0.4; }
-.world__decor--grass path { stroke: #4a6b3a; stroke-width: 1; fill: none; }
-.world__decor--bush ellipse { fill: #4a6b3a; stroke: #2a1e2a; stroke-width: 0.6; }
-.world__decor--bush .world__decor-shadow { fill: rgba(20, 12, 18, 0.22); stroke: none; }
+.world__decor--pebble ellipse { fill: #8b8578; stroke: #2b2138; stroke-width: 0.4; }
+.world__decor--grass path { stroke: #4d7a34; stroke-width: 1; fill: none; }
+.world__decor--bush ellipse { fill: #55873a; stroke: #2b2138; stroke-width: 0.6; }
+.world__decor--bush .world__decor-shadow { fill: rgba(18, 24, 20, 0.24); stroke: none; }
+.world__decor--tree .world__decor-trunk { fill: #7b5635; stroke: #2b2138; stroke-width: 0.8; }
+.world__decor--tree .world__decor-canopy { fill: #4d8a3c; stroke: #2b2138; stroke-width: 0.9; }
+.world__decor--tree .world__decor-canopy--light { fill: #66a34c; stroke-width: 0.6; }
+.world__decor--tree .world__decor-fruit { fill: var(--dc-danger); stroke: #2b2138; stroke-width: 0.4; }
+.world__decor--tree .world__decor-shadow { fill: rgba(18, 24, 20, 0.24); stroke: none; }
+.world__decor--tulip .world__decor-stem { stroke: #4d7a34; stroke-width: 1; fill: none; }
+.world__decor--tulip .world__decor-bloom { stroke: #2b2138; stroke-width: 0.5; }
 .is-night .world__decor--daisy circle { fill: #b8b0a4; }
 .is-night .world__decor--daisy .world__decor-core { fill: #8a7440; }
 
@@ -155,12 +183,12 @@
 .isle__stage--grabbing svg.world { cursor: grabbing; }
 
 /* ── Weather ─────────────────────────────────────────────────────────── */
-.weather-cloud ellipse { fill: #fff4d6; stroke: var(--dc-ink); stroke-width: 1.5; }
+.weather-cloud ellipse { fill: #fff8e8; stroke: var(--dc-ink); stroke-width: 1.5; }
 .weather-cloud__puff { animation: cloud-drift 14s ease-in-out infinite alternate; }
 .weather-cloud:nth-child(2n) .weather-cloud__puff { animation-delay: -3s; animation-duration: 17s; }
 .weather-layer--storm .weather-cloud ellipse { fill: #4b5878; }
 .weather-sunbeam {
-    fill: rgba(255, 244, 214, 0.18);
+    fill: rgba(255, 248, 232, 0.18);
     transform-origin: 280px 80px;
     animation: sunbeam-spin 26s linear infinite;
 }
@@ -173,6 +201,13 @@
 @keyframes sea-current {
     0% { transform: translate(-18px, 0) scaleX(1); }
     100% { transform: translate(24px, -5px) scaleX(1.03); }
+}
+@keyframes sea-sparkle {
+    0%, 100% { opacity: 0; transform: translateY(0); }
+    50% { opacity: 0.9; transform: translateY(-1.5px); }
+}
+@keyframes foam-lap {
+    to { stroke-dashoffset: -48; }
 }
 @keyframes cloud-drift { to { transform: translateX(14px); } }
 @keyframes star-twinkle {
@@ -188,7 +223,7 @@
 }
 .world__market-prop:nth-child(2n) { animation-delay: -1.4s; }
 .world__market-prop:nth-child(3n) { animation-delay: -2.6s; }
-.market-prop__shadow { fill: rgba(42, 30, 42, 0.24); }
+.market-prop__shadow { fill: rgba(43, 33, 56, 0.24); }
 .market-prop__line,
 .market-prop__flagpole,
 .market-prop__path {
@@ -212,14 +247,14 @@
 .market-prop__flagpole { stroke-width: 1.8; }
 .market-prop__path { stroke: var(--dc-sand); stroke-width: 2.4; }
 .market-prop__glow {
-    fill: rgba(255, 208, 74, 0.58);
+    fill: rgba(255, 201, 60, 0.58);
     animation: market-glow 1.8s ease-in-out infinite;
 }
 .market-owned-market_bunting .world__building[data-tab="market"] .world__building-shape,
 .market-owned-market_roof_tiles .world__building[data-tab="market"] .world__building-shape,
 .market-owned-roof_moss .world__building-shape,
 .market-owned-rule_board_lanterns .world__building[data-tab="blocker"] .world__building-shape {
-    filter: drop-shadow(0 0 4px rgba(255, 208, 74, 0.36));
+    filter: drop-shadow(0 0 4px rgba(255, 201, 60, 0.36));
 }
 
 @keyframes market-prop-bob {
@@ -247,38 +282,47 @@
     gap: var(--sp-2);
 }
 .isle__date-button {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 42px;
     border: 0;
-    background: var(--dc-parchment);
+    background: var(--dc-panel-grad);
     color: var(--dc-ink);
-    box-shadow: 0 0 0 2px var(--dc-ink);
+    box-shadow: 0 0 0 2px var(--dc-ink), 0 3px 0 0 var(--dc-ink);
     cursor: pointer;
     font-family: var(--font-display);
-    font-size: 12px;
+    font-size: 15px;
+    transition: transform 80ms steps(2), box-shadow 80ms steps(2), background 120ms ease-out;
 }
 .isle__date-button:disabled { cursor: default; opacity: 0.45; }
 .isle__date-button:not(:disabled):hover { background: var(--dc-noon); }
+.isle__date-button:not(:disabled):active {
+    transform: translateY(2px);
+    box-shadow: 0 0 0 2px var(--dc-ink), 0 1px 0 0 var(--dc-ink);
+}
 .isle__date-label {
     min-width: 148px;
     padding: var(--sp-2) var(--sp-3);
-    background: rgba(255, 244, 214, 0.94);
+    background: var(--dc-panel-grad);
     color: var(--dc-ink);
-    box-shadow: 0 0 0 2px rgba(42, 30, 42, 0.86), 0 10px 24px rgba(42, 30, 42, 0.12);
+    box-shadow: 0 0 0 2px var(--dc-ink), 0 3px 0 0 var(--dc-ink), 0 12px 24px rgba(23, 42, 66, 0.20);
 }
 .isle__date-label span,
 .isle-signboard span {
     display: block;
     font-family: var(--font-game);
-    font-size: var(--fs-md);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
     color: var(--dc-ink-soft);
 }
 .isle__date-label strong {
     display: block;
-    margin-top: 2px;
+    margin-top: 1px;
     font-family: var(--font-display);
-    font-size: 10px;
-    line-height: 1.4;
+    font-size: var(--fs-md);
+    font-weight: 700;
+    line-height: 1.3;
     color: var(--dc-ink);
 }
 
@@ -291,9 +335,9 @@
     grid-template-columns: auto 1fr;
     gap: 2px var(--sp-2);
     align-items: center;
-    background: rgba(255, 244, 214, 0.94);
+    background: var(--dc-panel-grad);
     color: var(--dc-ink);
-    box-shadow: 0 0 0 2px rgba(42, 30, 42, 0.86), 0 10px 24px rgba(42, 30, 42, 0.12);
+    box-shadow: 0 0 0 2px var(--dc-ink), 0 3px 0 0 var(--dc-ink), 0 12px 24px rgba(23, 42, 66, 0.20);
 }
 .isle__weather-badge span {
     grid-row: span 2;
@@ -302,12 +346,13 @@
 }
 .isle__weather-badge strong {
     font-family: var(--font-display);
-    font-size: 10px;
-    line-height: 1.35;
+    font-size: var(--fs-md);
+    font-weight: 700;
+    line-height: 1.2;
 }
 .isle__weather-badge em {
     font-family: var(--font-game);
-    font-size: var(--fs-md);
+    font-size: var(--fs-sm);
     color: var(--dc-ink-soft);
     font-style: normal;
 }
@@ -319,9 +364,9 @@
     align-items: center;
     gap: var(--sp-2);
     padding: var(--sp-2);
-    background: rgba(255, 244, 214, 0.94);
+    background: var(--dc-panel-grad);
     color: var(--dc-ink);
-    box-shadow: 0 0 0 2px rgba(42, 30, 42, 0.86), 0 10px 24px rgba(42, 30, 42, 0.12);
+    box-shadow: 0 0 0 2px var(--dc-ink), 0 3px 0 0 var(--dc-ink), 0 12px 24px rgba(23, 42, 66, 0.20);
 }
 
 .isle__editor-button {
@@ -331,10 +376,12 @@
     color: var(--dc-ink);
     cursor: pointer;
     font-family: var(--font-display);
-    font-size: 9px;
+    font-size: 16px;
+    font-weight: 600;
     line-height: 1.3;
-    padding: var(--sp-2);
+    padding: var(--sp-1) var(--sp-3);
     box-shadow: 0 0 0 2px var(--dc-ink);
+    transition: background 120ms ease-out;
 }
 
 .isle__editor-button:hover {
@@ -342,42 +389,49 @@
 }
 
 .isle__editor-button--reset {
-    background: #f6d39b;
+    background: var(--dc-parchment);
 }
 
 .isle__editor-hint {
     max-width: 190px;
     color: var(--dc-ink-soft);
     font-family: var(--font-game);
-    font-size: var(--fs-md);
-    line-height: 1;
+    font-size: var(--fs-sm);
+    line-height: 1.1;
 }
 
 .isle__signboards {
     left: var(--sp-4);
     right: var(--sp-4);
-    bottom: var(--sp-4);
+    bottom: calc(var(--hud-rail-h) + var(--sp-4));
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--sp-3);
+    max-width: 720px;
+    margin: 0 auto;
 }
 .isle-signboard {
-    min-height: 80px;
+    min-height: 74px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: var(--sp-3);
-    background: linear-gradient(180deg, #7b5635 0%, #5c3e25 100%);
-    color: #fff4d6;
-    box-shadow: 0 0 0 2px var(--dc-ink), inset 0 -8px 0 rgba(42, 30, 42, 0.18), 0 12px 24px rgba(42, 30, 42, 0.16);
+    padding: var(--sp-2) var(--sp-3);
+    background: linear-gradient(180deg, #8a6142 0%, #64452b 100%);
+    color: var(--dc-parchment);
+    box-shadow:
+        0 0 0 2px var(--dc-ink),
+        inset 0 2px 0 rgba(255, 248, 232, 0.22),
+        inset 0 -6px 0 rgba(43, 33, 56, 0.24),
+        0 12px 24px rgba(23, 42, 66, 0.30);
     text-align: center;
 }
-.isle-signboard span { color: #ffe38f; }
+.isle-signboard span { color: #ffd98a; }
 .isle-signboard strong {
-    margin-top: var(--sp-1);
+    margin-top: 2px;
     font-family: var(--font-display);
-    font-size: 12px;
-    line-height: 1.45;
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    line-height: 1.25;
     overflow-wrap: anywhere;
 }
 
@@ -400,14 +454,14 @@
             linear-gradient(to bottom,
                 var(--sky-top) 0%,
                 var(--sky-bottom) 38%,
-                rgba(91, 143, 185, 0.86) 39%,
+                rgba(47, 126, 166, 0.86) 39%,
                 rgba(46, 124, 166, 0.98) 100%);
     }
     .isle__stage {
         order: 3;
         min-height: 320px;
         height: clamp(320px, 72vw, 460px);
-        box-shadow: 0 0 0 2px rgba(42, 30, 42, 0.2), inset 0 -18px 36px rgba(42, 30, 42, 0.16);
+        box-shadow: 0 0 0 2px rgba(43, 33, 56, 0.2), inset 0 -18px 36px rgba(43, 33, 56, 0.16);
     }
     .isle__datebar {
         position: static;
@@ -453,13 +507,13 @@
 .world__building:hover .world__building-shape,
 .world__building:focus .world__building-shape { transform: translateY(-3px); }
 .isle--editing .world__building .world__building-shape {
-    filter: drop-shadow(0 0 3px rgba(255, 208, 74, 0.42));
+    filter: drop-shadow(0 0 3px rgba(255, 201, 60, 0.42));
 }
 .world__building[data-placement="valid"] .world__building-shape {
-    filter: drop-shadow(0 0 6px rgba(74, 155, 110, 0.82));
+    filter: drop-shadow(0 0 6px rgba(63, 158, 106, 0.82));
 }
 .world__building[data-placement="invalid"] .world__building-shape {
-    filter: drop-shadow(0 0 6px rgba(196, 69, 58, 0.9));
+    filter: drop-shadow(0 0 6px rgba(209, 75, 61, 0.9));
     opacity: 0.72;
 }
 
@@ -478,7 +532,7 @@
 
 .b-smoke {
     fill: none;
-    stroke: rgba(255, 244, 214, 0.88);
+    stroke: rgba(255, 248, 232, 0.88);
     stroke-width: 1.9;
     stroke-linecap: round;
     stroke-dasharray: 8 9;
@@ -504,11 +558,12 @@
 
 .world__building-label {
     font-family: var(--font-display);
-    font-size: 7px;
+    font-size: 14px;
+    font-weight: 700;
     fill: var(--dc-ink);
     paint-order: stroke;
     stroke: var(--dc-parchment);
-    stroke-width: 2;
+    stroke-width: 3;
     pointer-events: none;
     opacity: 0;
     transition: opacity 120ms ease-out;
