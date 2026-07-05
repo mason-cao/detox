@@ -333,15 +333,15 @@ const App = {
 
     categoryColor(category) {
         const map = {
-            'Productivity': '#5b8fb9',
-            'Communication': '#b59cff',
-            'Social': '#d16a8f',
-            'Entertainment': '#ffd04a',
+            'Productivity': '#2f7ea6',
+            'Communication': '#a48bf5',
+            'Social': '#e0708f',
+            'Entertainment': '#ffc93c',
             'Development': '#7b8fbf',
             'Media': '#d6a44e',
             'Design': '#c783b7',
-            'Enforcement': '#c4453a',
-            'Utilities': '#6b8e4e',
+            'Enforcement': '#d14b3d',
+            'Utilities': '#74a94c',
             'Uncategorized': '#aeaeb2',
         };
         return map[category] || '#aeaeb2';
@@ -460,6 +460,16 @@ const App = {
             if (token === this.renderToken) {
                 content.removeAttribute('aria-busy');
                 content.classList.remove('is-transitioning');
+                // Chrome occasionally composites the fresh view from a stale
+                // half-faded layer (page looks washed out until a repaint).
+                // Toggling a compositor property forces re-layerization —
+                // once right away and once after the entrance animation.
+                const nudge = () => {
+                    content.style.transform = 'translateZ(0)';
+                    requestAnimationFrame(() => { content.style.transform = ''; });
+                };
+                nudge();
+                setTimeout(() => { if (token === this.renderToken) nudge(); }, 320);
             }
         }
     },
@@ -471,8 +481,8 @@ const App = {
         const icons = {
             success: '<svg viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="2" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>',
             error: '<svg viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
-            info: '<svg viewBox="0 0 24 24" fill="none" stroke="#5b8fb9" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
-            warning: '<svg viewBox="0 0 24 24" fill="none" stroke="#ffd04a" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+            info: '<svg viewBox="0 0 24 24" fill="none" stroke="#2f7ea6" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+            warning: '<svg viewBox="0 0 24 24" fill="none" stroke="#ffc93c" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
         };
 
         const toast = document.createElement('div');
@@ -585,9 +595,12 @@ const App = {
         });
 
         this.initKeyboardShortcuts();
-        this.showTab('dashboard');
+        // #hash deep link: /#market opens the Market directly.
+        const hashTab = (location.hash || '').replace('#', '');
+        const tabs = ['dashboard', 'apps', 'stats', 'goals', 'blocker', 'market', 'cards', 'settings'];
+        this.showTab(tabs.includes(hashTab) ? hashTab : 'dashboard');
         if (window.HUD) HUD.init();
-        if (window.Compass) Compass.init();
+        // Compass stays dormant — the dock is the persistent navigator now.
         this.checkMonitor();
         this.refreshFocusMode();
         this.startAutoRefresh();

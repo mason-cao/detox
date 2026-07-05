@@ -1,33 +1,40 @@
-/* Dawn Cove — Detox Isle design tokens. */
+/* Lagoon Cove — Detox Isle design tokens (v2 redesign).
+   Deeper ink, brighter cream panels, saturated lagoon + meadow hues.
+   Every view builds on these; change here, cascade everywhere. */
 
 :root {
-    /* ── Palette (Dawn Cove) ─────────────────────────────────────────── */
-    --dc-dawn:       #ffb27a;  /* sunrise peach */
-    --dc-noon:       #ffd98a;  /* mid-morning gold */
-    --dc-dusk:       #d16a8f;  /* evening rose */
-    --dc-night:      #1a1f3a;  /* midnight navy */
-    --dc-parchment:  #fff4d6;  /* panel background, warm */
-    --dc-sand:       #e8c896;  /* ground tile base */
-    --dc-moss:       #6b8e4e;  /* grass accents */
-    --dc-sea:        #5b8fb9;  /* water / sky-horizon */
-    --dc-ink:        #2a1e2a;  /* body text, pixel outlines */
-    --dc-ink-soft:   #5a4a5a;  /* secondary text */
-    --dc-coin:       #ffd04a;  /* Sunlight currency */
-    --dc-shard:      #b59cff;  /* Starshard currency */
-    --dc-danger:     #c4453a;  /* law / block color */
-    --dc-ok:         #4a9b6e;  /* approval / completed */
+    /* ── Palette (Lagoon Cove) ───────────────────────────────────────── */
+    --dc-dawn:       #ffb27a;  /* sunrise peach (sky) */
+    --dc-noon:       #ffd98a;  /* warm gold — hover surfaces */
+    --dc-dusk:       #e0708f;  /* evening rose (sky) */
+    --dc-night:      #232946;  /* midnight indigo */
+    --dc-parchment:  #fff8e8;  /* panel cream — bright, reads as elevated */
+    --dc-sand:       #e8d5a5;  /* app backdrop + ground tint */
+    --dc-moss:       #74a94c;  /* meadow green */
+    --dc-sea:        #2f7ea6;  /* lagoon teal */
+    --dc-ink:        #2b2138;  /* deep plum ink — text + pixel outlines */
+    --dc-ink-soft:   #5f5370;  /* secondary text — darker than v1 for contrast */
+    --dc-coin:       #ffc93c;  /* Sunlight currency */
+    --dc-shard:      #a48bf5;  /* Starshard currency */
+    --dc-danger:     #d14b3d;  /* law / block */
+    --dc-ok:         #3f9e6a;  /* approval / under-limit */
+
+    /* ── Derived surfaces ────────────────────────────────────────────── */
+    --dc-panel-grad: linear-gradient(180deg, #fffdf4 0%, #fff4dc 100%);
+    --dc-shadow-soft: 0 6px 18px rgba(43, 33, 56, 0.14);
+    --dc-shadow-drop: 0 4px 0 0 rgba(43, 33, 56, 0.85);
 
     /* ── Typography ──────────────────────────────────────────────────── */
-    --font-display:  'Press Start 2P', 'Courier New', monospace;
-    --font-game:     'VT323', 'Courier New', monospace;
-    --font-ui:       'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-display:  'Pixelify Sans', 'Courier New', monospace;
+    --font-game:     'Pixelify Sans', 'Courier New', monospace;
+    --font-ui:       'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
 
     --fs-xs:   12px;
     --fs-sm:   14px;
     --fs-md:   16px;
-    --fs-lg:   20px;
+    --fs-lg:   19px;
     --fs-xl:   28px;
-    --fs-display: 14px;   /* Press Start 2P is chunky — keep display small */
+    --fs-display: 19px;   /* Pixelify Sans reads larger than Press Start 2P */
 
     /* ── Spacing (4px rhythm) ────────────────────────────────────────── */
     --sp-1: 4px;
@@ -40,7 +47,7 @@
 
     /* ── HUD sizing ──────────────────────────────────────────────────── */
     --hud-top-h:    56px;
-    --hud-rail-h:   64px;
+    --hud-rail-h:   68px;
 
     /* ── Day/night cycle (set by isle.js) ────────────────────────────── */
     --sky-top:       var(--dc-dawn);
@@ -49,20 +56,35 @@
     --ink-current:   var(--dc-ink);
 }
 
-/* Wire Dawn Cove into the legacy --bg/--text chain so non-Isle tabs inherit
-   the warm palette even before Plan 3 reskins their internals. Must load
-   AFTER style.css in index.html so these win the cascade. */
+/* Wire Lagoon Cove into the legacy --bg/--text chain so shared components
+   inherit the palette. Must load AFTER style.css in index.html so these
+   win the cascade. */
 :root {
     --bg:             var(--dc-sand);
     --bg-card:        var(--dc-parchment);
+    --bg-hover:       #fdeecb;
+    --bg-input:       #fdf1d6;
+    --border:         rgba(43, 33, 56, 0.22);
+    --border-light:   rgba(43, 33, 56, 0.12);
     --text:           var(--dc-ink);
     --text-secondary: var(--dc-ink-soft);
-    --chart-grid:     rgba(42, 30, 42, 0.15);
-    --chart-tick:     #5a4a5a;
+    --text-muted:     #837792;
+    --accent:         var(--dc-sea);
+    --accent-light:   #3f94bf;
+    --green:          var(--dc-ok);
+    --red:            var(--dc-danger);
+    --orange:         #e08f2e;
+    --chart-grid:     rgba(43, 33, 56, 0.14);
+    --chart-tick:     #5f5370;
 }
 
 /* Pixel-perfect rendering for scaled SVG / image assets. */
 .pixel-art {
     image-rendering: pixelated;
     image-rendering: crisp-edges;
+}
+
+/* Numbers should always sit in neat columns. */
+body {
+    font-variant-numeric: tabular-nums;
 }

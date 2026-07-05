@@ -1,32 +1,35 @@
 /* Reusable pixel-art UI primitives. Layered on top of tokens.css. */
 
-/* ── Panel: parchment card with 2-color pixel border ─────────────────── */
+/* ── Panel: cream card with 2-color pixel border + tinted drop ───────── */
 .pixel-panel {
-    background: var(--dc-parchment);
+    background: var(--dc-panel-grad);
     color: var(--dc-ink);
     border: none;
     padding: var(--sp-4);
     position: relative;
-    /* Fake pixel border: 2px outer ink + 1px inner highlight. */
     box-shadow:
         0 0 0 2px var(--dc-ink),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+        inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+        0 6px 0 -2px rgba(43, 33, 56, 0.20),
+        0 12px 24px rgba(43, 33, 56, 0.10);
     font-family: var(--font-ui);
 }
 
 .pixel-panel--dark {
-    background: var(--dc-night);
-    color: #e8ddf0;
+    background: linear-gradient(180deg, #2b3252 0%, var(--dc-night) 100%);
+    color: #ece5f6;
     box-shadow:
         0 0 0 2px var(--dc-ink),
-        inset 0 0 0 1px rgba(181, 156, 255, 0.2);
+        inset 0 0 0 1px rgba(164, 139, 245, 0.22),
+        0 12px 24px rgba(43, 33, 56, 0.22);
 }
 
 /* ── Button: chunky pressable tile ───────────────────────────────────── */
 .pixel-button {
     font-family: var(--font-display);
-    font-size: var(--fs-display);
-    padding: var(--sp-3) var(--sp-4);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    padding: var(--sp-2) var(--sp-4);
     background: var(--dc-parchment);
     color: var(--dc-ink);
     border: none;
@@ -35,7 +38,7 @@
     box-shadow:
         0 0 0 2px var(--dc-ink),
         0 4px 0 0 var(--dc-ink);
-    transition: transform 80ms steps(2), box-shadow 80ms steps(2);
+    transition: transform 80ms steps(2), box-shadow 80ms steps(2), background 120ms ease-out;
     user-select: none;
 }
 
@@ -50,13 +53,28 @@
         0 1px 0 0 var(--dc-ink);
 }
 
+.pixel-button:disabled {
+    cursor: default;
+    opacity: 0.55;
+    background: var(--dc-parchment);
+    transform: none;
+}
+
 .pixel-button--primary {
-    background: var(--dc-coin);
+    background: linear-gradient(180deg, #ffdc6b 0%, var(--dc-coin) 100%);
+}
+
+.pixel-button--primary:hover {
+    background: linear-gradient(180deg, #ffe58f 0%, #ffd35b 100%);
 }
 
 .pixel-button--danger {
     background: var(--dc-danger);
     color: #fff;
+}
+
+.pixel-button--danger:hover {
+    background: #b93b2e;
 }
 
 /* ── Chip: inline currency / counter pill ────────────────────────────── */
@@ -66,11 +84,14 @@
     gap: var(--sp-2);
     padding: var(--sp-1) var(--sp-3);
     font-family: var(--font-game);
-    font-size: var(--fs-lg);
+    font-size: var(--fs-md);
+    font-weight: 600;
     line-height: 1;
     background: var(--dc-parchment);
     color: var(--dc-ink);
-    box-shadow: 0 0 0 2px var(--dc-ink);
+    box-shadow:
+        0 0 0 2px var(--dc-ink),
+        inset 0 -3px 0 rgba(43, 33, 56, 0.10);
     min-height: 32px;
 }
 
@@ -79,8 +100,14 @@
     line-height: 1;
 }
 
-.pixel-chip--sunlight .pixel-chip__glyph { color: var(--dc-coin); }
-.pixel-chip--shard    .pixel-chip__glyph { color: var(--dc-shard); }
+.pixel-chip--sunlight .pixel-chip__glyph {
+    color: #b8860b;
+    text-shadow: 0 0 6px rgba(255, 201, 60, 0.9);
+}
+.pixel-chip--shard .pixel-chip__glyph {
+    color: #7a5cd6;
+    text-shadow: 0 0 6px rgba(164, 139, 245, 0.8);
+}
 
 /* ── Divider: dotted line, pixel-style ───────────────────────────────── */
 .pixel-divider {
@@ -91,4 +118,5 @@
         transparent 4px 8px
     );
     margin: var(--sp-4) 0;
+    opacity: 0.6;
 }

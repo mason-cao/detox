@@ -11,7 +11,10 @@
 /* Old sidebar layout is replaced — reset any stray width constraints. */
 #content {
     overflow: auto;
-    padding: var(--sp-4);
+    padding: var(--sp-5) var(--sp-5) calc(var(--hud-rail-h) + var(--sp-6));
+    max-width: 1280px;
+    width: 100%;
+    margin: 0 auto;
 }
 
 /* ── Top bar ─────────────────────────────────────────────────────────── */
@@ -20,8 +23,8 @@
     align-items: center;
     gap: var(--sp-4);
     padding: 0 var(--sp-4);
-    background: var(--dc-parchment);
-    box-shadow: 0 2px 0 0 var(--dc-ink);
+    background: var(--dc-panel-grad);
+    box-shadow: 0 2px 0 0 var(--dc-ink), 0 6px 16px rgba(43, 33, 56, 0.10);
     font-family: var(--font-display);
     font-size: var(--fs-display);
     position: sticky;
@@ -30,11 +33,23 @@
 }
 
 .hud-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
     font-family: var(--font-display);
-    font-size: var(--fs-display);
+    font-weight: 700;
+    font-size: 21px;
     color: var(--dc-ink);
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     margin-right: auto;
+}
+
+.hud-logo::before {
+    content: '';
+    width: 12px;
+    height: 12px;
+    background: var(--dc-coin);
+    box-shadow: 0 0 0 2px var(--dc-ink), 0 0 10px rgba(255, 201, 60, 0.8);
 }
 
 .hud-currencies {
@@ -60,8 +75,91 @@
 }
 
 .hud-weather[data-weather="sunny"] { background: #ffe38f; }
-.hud-weather[data-weather="cloudy"] { background: #dbe7e9; }
-.hud-weather[data-weather="storm"] { background: #4b5878; color: #fff4d6; }
+.hud-weather[data-weather="cloudy"] { background: #dde8ea; }
+.hud-weather[data-weather="storm"] { background: var(--dc-night); color: var(--dc-parchment); }
+
+/* ── Navigation dock ─────────────────────────────────────────────────── */
+#dock {
+    position: fixed;
+    left: 50%;
+    bottom: var(--sp-3);
+    transform: translateX(-50%);
+    z-index: 60;
+    display: flex;
+    gap: 2px;
+    padding: 5px;
+    background: var(--dc-panel-grad);
+    box-shadow:
+        0 0 0 2px var(--dc-ink),
+        0 5px 0 0 var(--dc-ink),
+        0 14px 28px rgba(43, 33, 56, 0.28);
+    max-width: calc(100vw - var(--sp-4) * 2);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+#dock::-webkit-scrollbar { display: none; }
+
+.dock-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 74px;
+    padding: 7px 10px 6px;
+    border: none;
+    background: transparent;
+    color: var(--dc-ink-soft);
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    line-height: 1;
+    transition: background 120ms ease-out, color 120ms ease-out, transform 80ms steps(2);
+}
+
+.dock-item svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+    stroke: none;
+}
+
+.dock-item svg .dock-detail {
+    fill: none;
+    stroke: var(--dc-parchment);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.dock-item:hover {
+    background: var(--bg-hover);
+    color: var(--dc-ink);
+}
+
+.dock-item:active { transform: translateY(1px); }
+
+.dock-item:focus-visible {
+    outline: 2px solid var(--dc-sea);
+    outline-offset: -2px;
+}
+
+.dock-item.is-active {
+    background: var(--dc-coin);
+    color: var(--dc-ink);
+    box-shadow: inset 0 -3px 0 rgba(43, 33, 56, 0.28), 0 0 0 2px var(--dc-ink);
+}
+
+.dock-item.is-active svg .dock-detail { stroke: var(--dc-coin); }
+
+@media (max-width: 860px) {
+    .dock-item { min-width: 52px; padding: 8px 8px 7px; }
+    .dock-item span { display: none; }
+    .dock-item svg { width: 22px; height: 22px; }
+}
 
 .hud-actions {
     display: flex;
@@ -110,7 +208,7 @@
 .help-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(26, 31, 58, 0.75);
+    background: rgba(35, 41, 70, 0.75);
     display: none;
     align-items: center;
     justify-content: center;
@@ -166,7 +264,7 @@
     box-shadow: 0 0 0 2px var(--dc-ink);
     cursor: pointer;
     font-family: var(--font-display);
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 0.5px;
 }
 
@@ -188,7 +286,7 @@
 
 .help-tour__eyebrow {
     font-family: var(--font-display);
-    font-size: 10px;
+    font-size: 13px;
     color: var(--dc-ink-soft);
     letter-spacing: 0.5px;
     margin-bottom: var(--sp-3);
@@ -215,7 +313,7 @@
 .help-tour__progress span {
     width: 18px;
     height: 8px;
-    background: rgba(42, 30, 42, 0.22);
+    background: rgba(43, 33, 56, 0.22);
     box-shadow: inset 0 0 0 1px var(--dc-ink);
 }
 
@@ -255,7 +353,7 @@
 .help-rule strong,
 .help-news strong {
     font-family: var(--font-display);
-    font-size: 10px;
+    font-size: 13px;
     color: var(--dc-ink);
     letter-spacing: 0.5px;
 }

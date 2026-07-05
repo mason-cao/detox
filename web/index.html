@@ -7,20 +7,20 @@
     <link rel="icon" href="data:,">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css?v=20260607a">
-    <link rel="stylesheet" href="/css/tokens.css?v=20260517a">
-    <link rel="stylesheet" href="/css/pixel-ui.css?v=20260507a">
-    <link rel="stylesheet" href="/css/hud.css?v=20260507a">
-    <link rel="stylesheet" href="/css/isle.css?v=20260607b">
-    <link rel="stylesheet" href="/css/compass.css?v=20260602a">
-    <link rel="stylesheet" href="/css/residents.css?v=20260607b">
-    <link rel="stylesheet" href="/css/effects.css?v=20260517a">
-    <link rel="stylesheet" href="/css/views.css?v=20260607b">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css?v=20260705b">
+    <link rel="stylesheet" href="/css/tokens.css?v=20260705b">
+    <link rel="stylesheet" href="/css/pixel-ui.css?v=20260705b">
+    <link rel="stylesheet" href="/css/hud.css?v=20260705b">
+    <link rel="stylesheet" href="/css/isle.css?v=20260705b">
+    <link rel="stylesheet" href="/css/compass.css?v=20260705b">
+    <link rel="stylesheet" href="/css/residents.css?v=20260705b">
+    <link rel="stylesheet" href="/css/effects.css?v=20260705b">
+    <link rel="stylesheet" href="/css/views.css?v=20260705b">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="/config.js"></script>
-    <script src="/js/auth.js?v=20260504a"></script>
-    <script src="/js/cloud.js?v=20260504a"></script>
+    <script src="/js/auth.js?v=20260705b"></script>
+    <script src="/js/cloud.js?v=20260705b"></script>
 </head>
 <body>
     <div id="app">
@@ -50,6 +50,41 @@
         </header>
         <main id="content"></main>
     </div>
+
+    <nav id="dock" aria-label="Isle navigation">
+        <button class="dock-item" type="button" data-tab="dashboard" title="The Isle (1)">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3 L17 9 H15 V16 H12 V11 H8 V16 H5 V9 H3 Z"/></svg>
+            <span>Isle</span>
+        </button>
+        <button class="dock-item" type="button" data-tab="apps" title="Residents (2)">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="7" cy="7" r="3"/><path d="M2 17 C2 13 5 12 7 12 C9 12 12 13 12 17 Z"/><circle cx="14.5" cy="8" r="2.4"/><path d="M12.5 17 C13 13.5 15 13 15 13 C17 13 18.5 14.5 18.5 17 Z"/></svg>
+            <span>Residents</span>
+        </button>
+        <button class="dock-item" type="button" data-tab="stats" title="Chronicle (3)">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="11" width="3.4" height="6"/><rect x="8.3" y="7" width="3.4" height="10"/><rect x="13.6" y="3" width="3.4" height="14"/></svg>
+            <span>Chronicle</span>
+        </button>
+        <button class="dock-item" type="button" data-tab="goals" title="Charter (4)">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 2 H15 V18 L13 16.5 L11 18 L10 17 L9 18 L7 16.5 L5 18 Z"/><path d="M7.5 6 H12.5 M7.5 9 H12.5 M7.5 12 H10.5" class="dock-detail"/></svg>
+            <span>Charter</span>
+        </button>
+        <button class="dock-item" type="button" data-tab="blocker" title="Rule Board (5)">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2 L17 5 V10 C17 14 14 17 10 18 C6 17 3 14 3 10 V5 Z"/><path d="M7 10 L9 12 L13 7.5" class="dock-detail"/></svg>
+            <span>Rules</span>
+        </button>
+        <button class="dock-item" type="button" data-tab="market" title="Market (6)">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7 L4.5 3 H15.5 L17 7 Z"/><path d="M4 8 H16 V17 H12 V12 H8 V17 H4 Z"/></svg>
+            <span>Market</span>
+        </button>
+        <button class="dock-item" type="button" data-tab="cards" title="Postcards (7)">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="5" width="15" height="10.5"/><path d="M11.5 7.5 H15 M11.5 10 H15" class="dock-detail"/><rect x="4.5" y="7.5" width="5" height="5.5" class="dock-detail"/></svg>
+            <span>Post</span>
+        </button>
+        <button class="dock-item" type="button" data-tab="settings" title="Mayor's Study (8)">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2 L11.5 5 L15 4 L14.5 7.5 L18 9 L15.5 11.5 L17 15 L13.5 14.8 L12 18 L10 15.5 L8 18 L6.5 14.8 L3 15 L4.5 11.5 L2 9 L5.5 7.5 L5 4 L8.5 5 Z"/><circle cx="10" cy="10" r="2.4" class="dock-detail"/></svg>
+            <span>Study</span>
+        </button>
+    </nav>
 
     <div class="help-overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle" onclick="if(event.target===this)HUD.closeHelp()">
         <div class="help-overlay__panel pixel-panel" tabindex="-1">
@@ -113,24 +148,25 @@
 
     <div class="toast-container" id="toastContainer"></div>
 
-    <script src="/js/app.js?v=20260517d"></script>
-    <script src="/js/hud.js?v=20260517a"></script>
-    <script src="/js/iso.js?v=20260507a"></script>
-    <script src="/js/island-state.js?v=20260602a"></script>
-    <script src="/js/world.js?v=20260607b"></script>
-    <script src="/js/compass.js?v=20260517f"></script>
-    <script src="/js/buildings.js?v=20260603b"></script>
-    <script src="/js/effects.js?v=20260507a"></script>
-    <script src="/js/residents.js?v=20260607b"></script>
-    <script src="/js/isle.js?v=20260603b"></script>
-    <script src="/js/dashboard.js?v=20260507a"></script>
-    <script src="/js/app-symbols.js?v=20260603a"></script>
-    <script src="/js/apps.js?v=20260603b"></script>
-    <script src="/js/stats.js?v=20260603b"></script>
-    <script src="/js/goals.js?v=20260603b"></script>
-    <script src="/js/blocker.js?v=20260603b"></script>
-    <script src="/js/market.js?v=20260607b"></script>
-    <script src="/js/cards.js?v=20260603b"></script>
-    <script src="/js/settings.js?v=20260603b"></script>
+    <script src="/js/app.js?v=20260705b"></script>
+    <script src="/js/hud.js?v=20260705b"></script>
+    <script src="/js/iso.js?v=20260705b"></script>
+    <script src="/js/pixel-sprites.js?v=20260705b"></script>
+    <script src="/js/island-state.js?v=20260705b"></script>
+    <script src="/js/world.js?v=20260705b"></script>
+    <script src="/js/compass.js?v=20260705b"></script>
+    <script src="/js/buildings.js?v=20260705b"></script>
+    <script src="/js/effects.js?v=20260705b"></script>
+    <script src="/js/residents.js?v=20260705b"></script>
+    <script src="/js/isle.js?v=20260705b"></script>
+    <script src="/js/dashboard.js?v=20260705b"></script>
+    <script src="/js/app-symbols.js?v=20260705b"></script>
+    <script src="/js/apps.js?v=20260705b"></script>
+    <script src="/js/stats.js?v=20260705b"></script>
+    <script src="/js/goals.js?v=20260705b"></script>
+    <script src="/js/blocker.js?v=20260705b"></script>
+    <script src="/js/market.js?v=20260705b"></script>
+    <script src="/js/cards.js?v=20260705b"></script>
+    <script src="/js/settings.js?v=20260705b"></script>
 </body>
 </html>
