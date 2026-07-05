@@ -43,7 +43,7 @@ CARDS_DIR = os.path.join(DATA_DIR, "cards")
 WEB_DIR = _resolve_web_dir(BASE_DIR)
 DOCS_DIR = _resolve_docs_dir(BASE_DIR)
 
-APP_VERSION = os.environ.get("DETOX_APP_VERSION", "0.1.0")
+APP_VERSION = os.environ.get("DETOX_APP_VERSION", "0.2.0")
 BUNDLE_IDENTIFIER = "com.detox.agent"
 LAUNCH_AGENT_PATH = os.path.expanduser(
     "~/Library/LaunchAgents/com.detox.agent.plist"
@@ -198,6 +198,11 @@ MARKET_CATALOG = (
 )
 
 CHANGELOG_ENTRIES = [
+    {
+        "date": "2026-07-05",
+        "title": "Lagoon Cove redesign",
+        "body": "Full visual refresh: a persistent navigation dock, richer isle terrain and water, new fonts and palette, cleaner market previews, and redesigned postcards.",
+    },
     {
         "date": "2026-04-28",
         "title": "Market and rewards ledger",

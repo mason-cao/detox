@@ -24,6 +24,8 @@ function loadMarket() {
     };
     context.window = context;
     vm.createContext(context);
+    const pxSource = fs.readFileSync(path.join(__dirname, '../js/pixel-sprites.js'), 'utf8');
+    vm.runInContext(pxSource, context);
     const source = fs.readFileSync(path.join(__dirname, '../js/market.js'), 'utf8');
     vm.runInContext(source, context);
     return context.Market;

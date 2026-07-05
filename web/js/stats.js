@@ -136,7 +136,7 @@ const Stats = {
                 <div class="chart-wrapper" style="position: relative;">
                     <canvas id="weeklyStatsChart"></canvas>
                     <span class="effect-quill" data-role="quill" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#2a1e2a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#2b2138" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M4 20l8-8 5-1 4-7-7 4-1 5-8 8z"/>
                             <path d="M14 10l1 1"/>
                         </svg>
@@ -163,16 +163,16 @@ const Stats = {
                 datasets: [{
                     label: 'Screen Time',
                     data: weekly.days.map(d => d.minutes),
-                    backgroundColor: 'rgba(91, 143, 185, 0.35)',
-                    borderColor: '#5b8fb9',
+                    backgroundColor: 'rgba(47, 126, 166, 0.35)',
+                    borderColor: '#2f7ea6',
                     borderWidth: 0,
                     borderRadius: 0,
-                    hoverBackgroundColor: 'rgba(91, 143, 185, 0.6)',
+                    hoverBackgroundColor: 'rgba(47, 126, 166, 0.6)',
                 }, {
                     label: 'Average',
                     data: weekly.days.map(() => weekly.daily_average),
                     type: 'line',
-                    borderColor: '#d16a8f',
+                    borderColor: '#e0708f',
                     borderWidth: 2,
                     borderDash: [5, 5],
                     pointRadius: 0,

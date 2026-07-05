@@ -1,5 +1,9 @@
 /* Resident marker layer — static app presence + active glow. */
 
+/* Pixel-sprite cells: fills only. Legacy stroke rules (sized for the old
+   hand-drawn paths) would swallow 1-unit grid cells whole. */
+.px rect { stroke: none; }
+
 .world__resident {
     outline: none;
     will-change: transform;
@@ -10,7 +14,7 @@
 }
 
 .world__resident-shadow {
-    fill: rgba(42, 30, 42, 0.26);
+    fill: rgba(43, 33, 56, 0.26);
     pointer-events: none;
 }
 
@@ -41,14 +45,14 @@
 
 .world__resident-portrait-rim {
     fill: #7b5635;
-    stroke: rgba(42, 30, 42, 0.72);
+    stroke: rgba(43, 33, 56, 0.72);
     stroke-width: 1.2;
-    filter: drop-shadow(0 3px 3px rgba(42, 30, 42, 0.24));
+    filter: drop-shadow(0 3px 3px rgba(43, 33, 56, 0.24));
 }
 
 .world__resident-portrait-well {
     fill: #fff8ef;
-    stroke: rgba(255, 244, 214, 0.92);
+    stroke: rgba(255, 248, 232, 0.92);
     stroke-width: 1;
 }
 
@@ -59,13 +63,13 @@
 
 .world__resident-portrait-pin {
     fill: #d6bd72;
-    stroke: rgba(42, 30, 42, 0.62);
+    stroke: rgba(43, 33, 56, 0.62);
     stroke-width: 1;
     stroke-linejoin: round;
 }
 
 .world__resident-body {
-    filter: drop-shadow(0 3px 0 rgba(42, 30, 42, 0.22));
+    filter: drop-shadow(0 3px 0 rgba(43, 33, 56, 0.22));
     transform-box: fill-box;
     transform-origin: center bottom;
 }
@@ -109,8 +113,8 @@
 }
 
 .world__resident-hardhat { fill: var(--dc-coin); }
-.world__resident-hood { fill: rgba(91, 143, 185, 0.52); }
-.world__resident-jester-cap { fill: #c4453a; }
+.world__resident-hood { fill: rgba(47, 126, 166, 0.52); }
+.world__resident-jester-cap { fill: #d14b3d; }
 .world__resident-sheriff-hat { fill: #9d7354; }
 .world__resident-hardhat-line,
 .world__resident-hat-band,
@@ -141,7 +145,7 @@
 }
 
 .world__resident-cloak {
-    fill: rgba(42, 30, 42, 0.12);
+    fill: rgba(43, 33, 56, 0.12);
     stroke: var(--dc-ink);
     stroke-width: 1;
 }
@@ -158,7 +162,7 @@
 }
 
 .world__resident-collar {
-    stroke: rgba(255, 244, 214, 0.85);
+    stroke: rgba(255, 248, 232, 0.85);
     stroke-width: 1.2;
 }
 
@@ -198,7 +202,7 @@
 }
 
 .world__resident-cheek {
-    fill: rgba(196, 69, 58, 0.52);
+    fill: rgba(209, 75, 61, 0.52);
 }
 
 .world__resident-diamond,
@@ -228,9 +232,9 @@
     display: block;
 }
 
-.world__resident[data-archetype="jester"] .world__resident-sash { stroke: #c4453a; }
-.world__resident[data-archetype="wanderer"] .world__resident-cloak { fill: rgba(91, 143, 185, 0.30); }
-.world__resident[data-archetype="banished"] .world__resident-cloak { fill: rgba(42, 30, 42, 0.34); }
+.world__resident[data-archetype="jester"] .world__resident-sash { stroke: #d14b3d; }
+.world__resident[data-archetype="wanderer"] .world__resident-cloak { fill: rgba(47, 126, 166, 0.30); }
+.world__resident[data-archetype="banished"] .world__resident-cloak { fill: rgba(43, 33, 56, 0.34); }
 .world__resident[data-archetype="sheriff"] .world__resident-hat { fill: #9d7354; }
 .world__resident[data-archetype="banished"] .world__resident-satchel { display: none; }
 
@@ -247,7 +251,7 @@
 .world__resident-tool--musician { fill: #d6bd72; }
 .world__resident-tool--farmer { fill: var(--dc-ok); }
 .world__resident-tool--sheriff circle {
-    fill: rgba(255, 208, 74, 0.38);
+    fill: rgba(255, 201, 60, 0.38);
     stroke-width: 0;
 }
 .world__resident-tool--wanderer { fill: #7b5635; }
@@ -289,20 +293,22 @@ body:not(.reduce-motion) .world__resident-limbs--back {
 
 .world__resident-name {
     font-family: var(--font-game);
-    font-size: 9px;
+    font-size: 11px;
+    font-weight: 600;
     fill: var(--dc-ink);
     paint-order: stroke;
     stroke: var(--dc-parchment);
-    stroke-width: 2;
+    stroke-width: 2.6;
 }
 
 .world__resident-minutes {
     font-family: var(--font-game);
-    font-size: 8px;
+    font-size: 10px;
+    font-weight: 500;
     fill: var(--dc-ink-soft);
     paint-order: stroke;
     stroke: var(--dc-parchment);
-    stroke-width: 2;
+    stroke-width: 2.4;
     opacity: 0;
     transition: opacity 140ms ease-out;
 }

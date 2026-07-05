@@ -27,18 +27,7 @@ const Cards = {
                     <div class="postcard-intro">
                         <div class="postcard-compose">
                             <div class="postcard-compose__pixel-grid" aria-hidden="true"></div>
-                            <div class="postcard-compose__art" aria-hidden="true">
-                                <svg viewBox="0 0 190 132" role="presentation">
-                                    <rect x="5" y="6" width="180" height="120"></rect>
-                                    <path class="postcard-compose__sea" d="M10 86 H34 V80 H58 V88 H86 V82 H118 V88 H180"></path>
-                                    <path class="postcard-compose__sand" d="M32 82 H48 V64 H66 V52 H104 V44 H130 V54 H150 V78 H164 V94 H144 V106 H88 V116 H44 V104 H26 V92 H32 Z"></path>
-                                    <path class="postcard-compose__grass" d="M58 82 H74 V70 H92 V58 H116 V70 H132 V84 H112 V96 H84 V92 H58 Z"></path>
-                                    <path class="postcard-compose__path" d="M70 84 H86 V76 H106 V80 H122"></path>
-                                    <circle class="postcard-compose__sun" cx="150" cy="30" r="10"></circle>
-                                    <path class="postcard-compose__stamp" d="M20 22 H54 V52 H20 Z"></path>
-                                    <path class="postcard-compose__flag" d="M118 48 H138 V62 H118 Z M118 62 V88"></path>
-                                </svg>
-                            </div>
+                            <div class="postcard-compose__art" aria-hidden="true">${Px.postcardScene()}</div>
                             <div class="postcard-compose__copy">
                                 <span class="postcard-compose__eyebrow">Detox Isle Post</span>
                                 <h2>Greetings from the Isle</h2>
